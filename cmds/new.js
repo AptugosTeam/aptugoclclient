@@ -18,6 +18,7 @@ module.exports = async (args) => {
       validator: /^[0-9a-zA-Z\-]+$/,
       warning: 'Application must be only letters, numbers, or dashes'
     })
+    appname = appname.name
   }
 
   // App Template
