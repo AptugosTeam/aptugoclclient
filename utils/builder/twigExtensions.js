@@ -6,8 +6,9 @@ module.exports = {
   },
   fieldData: (value) => {
     let fieldDefinition = value
+    if (value.type === 'element') return value
     if (!value) {
-      console.log('value', value, aptugo)
+      console.log('value', value, aptugo.currentRenderingElement.name, aptugo.currentRenderingPage.name)
     }
     
     if (!value.unique_id) {

@@ -61,9 +61,9 @@ const twigExtensions = () => {
 
   
 
-  // extendFilter('assetData', function(value) {
-  //   return builderObj.plainAssets[value]
-  // })
+  extendFilter('assetData', function(value) {
+    // return builderObj.plainAssets[value]
+  })
 
   
 }
@@ -141,6 +141,8 @@ module.exports = {
 
       const elementsFolder = parameters.template.files.filter(file => file.path === 'elements')[0]
       aptugo.loadedElements = loadElements(elementsFolder.children)
+
+      aptugo.assets = parameters.application.assets
       saveTwigTemplates(elementsFolder.children)
       const end = new Date()
       spinner.succeed(`Build set-up: ${humanizeDuration(end - start)}`);
