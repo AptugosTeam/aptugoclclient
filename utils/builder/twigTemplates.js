@@ -10,7 +10,7 @@ module.exports = (templates) => {
       } else {
         const [,fileSource] = fsLoadAndParseFile(template.unique_id)
         if (!fileSource) {
-          error(`Error with template ${template.unique_id}`, true)
+          error(`Error with template ${template.unique_id} ${template.path}`, true)
         }
 
         try {

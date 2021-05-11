@@ -120,10 +120,17 @@ module.exports = (page, parameters) => {
     // handle FIELDS special case
     const broughtElement = aptugo.loadedElements.find(item => item.path === `${parameters.element.value}.tpl`)
     let elementPath = broughtElement.realPath || `${element.value}.tpl`
-    if (parameters.element.value === 'field' && parameters.element.values.Field) {
-      const fieldToRender = aptugo.plainFields[element.values.Field]
-      parameters.field = fieldToRender
-      elementPath = `Fields${fieldToRender.data_type}${element.values.Type}.tpl`
+    if (parameters.element.value === 'field') {
+      if (parameters.element.values.Field) {
+        const fieldToRender = aptugo.plainFields[element.values.Field]
+        if (!fieldToRender) {
+          error(`There's an error in ${parameters.page.name} - ${element.name}.`, true)
+        }
+        parameters.field = fieldToRender
+        elementPath = `Fields${fieldToRender.data_type}${element.values.Type}.tpl`
+      } else if (parameters.element.values.fieldVariable) {
+        elementPath = `FieldsVarShow.tpl`
+      }
     }
 
     // Check for Element Extra Settings
