@@ -5,7 +5,9 @@ const menus = {
     build .............. builds an application
     config ............. setup Aptugo
     new ................ create a new application
+    model .............. allows you to create models/entities
     remove ............. removes an application
+    templates .......... permits interaction with templates
     version ............ show package version
     help ............... show help menu for a command`,
 
@@ -25,6 +27,17 @@ const menus = {
 
     --clean ............ clean the Build folder before build (default: false)
     --skip ............. comma separated list of skip options (copy, pages, post)
+  `,
+
+  model: `
+    aptugo model [entity name] [single entity name] <options>
+  `,
+
+  templates: `
+    aptugo templates list <options>
+
+    --extended ......... results get table formated
+    --raw .............. results in JSON format
   `
 }
 

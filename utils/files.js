@@ -24,5 +24,24 @@ module.exports = {
       JSON.stringify(content, null, 2),
       { flag: 'w' }
     )
+  },
+  getTree: (folder) => {
+    const output = []
+
+    const filesInFolder = fs.readdirSync(folder)
+    filesInFolder.forEach(file => {
+      const toPush = {
+        unique_id: aptugo.generateID(),
+        path: file
+      }
+      if (fs.lstatSync( path.join(folder, file) ).isDirectory()) {
+        toPush.type = 'folder'
+        toPush.children = module.exports.getTree( path.join(folder, file) )
+      } else {
+
+      }
+      output.push(toPush)
+    })
+    return output
   }
 } 

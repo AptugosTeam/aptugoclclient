@@ -14,7 +14,8 @@ const log = require('../log')
 const ora = require('ora')
 const chalk = require('chalk')
 const humanizeDuration = require("humanize-duration")
-const {spawn} = require('child_process');
+const {spawn} = require('child_process')
+const error = require('../error')
 
 const twigExtensions = () => {
   extendFunction('parse', te.parse)
@@ -86,8 +87,47 @@ module.exports = {
     })
   },
 
+  parseApplication: (application) => {
+    application.tables.forEach(table => aptugo.plain[table.unique_id] = table)
+    const navigateAndParseTree = (tree) => {
+      return tree.map(item => {
+        if (item.type === 'page') {
+          Object.keys(item).map(propertyName => {
+            if (item[propertyName] && item[propertyName].substr && item[propertyName].substr(0,2) === '()') {
+              let replacedValue = item[propertyName].replace('aptugo.store.getState().application.tables','params.plainTables')
+              replacedValue = '(params)' + replacedValue.substr(2)
+              item[propertyName] = module.exports.parseToString(replacedValue) 
+            }
+          })
+        }
+        if (item.children && item.children.length) item.children = navigateAndParseTree(item.children)
+        return item
+      })
+    }
+    application.pages = navigateAndParseTree(application.pages)
+    return application
+  },
+
+  parseToString(input) {
+    let output = ''
+    try {
+      const params = {
+        plainTables: Object.values(aptugo.plain)
+      }
+      output = module.exports.deserializeFunction(input).call({})(params)
+    } catch(e) {
+      console.error(e)
+      output = input
+    }
+    return output
+  },
+
+  deserializeFunction(funcString) {
+    return new Function('builder', `return ${funcString}`)
+  },
+
   buildParameters: (buildData) => {
-    const application = loadApp(buildData.app)
+    const application = module.exports.parseApplication(loadApp(buildData.app))
     const settings = buildData.type === 'Development' ? application.settings.development : application.settings.production
     const template = getTemplate(settings.template)
     const buildFolder = settings.folder
@@ -99,6 +139,8 @@ module.exports = {
       var [varName, varValue] = thevar.split(':')
       try { buildData.variables[varName] = eval(varValue) } catch(e) { buildData.variables[varName] = varValue }
     })
+
+    if (!template) error('Error: Application does not have a template assigned (or it is missing)', true)
 
     aptugo.activeParameters = {
       skip: buildData.skip,
@@ -140,10 +182,12 @@ module.exports = {
       })
 
       const elementsFolder = parameters.template.files.filter(file => file.path === 'elements')[0]
-      aptugo.loadedElements = loadElements(elementsFolder.children)
-
+      if (!elementsFolder) error('ERROR IN TEMPLATE: Template does not contain an elements folder', false)
+      else {
+        aptugo.loadedElements = loadElements(elementsFolder.children)
+        saveTwigTemplates(elementsFolder.children)
+      }
       aptugo.assets = parameters.application.assets
-      saveTwigTemplates(elementsFolder.children)
       const end = new Date()
       spinner.succeed(`Build set-up: ${humanizeDuration(end - start)}`);
       resolve()

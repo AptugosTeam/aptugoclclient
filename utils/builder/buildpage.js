@@ -79,6 +79,7 @@ module.exports = (page, parameters) => {
     // Finalize page build
     const renderedPage = twigRender({ data: '{{ content }}', rethrow: true }, parameters, pageDefiniton)
     log(`Rendered page: ${pageDefiniton.name}`, { type: 'tit', level: parameters.level, unique_id: pageDefiniton.unique_id, verbosity: 9 })
+    console.log(pageDefiniton)
     if (pageDefiniton.filename) {
       const pagePath = path.join(parameters.fullbuildfolder, aptugo.generationFolder, pageDefiniton.filename)
       aptugo.writeFile(pagePath, renderedPage, true)
@@ -110,13 +111,10 @@ module.exports = (page, parameters) => {
     parameters.element = { ...element, ...elementDefiniton }
     aptugo.currentRenderingElement = parameters.element
     
-
     // Brings delayed content matching this element
     parameters.delayed = parameters.page.delays ? parameters.page.delays[parameters.element.value] || [] : []
     parameters.delayed = parameters.delayed.concat(inherits.map(inherit => inherit.delays))
     
-    
-
     // handle FIELDS special case
     const broughtElement = aptugo.loadedElements.find(item => item.path === `${parameters.element.value}.tpl`)
     let elementPath = broughtElement.realPath || `${element.value}.tpl`

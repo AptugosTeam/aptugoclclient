@@ -10,6 +10,8 @@ module.exports = {
       pages = module.exports.fixPage(pages, false, parent)
     } else if (pages.type === 'element') {
       pages = module.exports.fixElement(pages, false, parent)
+    } else {
+      console.log(pages)
     }
 
     if (pages.children) pages.children = module.exports.fix(pages.children, pages)

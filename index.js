@@ -33,8 +33,10 @@ global.aptugo = {
     }
   },
   pretify: (input, parser, filename) => {
+    const ignoreExtensions = ['png','ts','htaccess','development','production','html','txt']
     if (typeof parser === 'boolean' && parser) {
       const fileExtension = filename.substr(filename.lastIndexOf('.') + 1).toLowerCase()
+      if (ignoreExtensions.indexOf(fileExtension) !== -1) return input
       switch (fileExtension) {
         case 'js':
           parser = 'babel'
@@ -126,6 +128,10 @@ module.exports = async () => {
           case 'new':
             require('./cmds/new')(subcmd)
             break
+
+          case 'model':
+            require('./cmds/model')(subcmd)
+            break
       
           case 'remove':
             require('./cmds/remove')(subcmd)
@@ -138,7 +144,11 @@ module.exports = async () => {
           case 'structures':
             require('./cmds/structures')(subcmd)
             break
-  
+
+          case 'templates':
+            require('./cmds/templates')(subcmd)
+            break
+
           default:
             error(`"${cmd}" is not a valid command!`, true)
             break

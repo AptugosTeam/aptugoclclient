@@ -2,23 +2,32 @@ const fs = require('fs')
 const path = require('path')
 const yaml = require('js-yaml')
 const { get } = require('./config')
+const { getTree } = require('./files')
 
 module.exports = {
-  list: () => {
+  list: (loadfull = false) => {
     const toReturn = []
     const folders = get('folders')
     const templateFolders = fs.readdirSync(folders.templates)
     templateFolders.forEach(templateFolder => {
       try {
-        const templateDefinition = JSON.parse( fs.readFileSync(path.join(folders.templates,templateFolder,'template.json'), { encoding: 'utf8'}, true) )
+        let templateDefinition = JSON.parse( fs.readFileSync(path.join(folders.templates,templateFolder,'template.json'), { encoding: 'utf8'}, true) )
+        if ( loadfull ) {
+          templateDefinition = module.exports.get(templateDefinition._id)
+        }
         toReturn.push(templateDefinition)
-      } catch(e) {}
+      } catch(e) {
+        console.error(e)
+      }
     })
     return toReturn
   },
   get: (templateID) => {
+    const folders = get('folders')
     const templates = module.exports.list()
-    return templates.filter(template => template._id === templateID)[0]
+    const currentTemplate = templates.filter(template => template._id === templateID)[0]
+    currentTemplate.files = getTree( path.join( folders.templates, currentTemplate._id ) )
+    return currentTemplate
   },
   fsLoadAndParseFile: (unique_id) => {
     const fileSource = module.exports.fsLoadFileSource(unique_id)

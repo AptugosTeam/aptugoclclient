@@ -9,9 +9,11 @@ module.exports = async (args) => {
   log('Application Build', { type: 'mainTitle' })
   let appSelected
   let typeSelected
+  const apps = await appsList()
+
   if (!args.app) {
     log('\nSelect the application to build:', { type: 'promptHeader' })
-    const apps = await appsList()
+    
     appSelected = await cliSelect({
       values: apps,
       indentation: 2,
@@ -27,8 +29,10 @@ module.exports = async (args) => {
       }
     })
     args.app = appSelected.value
+  } else {
+    args.app = apps.filter(localapp => localapp.settings.name === args.app)[0]
   }
-
+  
   if (!args.type) {
     log('\nSelect the build method:', { type: 'promptHeader' })
     typeSelected = await cliSelect({
