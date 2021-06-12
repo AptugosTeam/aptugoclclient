@@ -11,11 +11,16 @@ module.exports = {
     const templateFolders = fs.readdirSync(folders.templates)
     templateFolders.forEach(templateFolder => {
       try {
-        let templateDefinition = JSON.parse( fs.readFileSync(path.join(folders.templates,templateFolder,'template.json'), { encoding: 'utf8'}, true) )
-        if ( loadfull ) {
-          templateDefinition = module.exports.get(templateDefinition._id)
+        if (fs.lstatSync( path.join(folders.templates,templateFolder) ).isDirectory()) {
+          const fileContents = fs.readFileSync(path.join(folders.templates,templateFolder,'template.json'), { encoding: 'utf8'}, true)
+          if (fileContents) {
+            let templateDefinition = JSON.parse( fileContents )
+            if ( loadfull ) {
+              templateDefinition = module.exports.get(templateDefinition._id)
+            }
+            toReturn.push(templateDefinition)
+          }
         }
-        toReturn.push(templateDefinition)
       } catch(e) {
         console.error(e)
       }

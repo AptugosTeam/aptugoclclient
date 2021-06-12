@@ -37,7 +37,6 @@ module.exports = async (args) => {
   const result = await structRun(apptemplate.value, { Name: appname } )
   save(result)
   console.log( chalk.bgKeyword('orange').black.bold('\n\nSuccessfuly created\n\n') )
-  
   // Build App
   require('./build')({ app: result, type: 'Development' })
 }

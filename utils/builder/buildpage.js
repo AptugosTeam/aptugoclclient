@@ -79,7 +79,7 @@ module.exports = (page, parameters) => {
     // Finalize page build
     const renderedPage = twigRender({ data: '{{ content }}', rethrow: true }, parameters, pageDefiniton)
     log(`Rendered page: ${pageDefiniton.name}`, { type: 'tit', level: parameters.level, unique_id: pageDefiniton.unique_id, verbosity: 9 })
-    console.log(pageDefiniton)
+    console.log(parameters.fullbuildfolder, aptugo.generationFolder, pageDefiniton.filename)
     if (pageDefiniton.filename) {
       const pagePath = path.join(parameters.fullbuildfolder, aptugo.generationFolder, pageDefiniton.filename)
       aptugo.writeFile(pagePath, renderedPage, true)

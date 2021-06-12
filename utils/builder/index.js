@@ -220,7 +220,8 @@ module.exports = {
       spinner.stream = process.stdout
 
       if (parameters.skip.indexOf('pages') === -1) {
-        aptugo.generationFolder = searchForRenderingPlaceholder(parameters.template.files, parameters.buildFolder)
+        
+        aptugo.generationFolder = parameters.template.renderingFolder ? path.join(parameters.buildFolder, parameters.template.renderingFolder ) : searchForRenderingPlaceholder(parameters.template.files, parameters.buildFolder)
         parameters.application.pages.forEach(page => buildPage(page, parameters))
         const end = new Date()
         spinner.succeed(`Pages generated: ${humanizeDuration(end - start)}`);
