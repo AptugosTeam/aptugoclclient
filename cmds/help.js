@@ -35,10 +35,21 @@ const menus = {
   `,
 
   templates: `
-    aptugo templates list <options>
+    aptugo templates list <options> ........ returns a list of all available templates
 
     --extended ......... results get table formated
     --raw .............. results in JSON format
+
+    aptugo templates setoption <options> ... sets an option for a template
+
+    --template ......... the ID of the template to set the option for
+    --optionName ....... the name of the option
+    --optionValue ...... the valur of the option
+
+    aptugo templates setfield <options> .... set a field type for the template
+
+    --template ......... the ID of the template to set the field for
+    --name ............. the name of the field
   `,
 
   renderer: `
