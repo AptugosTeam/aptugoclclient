@@ -22,12 +22,14 @@ const twigExtensions = () => {
   extendFunction('includeTemplate', te.includeTemplate)
   extendFunction('insert_setting', te.insertSetting)
   extendFunction('save_delayed', te.saveDelayed)
+  extendFunction('add_setting', te.addSetting)
 
   extendFilter('elementData', te.elementData)
   extendFilter('fieldData', te.fieldData)
   extendFilter('removeExtension', te.removeExtension)
   extendFilter('plain', te.plain)
   extendFilter('tableData', te.tableData)
+  extendFilter('castToArray', te.castToArray)
 
   extendFilter('camelCase', function(value, params) {   
     return value.replace(/(?:^\w|[A-Z]|\b\w|\s+)/g, function(match, index) {

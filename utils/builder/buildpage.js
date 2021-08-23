@@ -5,17 +5,8 @@ const error = require('../error')
 const chalk = require("chalk")
 const twigRender = require('./twigRender')
 const log = require('../log')
-
-
-function getCascadingTree(unique_id, accumulated = []) {
-  if (aptugo.plain[unique_id]) {
-    if (aptugo.plain[unique_id].parent && aptugo.plain[unique_id].parent !== 'not set') {
-      accumulated.push(aptugo.plain[unique_id].parent)
-      accumulated = getCascadingTree(aptugo.plain[unique_id].parent, accumulated)
-    }
-  }
-  return accumulated
-}
+const  buildElement = require('./buildElement')
+const getCascadingTree = require('./getCascadingTree')
 
 function getInheritedChilds(element) {
   const parentsTree = getCascadingTree(element.unique_id)
@@ -84,72 +75,6 @@ module.exports = (page, parameters) => {
       const pagePath = path.join(parameters.fullbuildfolder, aptugo.generationFolder, pageDefiniton.filename)
       aptugo.writeFile(pagePath, renderedPage, true)
     }
-  }
-
-  // Builds the source code for an element
-  buildElement = (element, parameters) => {
-    log(`Building element: ${element.name} (${element.value} - ${parameters.page.name} - ${element.unique_id})`, { type: 'advance', level: parameters.level, verbosity: 8 })
-
-    let toReturn = ''
-    let subElementsContent = ''
-    aptugo.skipDelaySaving = false
-
-    // Render childs first and saves into content
-    element.children && element.children.forEach((child) => {
-      const childDefiniton = loadPage(child.unique_id, parameters.appFolder)
-      subElementsContent += buildElement({ ...childDefiniton, ...child }, { ...parameters, level: parameters.level + 1 })
-    })
-    parameters.content = subElementsContent
-    
-    const inherits = getInheritedChilds(element)
-    inherits.forEach(inherit => {
-      buildElement(inherit, { ...parameters, level: parameters.level + 1 } )
-    })
-
-    // Loads full element definition
-    const elementDefiniton = loadPage(element.unique_id, parameters.appFolder)
-    parameters.element = { ...element, ...elementDefiniton }
-    aptugo.currentRenderingElement = parameters.element
-    
-    // Brings delayed content matching this element
-    parameters.delayed = parameters.page.delays ? parameters.page.delays[parameters.element.value] || [] : []
-    parameters.delayed = parameters.delayed.concat(inherits.map(inherit => inherit.delays))
-    
-    // handle FIELDS special case
-    const broughtElement = aptugo.loadedElements.find(item => item.path === `${parameters.element.value}.tpl`)
-    let elementPath = broughtElement.realPath || `${element.value}.tpl`
-    if (parameters.element.value === 'field') {
-      if (parameters.element.values.Field) {
-        const fieldToRender = aptugo.plainFields[element.values.Field]
-        if (!fieldToRender) {
-          error(`There's an error in ${parameters.page.name} - ${element.name}.`, true)
-        }
-        parameters.field = fieldToRender
-        elementPath = `Fields${fieldToRender.data_type}${element.values.Type}.tpl`
-      } else if (parameters.element.values.fieldVariable) {
-        elementPath = `FieldsVarShow.tpl`
-      }
-    }
-
-    // Check for Element Extra Settings
-    if (broughtElement.settings) {
-      broughtElement.settings.forEach(setting => {
-        if (!aptugo.extraSettings[setting.name]) aptugo.extraSettings[setting.name] = []
-        const innRender = twigRender({ data: setting.value, rethrow: true }, parameters, parameters.element)
-        if (aptugo.extraSettings[setting.name].indexOf(innRender) === -1) aptugo.extraSettings[setting.name].push(innRender)
-      })
-    }
-  
-    try {
-      toReturn += twigRender({ ref: elementPath, debug: false, trace: false, rethrow: true }, parameters, parameters.element)
-      broughtElement.rendered = toReturn
-      aptugo.plain[parameters.element.unique_id].rendered = toReturn
-      log(`√ Element built: ${element.name} (${element.value} - ${parameters.page.name})`, { type: 'advance', level: parameters.level, verbosity: 10 })
-    } catch(e) {
-      console.error(e)
-      error(`Problems rendering ${element.value}`, true)
-    }
-    return toReturn
   }
 
   // Renders the element into the parent

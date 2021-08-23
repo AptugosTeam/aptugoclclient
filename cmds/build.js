@@ -30,7 +30,7 @@ module.exports = async (args) => {
     })
     args.app = appSelected.value
   } else {
-    // args.app = apps.filter(localapp => localapp.settings.name === args.app)[0]
+    args.app = apps.filter(localapp => localapp.settings.name === args.app)[0]
   }
   
   if (!args.type) {

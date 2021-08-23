@@ -41,7 +41,7 @@ module.exports = (message, options) => {
     else if (options.type === 'subtitle2') output += `${typeSubtitleB(message)}`
     else output += `${message}`
 
-    if (options.verbosity <= logLevel) console.log( output )
+    if (options.verbosity <= logLevel) console.log( logLevel, output )
     if (options.exit) process.exit(1)
   // }
 }

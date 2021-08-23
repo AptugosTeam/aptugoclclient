@@ -7,6 +7,7 @@ const menus = {
     new ................ create a new application
     model .............. allows you to create models/entities
     remove ............. removes an application
+    renderer ........... functions related with rendering options into code
     templates .......... permits interaction with templates
     version ............ show package version
     help ............... show help menu for a command`,
@@ -38,6 +39,10 @@ const menus = {
 
     --extended ......... results get table formated
     --raw .............. results in JSON format
+  `,
+
+  renderer: `
+    aptugo renderer <options>
   `
 }
 

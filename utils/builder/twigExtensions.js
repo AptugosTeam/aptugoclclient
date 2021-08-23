@@ -1,6 +1,9 @@
 const { extendFilter, extendFunction, twig: _twig, cache } = require('twig/twig.js')
 
 module.exports = {
+  castToArray: (value) => {
+    return Object.entries(value)
+  },
   elementData: (value) => {
     //   return builderObj.plainPages[value]
   },
@@ -100,6 +103,9 @@ module.exports = {
   },
   tableData: (value) => {
     return aptugo.activeParameters.application.tables.find(table => table.unique_id === value)
+  },
+  addSetting: (settingName, settingValue) => {
+    if (aptugo.extraSettings[settingName].indexOf(settingValue) === -1) aptugo.extraSettings[settingName].push(settingValue)
   },
   insertSetting: (setting) => {
     let output = null

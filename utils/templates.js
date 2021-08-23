@@ -12,13 +12,15 @@ module.exports = {
     templateFolders.forEach(templateFolder => {
       try {
         if (fs.lstatSync( path.join(folders.templates,templateFolder) ).isDirectory()) {
-          const fileContents = fs.readFileSync(path.join(folders.templates,templateFolder,'template.json'), { encoding: 'utf8'}, true)
-          if (fileContents) {
-            let templateDefinition = JSON.parse( fileContents )
-            if ( loadfull ) {
-              templateDefinition = module.exports.get(templateDefinition._id)
+          if (fs.existsSync(path.join(folders.templates,templateFolder,'template.json'))) {
+            const fileContents = fs.readFileSync(path.join(folders.templates,templateFolder,'template.json'), { encoding: 'utf8'}, true)
+            if (fileContents) {
+              let templateDefinition = JSON.parse( fileContents )
+              if ( loadfull ) {
+                templateDefinition = module.exports.get(templateDefinition._id, templateFolder)
+              }
+              toReturn.push(templateDefinition)
             }
-            toReturn.push(templateDefinition)
           }
         }
       } catch(e) {
@@ -27,12 +29,54 @@ module.exports = {
     })
     return toReturn
   },
-  get: (templateID) => {
+  setoption: (templateFolder, option, value) => {
+    const folders = get('folders')
+    const templateFilePath = path.join(folders.templates,templateFolder,'template.json')
+    const templateContents = fs.readFileSync(templateFilePath)
+    if (templateContents) {
+      let templateDefinition = JSON.parse( templateContents )
+      templateDefinition[option] = value
+      fs.writeFileSync(templateFilePath, JSON.stringify(templateDefinition, null, 2), {flag:'w'})
+    }
+  },
+  setfield: (templateFolder, fieldDefinition) => {
+    const folders = get('folders')
+    const templateFolderPath = path.join(folders.templates,templateFolder)
+    const fieldsDefinitionFolder = path.join(templateFolderPath,'Fields')
+    if (!fs.existsSync(fieldsDefinitionFolder)) {
+      fs.mkdirSync(fieldsDefinitionFolder)
+    }
+    fs.writeFileSync(path.join(fieldsDefinitionFolder,`${fieldDefinition.name}.json`), JSON.stringify( JSON.parse(fieldDefinition.value), null, 2 ), { flag:'w' })
+    return path.join(fieldsDefinitionFolder,`${fieldDefinition.name}.json`)
+  },
+  get: (templateID, templateFolder) => {
     const folders = get('folders')
     const templates = module.exports.list()
     const currentTemplate = templates.filter(template => template._id === templateID)[0]
-    currentTemplate.files = getTree( path.join( folders.templates, currentTemplate._id ) )
+    currentTemplate.files = getTree( path.join( folders.templates, templateFolder ) )
+    currentTemplate.fields = module.exports.getFields(templateFolder)
     return currentTemplate
+  },
+  getFields: (templateFolder) => {
+    const output = []
+    const folders = get('folders')
+    const fieldsFolder = path.join( folders.templates, templateFolder, 'Fields' )
+    if (fs.existsSync(fieldsFolder)) {
+      const fieldsInFolder = fs.readdirSync( fieldsFolder )
+      fieldsInFolder.forEach(fieldFileName => {
+        if (fieldFileName.toLowerCase().substr(-4) === 'json') {
+          const fieldSource = fs.readFileSync(path.join( fieldsFolder, fieldFileName ), 'utf8')
+          let parsed
+          try {
+            parsed = JSON.parse(fieldSource)
+            output.push(parsed)
+          } catch(e) {
+            console.log('error loading ', fieldFileName )
+          }
+        }
+      })
+    }
+    return output
   },
   fsLoadAndParseFile: (unique_id) => {
     const fileSource = module.exports.fsLoadFileSource(unique_id)

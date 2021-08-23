@@ -6,14 +6,16 @@ const log = require('../log')
 
 module.exports = (parameters) => {
   doCopyStaticFiles = (parameters) => {
-    parameters.files.forEach(file => {
+    parameters.files.forEach(prefile => {
       let skip = false
-      if (file.path === 'elements') skip = true
+      if (prefile.path === 'elements') skip = true
 
       if (!skip) {
+        let [postfile,fs] = fsLoadAndParseFile(prefile.unique_id)
+        const file = { ...prefile, ...postfile }
         let fileName = file.path
         let partialPath = path.join(parameters.buildFolder, fileName )
-        let fullPath = file.fullpath || path.join(parameters.fullbuildfolder, partialPath)
+        let fullPath = file.fullPath || path.join(parameters.fullbuildfolder, partialPath)
         aptugo.currentFile = {
           ...file,
           fullPath: fullPath
@@ -43,7 +45,6 @@ module.exports = (parameters) => {
                 }
               } else {
                 try {
-                  const [,fs] = fsLoadAndParseFile(file.unique_id)
                   var template = twig.twig({ data: fs || ''})
                   var contents = template.render(parameters)
                   aptugo.writeFile( fullPath, contents, true )
@@ -64,7 +65,6 @@ module.exports = (parameters) => {
           }
         } else {
           try {
-            const [,fs] = fsLoadAndParseFile(file.unique_id)
             var template = twig.twig({ data: fs || ''})
             var contents = template.render(parameters)
             log(`Copying static file: ${fullPath}`, { type: 'advance', level: parameters.level, verbosity: 7 })

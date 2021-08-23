@@ -101,10 +101,10 @@ module.exports = async () => {
     cmd = 'help'
   }
 
-  const spinner = ora('Checking License').start()
+  // const spinner = ora('Checking License').start()
   await checkLicense()
     .then((result) => {
-      spinner.stop()
+      // spinner.stop()
       try {
         const checkResult = check()
         if (checkResult !== 0) {
@@ -149,6 +149,9 @@ module.exports = async () => {
             require('./cmds/templates')(subcmd)
             break
 
+          case 'renderer':
+            require('./cmds/renderer')(subcmd)
+            break
           default:
             error(`"${cmd}" is not a valid command!`, true)
             break
