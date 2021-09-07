@@ -14,6 +14,8 @@ const organizeImports = require('prettier-plugin-organize-imports')
 
 global.aptugo = {
   plain: {},
+  plainAssets: {},
+  plainTables: {},
   activeParameters: {},
   extraSettings: [],
   friendly: (value) => {
@@ -108,7 +110,7 @@ module.exports = async () => {
       try {
         const checkResult = check()
         if (checkResult !== 0) {
-          console.error(chalk.red.bold('Missing config'))
+          console.error(chalk.blue.bold('Missing config'))
           cmd = 'config'
           subcmd = { _: ['ask','folders'] }
         }
@@ -148,7 +150,9 @@ module.exports = async () => {
           case 'templates':
             require('./cmds/templates')(subcmd)
             break
-
+          case 'assets':
+            require('./cmds/assets')(subcmd)
+            break
           case 'renderer':
             require('./cmds/renderer')(subcmd)
             break

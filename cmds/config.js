@@ -47,8 +47,12 @@ module.exports = async (args) => {
       clear()
       console.log(`All configured options cleared\n`)
     }
+    if (args.list || args.c || args._[1] === 'set') {
+      set(args.var, args.value)
+    }
     if (args.ask || args.a || args._[0] === 'ask') {
       prompt.start()
+      console.log(args)
       prompt.get( configOptions[args._[1]], function (err, result) {
         if (err) return onErr(err)
 
@@ -64,3 +68,5 @@ module.exports = async (args) => {
     console.error(err)
   }
 }
+
+

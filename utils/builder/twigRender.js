@@ -5,10 +5,10 @@ module.exports = (twigParameters, parameters, element) => {
   let toReturn = ''
   const template = _twig(twigParameters)
   try {
-    toReturn = template.render(parameters)
+    toReturn = template.render({ ...parameters, builder: aptugo })
   } catch(e) {
-    console.error(e)
-    error(`Problems rendering ${element.value}`, true)
+    console.error(e, element)
+    error(`Problem rendering ${element.value}`, true)
   }
   return toReturn
 }

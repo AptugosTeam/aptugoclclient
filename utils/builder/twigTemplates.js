@@ -8,7 +8,7 @@ module.exports = (templates) => {
       if (template.type === 'folder') {
         saveTwigTemplates(template.children, `${preset}${template.path}`)
       } else {
-        const [,fileSource] = fsLoadAndParseFile(template.unique_id)
+        const [,fileSource] = fsLoadAndParseFile({ unique_id: template.unique_id })
         if (!fileSource) {
           error(`Error with template ${template.unique_id} ${template.path}`, true)
         }

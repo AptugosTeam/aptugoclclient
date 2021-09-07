@@ -41,13 +41,13 @@ function getInheritedChilds(element) {
 module.exports = (page, parameters) => {
   buildPage = (page, parameters) => {
     // Load page
-    const pageDefiniton = { ...page, ...loadPage(page.unique_id, parameters.appFolder) }
+    const pageDefiniton = { ...loadPage(page.unique_id, parameters.appFolder), ...page }
     aptugo.currentRenderingPage = pageDefiniton
     log(`Building page: ${aptugo.currentRenderingPage.name}`, { type: 'title', level: parameters.level, unique_id: pageDefiniton.unique_id, verbosity: 6 })
 
     // Build Elements
     page.children.forEach(pageChild => {
-      const childDefiniton = loadPage(pageChild.unique_id, parameters.appFolder)
+      const childDefiniton = pageChild
       if (childDefiniton.type === 'page') {
         buildPage({ ...pageChild, ...childDefiniton }, { ...parameters, level: (parameters.level || 0) + 1 })
       } else {
@@ -61,7 +61,7 @@ module.exports = (page, parameters) => {
     page.children.forEach(pageChild => {  
       const childDefiniton = loadPage(pageChild.unique_id, parameters.appFolder)
       if (childDefiniton.type === 'element') {
-        const rendered = renderElement({ ...childDefiniton, ...pageChild }, {...parameters, page: pageDefiniton, level: (parameters.level || 0) + 1  } )
+        const rendered = buildElement({ ...childDefiniton, ...pageChild }, {...parameters, render: true, page: pageDefiniton, level: (parameters.level || 0) + 1  } )
         pageContent.push(rendered)
       }
     })
@@ -76,55 +76,5 @@ module.exports = (page, parameters) => {
       aptugo.writeFile(pagePath, renderedPage, true)
     }
   }
-
-  // Renders the element into the parent
-  renderElement = (element, parameters) => {
-    log(`Rendering element: ${element.name} (${element.value} - ${parameters.page.unique_id} - ${element.unique_id})`, { type: 'advance', level: parameters.level, verbosity: 8 })
-    let toReturn = ''
-    let subElementsContent = ''
-    aptugo.skipDelaySaving = true
-
-    // Render childs first
-    element.children && element.children.forEach((child) => {
-      const childDefiniton = loadPage(child.unique_id, parameters.appFolder)
-      subElementsContent += renderElement({ ...childDefiniton, ...child }, {...parameters, level: parameters.level + 1})
-    })
-    parameters.content = subElementsContent
-    
-    const inherits = getInheritedChilds(element)
-    let inheritedContent = ''
-    if (inherits.length) {
-      inherits.forEach(inherit => {
-        if (inherit.forEach) {
-          inherit.forEach(sub => inheritedContent += sub.rendered)
-        } else inheritedContent += inherit.rendered
-      })
-    }
-
-    const elementDefiniton = loadPage(element.unique_id, parameters.appFolder)
-    aptugo.currentRenderingElement = { ...element, ...elementDefiniton }
-    parameters.delayed = parameters.page.delays ? parameters.page.delays[aptugo.currentRenderingElement.value] || [] : []
-    // parameters.delayed = parameters.delayed.concat(inherits.map(inherit => inherit.delays))
-    parameters.element = aptugo.currentRenderingElement
-    const broughtElement = aptugo.loadedElements.find(item => item.path === `${aptugo.currentRenderingElement.value}.tpl`)
-    let elementPath = broughtElement.realPath || `${element.value}.tpl`
-    
-    if (aptugo.currentRenderingElement.value === 'field' && aptugo.currentRenderingElement.values.Field) {
-      const fieldToRender = aptugo.plainFields[element.values.Field]
-      parameters.field = fieldToRender
-      elementPath = `Fields${fieldToRender.data_type}${element.values.Type}.tpl`
-    }
-    
-    try {
-      if (inheritedContent !== '') parameters.content = inheritedContent + parameters.content
-      toReturn += twigRender({ ref: elementPath, debug: false, trace: false, rethrow: true }, parameters, aptugo.currentRenderingElement)
-      broughtElement.rendered = toReturn
-    } catch(e) {
-      console.error(e)
-      error(`Problems rendering ${element.value}`, true)
-    }
-    return toReturn
-  }
-
   buildPage(page, parameters)
 }

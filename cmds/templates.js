@@ -3,7 +3,11 @@ const readline = require('readline')
 const {
   list: templatesList,
   setoption: option,
-  setfield: field
+  setfield: field,
+  fileSource: source,
+  setfile: file,
+  remove,
+  create
 } = require('../utils/templates')
 const Table = require('cli-table')
 const { stdin } = require('process')
@@ -30,14 +34,38 @@ const setoption = async (args) => {
   return list({ raw: true })
 }
 
-const setfield = async (args) => {
+const createTemplate = async (args) => {
   var r1 = readline.createInterface({ input: process.stdin, output: process.stdout })
   r1.question('Paste definition here\n', async (def) => {
-    const newdef = await field(args.template, { ...args, name: args.name, value: def })
+    const newdef = await create(def)
     r1.close()
     process.stdin.destroy()
     return newdef
   })
+}
+
+const setfield = async (args) => {
+  var r1 = readline.createInterface({ input: process.stdin, output: process.stdout })
+  r1.question('Paste definition here\n', function (def) {
+    const newdef = field(args.template, { ...args, name: args.name, value: def })
+    r1.close()
+    process.stdin.destroy()
+    return newdef
+  })
+}
+
+const setfile = async (args) => {
+  var r1 = readline.createInterface({ input: process.stdin, output: process.stdout })
+  r1.question('Paste definition here\n', function (def) {
+    const newdef = file(args.template, def)
+    r1.close()
+    process.stdin.destroy()
+    return newdef
+  })
+}
+
+const filesource = async (args) => {
+  return source(args.template, args.file)
 }
 
 module.exports = async (args) => {
@@ -45,11 +73,23 @@ module.exports = async (args) => {
     case 'list':
       console.log( await list(args) )
       break
+    case 'create':
+      console.log( await createTemplate(args) )
+      break
+    case 'delete':
+      console.log( await remove(args) )
+      break
     case 'setoption':
       await setoption(args)
       break
     case 'setfield':
-      console.log( await setfield(args) )
+      await setfield(args)
+      break
+    case 'setfile':
+      await setfile(args)
+      break
+    case 'fileSource':
+      console.log( await filesource(args) )
       break
   }
 }

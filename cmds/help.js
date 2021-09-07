@@ -15,6 +15,7 @@ const menus = {
   config: `
     aptugo config <options>
 
+    set ................ sets a config value
     --view, -v ......... view current configured settings
   `,
 

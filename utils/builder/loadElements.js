@@ -11,8 +11,7 @@ module.exports = (elements) => {
       if (element.type === 'folder') {
         output.push( ...doloadElements(element.children, `${preset}${element.path}`))
       } else {
-        const [settings,fs] = fsLoadAndParseFile(element.unique_id)
-
+        const [settings,fs] = fsLoadAndParseFile({ unique_id: element.unique_id })
         output.push({
           ...element,
           ...settings,

@@ -40,7 +40,7 @@ module.exports = {
           app.pages = makeItPlain(app.pages)
           app.tables = app.tables.map(table => {
             const tableDefinition = JSON.parse( fs.readFileSync( path.join( appFolderDefinition, appFolder, 'Tables', `${table.unique_id}.json` ), { encoding: 'utf8'}, true) )
-
+            aptugo.plainTables[table.unique_id] = tableDefinition
             tableDefinition.fields.forEach(field => {
               if (!aptugo.plainFields) aptugo.plainFields = {}
               aptugo.plainFields[field.unique_id] = field

@@ -5,14 +5,16 @@ module.exports = {
     return Object.entries(value)
   },
   elementData: (value) => {
+    return aptugo.plain[value]
     //   return builderObj.plainPages[value]
   },
   fieldData: (value) => {
+    // if (!value) return
     let fieldDefinition = value
-    if (value.type === 'element') return value
     if (!value) {
       console.log('value', value, aptugo.currentRenderingElement.name, aptugo.currentRenderingPage.name)
     }
+    if (value.type === 'element') return value
     
     if (!value.unique_id) {
       fieldDefinition = aptugo.plainFields[value]
@@ -57,12 +59,11 @@ module.exports = {
     if (!template) template = _twig({ ref: 'empty' })
     else {
       var loadedElement = aptugo.loadedElements.find(loadedElement => loadedElement.path === templateID)
-
       if (loadedElement.settings) {
         loadedElement.settings.forEach(setting => {
           if (!aptugo.extraSettings[setting.name]) aptugo.extraSettings[setting.name] = []
-          template = _twig({ data: setting.value, rethrow: true })
-          const innRender = template.render(aptugo.currentRenderingElement)
+          let inntemplate = _twig({ data: setting.value, rethrow: true })
+          const innRender = inntemplate.render(aptugo.currentRenderingElement)
           if (aptugo.extraSettings[setting.name].indexOf(innRender) === -1) aptugo.extraSettings[setting.name].push(innRender)
         })
       }
@@ -104,21 +105,25 @@ module.exports = {
   tableData: (value) => {
     return aptugo.activeParameters.application.tables.find(table => table.unique_id === value)
   },
+  assetData: (value) => {
+    return aptugo.plainAssets[value]
+  },
   addSetting: (settingName, settingValue) => {
+    if (!aptugo.extraSettings[settingName]) aptugo.extraSettings[settingName] = []
     if (aptugo.extraSettings[settingName].indexOf(settingValue) === -1) aptugo.extraSettings[settingName].push(settingValue)
   },
   insertSetting: (setting) => {
     let output = null
-    if (!aptugo.skipSettings) {
-      output = aptugo.extraSettings[setting] ? typeof aptugo.extraSettings[setting] === 'string' ? aptugo.extraSettings[setting] : aptugo.extraSettings[setting].join('\n') : ''
-    } else {
-      const exists = aptugo.filesWithExtraSettings.filter(fwes => fwes.path === aptugo.currentFile.path)
+    if (aptugo.skipSettings) { // SAVE 
+      const exists = aptugo.filesWithExtraSettings.filter(fwes => fwes.unique_id === aptugo.currentFile.unique_id)
       if (exists.length === 0) {
         aptugo.filesWithExtraSettings.push({
           ...aptugo.currentFile,
           savePath: 'aaaa'
         })
       }
+    } else { // APPLY
+      output = aptugo.extraSettings[setting] ? typeof aptugo.extraSettings[setting] === 'string' ? aptugo.extraSettings[setting] : aptugo.extraSettings[setting].join('\n') : ''
     }
     return output
   },

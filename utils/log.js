@@ -15,6 +15,7 @@ const spinner = {
   lastChange: null
 }
 const logLevel = 3
+const debugElement = 'TVJAHZka'
 module.exports = (message, options) => {
   let output = ''
   if (!options.verbosity) options.verbosity = 1
@@ -41,7 +42,7 @@ module.exports = (message, options) => {
     else if (options.type === 'subtitle2') output += `${typeSubtitleB(message)}`
     else output += `${message}`
 
-    if (options.verbosity <= logLevel) console.log( logLevel, output )
+    if (options.verbosity <= logLevel || (debugElement && options.id === debugElement)) console.log( logLevel, output )
     if (options.exit) process.exit(1)
   // }
 }

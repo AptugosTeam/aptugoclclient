@@ -11,7 +11,7 @@ module.exports = {
     } else if (pages.type === 'element') {
       pages = module.exports.fixElement(pages, false, parent)
     } else {
-      console.log(pages)
+      console.log('Fix Pages', pages)
     }
 
     if (pages.children) pages.children = module.exports.fix(pages.children, pages)

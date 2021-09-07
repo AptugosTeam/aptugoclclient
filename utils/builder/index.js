@@ -1,4 +1,5 @@
 const path = require('path')
+const util = require('util')
 const fs = require('fs')
 const { get: getTemplate, searchForRenderingPlaceholder } = require('../templates')
 const { get: getConfig } = require('../config')
@@ -29,6 +30,7 @@ const twigExtensions = () => {
   extendFilter('removeExtension', te.removeExtension)
   extendFilter('plain', te.plain)
   extendFilter('tableData', te.tableData)
+  extendFilter('assetData', te.assetData)
   extendFilter('castToArray', te.castToArray)
 
   extendFilter('camelCase', function(value, params) {   
@@ -59,15 +61,6 @@ const twigExtensions = () => {
   //   const parentsTree = getCascadingTree(builderObj.plainPages, value.unique_id)
   //   return parentsTree
   // })
-
-  
-
-  
-
-  extendFilter('assetData', function(value) {
-    // return builderObj.plainAssets[value]
-  })
-
   
 }
 
@@ -91,8 +84,14 @@ module.exports = {
 
   parseApplication: (application) => {
     application.tables.forEach(table => aptugo.plain[table.unique_id] = table)
+    application.assets.forEach(asset => {
+      aptugo.plain[asset.id] = asset
+      aptugo.plainAssets[asset.id] = asset
+    })
+    
     const navigateAndParseTree = (tree) => {
       return tree.map(item => {
+        aptugo.plain[item.unique_id] = item
         if (item.type === 'page') {
           Object.keys(item).map(propertyName => {
             if (item[propertyName] && item[propertyName].substr && item[propertyName].substr(0,2) === '()') {
@@ -130,6 +129,7 @@ module.exports = {
 
   buildParameters: (buildData) => {
     const application = module.exports.parseApplication(loadApp(buildData.app))
+    // console.log(util.inspect(application, false, null, true /* enable colors */))
     const settings = buildData.type === 'Development' ? application.settings.development : application.settings.production
     const template = getTemplate(settings.template)
     const buildFolder = settings.folder
@@ -222,9 +222,10 @@ module.exports = {
       spinner.stream = process.stdout
 
       if (parameters.skip.indexOf('pages') === -1) {
-        
         aptugo.generationFolder = parameters.template.renderingFolder ? path.join(parameters.buildFolder, parameters.template.renderingFolder ) : searchForRenderingPlaceholder(parameters.template.files, parameters.buildFolder)
-        parameters.application.pages.forEach(page => buildPage(page, parameters))
+        parameters.application.pages.forEach(page => {
+          buildPage(page, parameters)
+        })
         const end = new Date()
         spinner.succeed(`Pages generated: ${humanizeDuration(end - start)}`);
       } else {
@@ -240,7 +241,6 @@ module.exports = {
       const start = new Date()
       const spinner = ora('Re-Generating pages with extra settings...\n').start()
       spinner.stream = process.stdout
-
       if (parameters.skip.indexOf('copy') === -1) {
         aptugo.skipSettings = false
         copyStaticFiles({ ...parameters, files: aptugo.filesWithExtraSettings })
