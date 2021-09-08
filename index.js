@@ -31,7 +31,7 @@ global.aptugo = {
   },
   createIfDoesntExists: (folderPath) => {
     if (!fs.existsSync(folderPath)) {
-      fs.mkdirSync(folderPath)
+      fs.mkdirSync(folderPath, { recursive: true })
     }
   },
   pretify: (input, parser, filename) => {

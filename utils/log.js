@@ -14,7 +14,7 @@ const spinner = {
   started: false,
   lastChange: null
 }
-const logLevel = 3
+const logLevel = 10
 const debugElement = 'TVJAHZka'
 module.exports = (message, options) => {
   let output = ''

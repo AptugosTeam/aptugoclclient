@@ -9,6 +9,9 @@ module.exports = {
   set: (varName, value) => {
     const config = new Conf()
     config.set(varName, value)
+    if (varName.substr(0,7) === 'folders') {
+      aptugo.createIfDoesntExists(value)
+    }
     return config.get(varName)
   },
   clear: () => {

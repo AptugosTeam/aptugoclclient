@@ -1,6 +1,7 @@
 const fs = require('fs')
 const path = require('path')
 const yaml = require('js-yaml')
+const { isBinary } = require('istextorbinary')
 
 const fsParseFileForStorage = (fileDetails) => {
   const {
@@ -37,16 +38,19 @@ const getTree = (folder, accumulatedPath = '', fix = false) => {
           toPush = { ...toPush, ...yaml.load(folderSource) }
         } catch(e) {}
       } else {
-        const fileSource = fs.readFileSync( path.join(folder, file), 'utf8')
-        const [prefs, source] = module.exports.parseFile(fileSource)
-        toPush = { ...toPush, ...prefs }
-        if (fix) {
-          if (!prefs.unique_id) { // Add and save unique_id if not exists
-            toPush.unique_id = aptugo.generateID()
-            fs.writeFileSync(path.join(folder, file), fsParseFileForStorage({ ...toPush, source }), { flag: 'w' } )
+        const binary = isBinary(path.join(folder, file))
+        if (!binary) {
+          const fileSource = fs.readFileSync( path.join(folder, file), 'utf8')
+          const [prefs, source] = module.exports.parseFile(fileSource)
+          toPush = { ...toPush, ...prefs }
+          if (fix) {
+            if (!prefs.unique_id) { // Add and save unique_id if not exists
+              toPush.unique_id = aptugo.generateID()
+              fs.writeFileSync(path.join(folder, file), fsParseFileForStorage({ ...toPush, source }), { flag: 'w' } )
+            }
+          } else {
+            toPush.unique_id = prefs.unique_id || aptugo.generateID()
           }
-        } else {
-          toPush.unique_id = prefs.unique_id || aptugo.generateID()
         }
       }
       output.push(toPush)

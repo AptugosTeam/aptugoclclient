@@ -4,6 +4,7 @@ const yaml = require('js-yaml')
 const { get } = require('./config')
 const { getTree } = require('./files')
 const { exit } = require('process')
+const { isBinary } = require('istextorbinary')
 
 module.exports = {
   list: (loadfull = false) => {
@@ -87,7 +88,6 @@ module.exports = {
       const filePath = path.join(templateFolderPath, fileName)
       fs.writeFileSync(filePath, fileDetails.source)
     }
-    console.log(parsedFile)
   },
   fileSource: (templateID, fileID) => {
     const folders = get('folders')

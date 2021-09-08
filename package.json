@@ -1,6 +1,6 @@
 {
   "name": "aptugoclient",
-  "version": "1.0.5-13",
+  "version": "1.0.5-15",
   "description": "Command line client for Aptugo",
   "main": "index.js",
   "engines": {
@@ -29,6 +29,7 @@
     "conf": "^9.0.2",
     "gently-copy": "^3.2.0",
     "humanize-duration": "^3.25.1",
+    "istextorbinary": "^6.0.0",
     "js-yaml": "^4.0.0",
     "minimist": "^1.2.0",
     "ora": "^5.4.0",
