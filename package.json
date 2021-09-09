@@ -1,6 +1,6 @@
 {
   "name": "aptugoclient",
-  "version": "1.0.5-15",
+  "version": "1.0.5",
   "description": "Command line client for Aptugo",
   "main": "index.js",
   "engines": {
@@ -11,6 +11,7 @@
     "aptugo": "./bin/index.js"
   },
   "scripts": {
+    "pub": "npm version patch --force && npm publish",
     "postinstall": "node ./post-install.js"
   },
   "author": "Aptugo",
