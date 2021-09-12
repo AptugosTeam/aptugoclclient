@@ -1,6 +1,6 @@
 {
   "name": "aptugoclient",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "description": "Command line client for Aptugo",
   "main": "index.js",
   "engines": {
@@ -41,5 +41,8 @@
     "twig": "^1.15.4",
     "typescript": "latest",
     "yargs": "^13.3.2"
+  },
+  "devDependencies": {
+    "@trivago/prettier-plugin-sort-imports": "^2.0.4"
   }
 }
