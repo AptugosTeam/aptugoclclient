@@ -68,7 +68,6 @@ module.exports = {
   build: ({ app, type = 'Development', clean = false, skip = [] }) => {
     log(`Building ${app.settings.name} in ${type} mode`, { type: 'mainTitle' })
     const parameters = module.exports.buildParameters({ app, type, clean, variables: {}, skip })
-
     module.exports.firstStep_setupBuild(parameters).then(() => {
       module.exports.secondStep_copyStaticFiles(parameters).then(() => {
         module.exports.thirdStep_generatePages(parameters).then(() => {

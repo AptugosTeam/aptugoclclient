@@ -68,6 +68,8 @@ global.aptugo = {
         printWidth: 150,
         filepath: filename,
         endOfLine: 'lf',
+        importOrder: ["^@core/(.*)$", "^@server/(.*)$", "^@ui/(.*)$", "^[./]"],
+        importOrderSeparation: true,
         plugins: [parserTypeScript, parserBabel, parserScss, organizeImports]
       })
     } catch(e) {
@@ -102,7 +104,6 @@ module.exports = async () => {
   if (args.help || args.h) {
     cmd = 'help'
   }
-
   // const spinner = ora('Checking License').start()
   await checkLicense()
     .then((result) => {
@@ -112,7 +113,7 @@ module.exports = async () => {
         if (checkResult !== 0) {
           console.error(chalk.blue.bold('Missing config'))
           cmd = 'config'
-          subcmd = { _: ['ask','folders'] }
+          subcmd = { _: ['config', 'ask', 'folders'] }
         }
         switch (cmd) {
           case 'config':

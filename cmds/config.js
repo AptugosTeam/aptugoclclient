@@ -38,34 +38,33 @@ function onErr(err) {
 }
 
 module.exports = async (args) => {
-  try {
-    if (args.list || args.l || args._[1] === 'list') {
+  switch (args._[1]) {
+    case 'list':
       const allOptions = get()
       console.log(`All configured options:\n`, JSON.parse(JSON.stringify(allOptions)) )
-    }
-    if (args.list || args.c || args._[1] === 'clear') {
+      break
+    case 'clear':
       clear()
       console.log(`All configured options cleared\n`)
-    }
-    if (args.list || args.c || args._[1] === 'set') {
+      break
+    case 'set':
       set(args.var, args.value)
-    }
-    if (args.ask || args.a || args._[0] === 'ask') {
+      break
+    case 'ask':
       prompt.start()
-      console.log(args)
-      prompt.get( configOptions[args._[1]], function (err, result) {
+      prompt.get( configOptions[args._[2]], function (err, result) {
         if (err) return onErr(err)
 
-        if ( Array.isArray( configOptions[args._[1]] ) ) {
-          set(args._[1], result)
+        if ( Array.isArray( configOptions[args._[2]] ) ) {
+          set(args._[2], result)
         } else {
-          const varName = configOptions[args._[1]].name
+          const varName = configOptions[args._[2]].name
           set(varName, result[varName])
         }
       })
-    }
-  } catch (err) {
-    console.error(err)
+      break
+    default:
+      console.log('Unrecognized options for config')
   }
 }
 

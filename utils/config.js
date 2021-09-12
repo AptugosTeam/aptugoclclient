@@ -8,9 +8,16 @@ module.exports = {
   },
   set: (varName, value) => {
     const config = new Conf()
+    console.log('set', varName, value)
     config.set(varName, value)
     if (varName.substr(0,7) === 'folders') {
-      aptugo.createIfDoesntExists(value)
+      if (typeof value === 'string') {
+        aptugo.createIfDoesntExists(value)
+      } else {
+        Object.keys(value).map(objKey => {
+          aptugo.createIfDoesntExists(value[objKey])
+        })
+      }
     }
     return config.get(varName)
   },
