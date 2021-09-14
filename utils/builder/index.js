@@ -73,7 +73,9 @@ module.exports = {
         module.exports.thirdStep_generatePages(parameters).then(() => {
           module.exports.fourthStep_extraSettings(parameters).then(() => {
             module.exports.fifthStep_postBuild(parameters).then(() => {
-              module.exports.lastStep_success(parameters)
+              module.exports.sixthStep_buildScripts(parameters).then(() => {
+                module.exports.lastStep_success(parameters)
+              })
             })
           })
         })
@@ -182,7 +184,7 @@ module.exports = {
         rethrow: true
       })
 
-      const elementsFolder = parameters.template.files.filter(file => file.path === 'elements')[0]
+      const elementsFolder = parameters.template.files.filter(file => file.path === 'elements' || file.path === 'templatescripts')[0]
       if (!elementsFolder) error('ERROR IN TEMPLATE: Template does not contain an elements folder', false)
       else {
         aptugo.loadedElements = loadElements(elementsFolder.children)
@@ -264,6 +266,7 @@ module.exports = {
           var template = _twig({ data: tca, rethrow: true })
           const renderedCommands = template.render(parameters)
           const baseFilesFolder = path.join(parameters.fullbuildfolder, parameters.buildFolder)
+          console.log('rendered commands', renderedCommands)
           const child = spawn(`cd ${baseFilesFolder} && ${renderedCommands}`, {
             shell: true
           })
@@ -282,6 +285,65 @@ module.exports = {
           child.on('exit', function (exitCode) {
             if (exitCode > 0) {
               console.log(`Child exited with code: ${exitCode}`, exitCode)
+              // reject({ message: 'Postbuild Finished with code: ' + exitCode, error: exitCode })
+            } else {
+              const end = new Date()
+              spinner.succeed(`Post build comands finished: ${humanizeDuration(end - start)}`);
+              resolve()     
+            }
+          })
+        } else {
+          const end = new Date()
+          spinner.succeed(`No post build commands to run: ${humanizeDuration(end - start)}`);
+          resolve()
+        }
+      } else {
+        const end = new Date()
+        spinner.info(`Post build commands skiped: ${humanizeDuration(end - start)}`);
+        resolve()
+      }
+    })
+  },
+  sixthStep_buildScripts: (parameters) => {
+    return new Promise((resolve, reject) => {
+      const start = new Date()
+      const spinner = ora('Running post-build scripts...\n').start()
+      spinner.stream = process.stdout
+
+      if (parameters.skip.indexOf('post') === -1) {
+        let command = null
+        const folders = getConfig('folders')
+        if (parameters.type === 'Development') {
+          const scriptFolder = path.join(folders.templates, parameters.settings.template, 'templatescripts', 'development.js') 
+          if ( fs.existsSync( scriptFolder ) ) {
+            command = scriptFolder
+          }
+        } else {
+          const scriptFolder = path.join(folders.templates, parameters.settings.template, 'templatescripts', 'production.js') 
+          if ( fs.existsSync( scriptFolder ) ) {
+            command = scriptFolder
+          }
+        }
+        if (command) {
+          const baseFilesFolder = path.join(parameters.fullbuildfolder, parameters.buildFolder)
+          const child = spawn(`cd ${baseFilesFolder} && ${command}`, {
+            shell: true
+          })
+
+          child.stderr.on('data', function (data) {
+            console.log(3)
+            console.log(data.toString())
+            // that.helper.error(`${data.toString()} ERRROR`, data.toString())
+            // reject(data.toString())
+          })
+
+          child.stdout.on('data', function (data) {
+            log(data.toString(), { verbosity: 8 })
+          })
+
+          child.on('exit', function (exitCode) {
+            if (exitCode > 0) {
+              console.log(`Child exited with code: ${exitCode}`)
               // reject({ message: 'Postbuild Finished with code: ' + exitCode, error: exitCode })
             } else {
               const end = new Date()

@@ -20,11 +20,12 @@ const fsParseFileForStorage = (fileDetails) => {
 }
 
 const getTree = (folder, accumulatedPath = '', fix = false) => {
-  const ignoreFiles = ['template.json','.DS_Store','_.yaml']
+  const ignoreFiles = ['template.json','.DS_Store','_.yaml','templatescripts']
   const output = []
   const filesInFolder = fs.readdirSync(folder)
   filesInFolder.forEach(file => {
     if (ignoreFiles.indexOf(file) === -1) {
+      console.log('-----', file)
       let toPush = {
         path: file,
         completePath: path.join(accumulatedPath, file)

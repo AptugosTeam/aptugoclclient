@@ -12,7 +12,7 @@ module.exports = (parameters) => {
   doCopyStaticFiles = (parameters) => {
     parameters.files.forEach(prefile => {
       let skip = false
-      if (prefile.path === 'elements') skip = true
+      if (prefile.path === 'elements' || prefile.path === 'templatescripts') skip = true
 
       if (!skip) {
         let fileName = prefile.path
