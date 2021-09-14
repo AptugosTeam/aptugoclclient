@@ -1,4 +1,5 @@
 const path = require('path')
+const os = require('os')
 const util = require('util')
 const fs = require('fs')
 const { get: getTemplate, searchForRenderingPlaceholder } = require('../templates')
@@ -15,7 +16,7 @@ const log = require('../log')
 const ora = require('ora')
 const chalk = require('chalk')
 const humanizeDuration = require("humanize-duration")
-const {spawn} = require('child_process')
+const {spawn, execSync} = require('child_process')
 const error = require('../error')
 
 const twigExtensions = () => {
@@ -306,6 +307,15 @@ module.exports = {
   },
   sixthStep_buildScripts: (parameters) => {
     return new Promise((resolve, reject) => {
+      // FIX PATH
+      let returnValue = {}
+      const result = execSync(`${os.userInfo().shell} -ilc 'echo -n "_SHELL_ENV_DELIMITER_"; env; echo -n "_SHELL_ENV_DELIMITER_"; exit'`).toString()
+      for (const line of result.split('\n').filter(line => Boolean(line))) {
+        const [key, ...values] = line.split('=');
+        returnValue[key] = values.join('=');
+      }
+      if (returnValue.PATH) process.env.PATH = returnValue.PATH
+
       const start = new Date()
       const spinner = ora('Running post-build scripts...\n').start()
       spinner.stream = process.stdout
@@ -331,7 +341,6 @@ module.exports = {
           })
 
           child.stderr.on('data', function (data) {
-            console.log(3)
             console.log(data.toString())
             // that.helper.error(`${data.toString()} ERRROR`, data.toString())
             // reject(data.toString())
@@ -347,18 +356,18 @@ module.exports = {
               // reject({ message: 'Postbuild Finished with code: ' + exitCode, error: exitCode })
             } else {
               const end = new Date()
-              spinner.succeed(`Post build comands finished: ${humanizeDuration(end - start)}`);
+              spinner.succeed(`Post build scripts finished: ${humanizeDuration(end - start)}`);
               resolve()     
             }
           })
         } else {
           const end = new Date()
-          spinner.succeed(`No post build commands to run: ${humanizeDuration(end - start)}`);
+          spinner.succeed(`No post build scripts to run: ${humanizeDuration(end - start)}`);
           resolve()
         }
       } else {
         const end = new Date()
-        spinner.info(`Post build commands skiped: ${humanizeDuration(end - start)}`);
+        spinner.info(`Post build scripts skiped: ${humanizeDuration(end - start)}`);
         resolve()
       }
     })
