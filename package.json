@@ -1,6 +1,6 @@
 {
   "name": "aptugoclient",
-  "version": "1.0.10",
+  "version": "1.0.11",
   "description": "Command line client for Aptugo",
   "main": "index.js",
   "engines": {
@@ -28,6 +28,7 @@
     "cli-spinners": "^2.6.0",
     "cli-table": "^0.3.6",
     "conf": "^9.0.2",
+    "fix-path": "^4.0.0",
     "gently-copy": "^3.2.0",
     "humanize-duration": "^3.25.1",
     "istextorbinary": "^6.0.0",
@@ -38,6 +39,7 @@
     "prettier": "^2.2.1",
     "prettier-plugin-organize-imports": "^1.1.1",
     "prompt": "^1.1.0",
+    "shell-path": "^3.0.0",
     "twig": "^1.15.4",
     "typescript": "latest",
     "yargs": "^13.3.2"
