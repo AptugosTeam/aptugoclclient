@@ -25,7 +25,6 @@ const getTree = (folder, accumulatedPath = '', fix = false) => {
   const filesInFolder = fs.readdirSync(folder)
   filesInFolder.forEach(file => {
     if (ignoreFiles.indexOf(file) === -1) {
-      console.log('-----', file)
       let toPush = {
         path: file,
         completePath: path.join(accumulatedPath, file)
