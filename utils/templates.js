@@ -83,7 +83,7 @@ module.exports = {
       }
       const { children, source, ...cleanFileDetails } = fileDetails
       fs.writeFileSync(path.join(folderPath,'_.yaml'), yaml.dump(cleanFileDetails))
-    } else {
+    } else if (parsedFile) {
       fileDetails.source = parsedFile
       const filePath = path.join(templateFolderPath, fileName)
       fs.writeFileSync(filePath, fileDetails.source)

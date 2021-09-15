@@ -329,7 +329,7 @@ module.exports = {
             command = scriptFolder
           }
         } else {
-          const scriptFolder = path.join(folders.templates, parameters.settings.template, 'templatescripts', 'production.js') 
+          const scriptFolder = path.join(folders.templates, parameters.settings.template, 'templatescripts', 'production.js')
           if ( fs.existsSync( scriptFolder ) ) {
             command = scriptFolder
           }
