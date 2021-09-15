@@ -45,6 +45,12 @@ const twigExtensions = () => {
     return value ? value.replace(/[^a-zA-Z0-9]/g, "") : ''
   })
 
+  extendFilter('functionOrCall', function(value) {
+    if (!value) return ''
+    if (/^\([a-zA-Z ,]*\) => {/.exec(value)) return value
+    if (/^[a-zA-Z0-9]*$/.exec(value)) return value
+    return '(e) => {\n' + value + '\n}'
+  })
   extendFilter('textOrVariable', function(value) {
     if (!value) return ''
     if (typeof value === "number") return `"${value}"`
