@@ -109,12 +109,16 @@ module.exports = async () => {
     .then((result) => {
       // spinner.stop()
       try {
-        const checkResult = check()
-        if (checkResult !== 0) {
-          console.error(chalk.blue.bold('Missing config'))
-          cmd = 'config'
-          subcmd = { _: ['config', 'ask', 'folders'] }
+
+        if (cmd !== 'config') {
+          const checkResult = check()
+          if (checkResult !== 0) {
+            console.error(chalk.blue.bold('Missing config'))
+            cmd = 'config'
+            subcmd = { _: ['config', 'ask', 'folders'] }
+          }
         }
+        
         switch (cmd) {
           case 'config':
             require('./cmds/config')(subcmd)
