@@ -31,6 +31,11 @@ module.exports = {
     })
     return toReturn
   },
+  version: (args) => {
+    const folders = get('folders')
+    const version = fs.readFileSync( path.join(folders.templates, '..', 'version.txt'), { encoding: 'utf8' } )
+    return version
+  },
   create: (args) => {
     args = JSON.parse(args)
     const folders = get('folders')

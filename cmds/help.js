@@ -36,6 +36,11 @@ const menus = {
   `,
 
   templates: `
+    aptugo templates [command]
+
+    list ............... returns a list of the available templates
+    version ............ displays the current version of your templates
+    
     aptugo templates list <options> ........ returns a list of all available templates
 
     --extended ......... results get table formated

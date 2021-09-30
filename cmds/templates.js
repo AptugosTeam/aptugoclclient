@@ -7,7 +7,8 @@ const {
   fileSource: source,
   setfile: file,
   remove,
-  create
+  create,
+  version
 } = require('../utils/templates')
 const Table = require('cli-table')
 const { stdin } = require('process')
@@ -72,6 +73,9 @@ module.exports = async (args) => {
   switch (args._[1]) {
     case 'list':
       console.log( await list(args) )
+      break
+    case 'version':
+      console.log( await version(args) )
       break
     case 'create':
       console.log( await createTemplate(args) )

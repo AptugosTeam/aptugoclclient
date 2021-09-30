@@ -18,7 +18,7 @@ module.exports = {
     
     if (!value.unique_id) {
       fieldDefinition = aptugo.plainFields[value]
-      if (!fieldDefinition) console.log('value:', value, aptugo.plainFields)
+      if (!fieldDefinition) console.log('value:', value)
     }
     
     const tempExtDef = aptugo.activeParameters.template.fields.filter(field => field.value === fieldDefinition.data_type)
