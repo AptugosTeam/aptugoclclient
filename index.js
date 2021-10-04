@@ -118,7 +118,6 @@ module.exports = async () => {
             subcmd = { _: ['config', 'ask', 'folders'] }
           }
         }
-        
         switch (cmd) {
           case 'config':
             require('./cmds/config')(subcmd)

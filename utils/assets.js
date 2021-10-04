@@ -2,6 +2,7 @@ const fs = require('fs')
 const path = require('path')
 const yaml = require('js-yaml')
 const { get } = require('./config')
+const { list: appsList } = require('./apps')
 const { getTree } = require('./files')
 const { exit } = require('process')
 
@@ -10,5 +11,21 @@ module.exports = {
     const appFolders = get('folders').applications
     const assetPath = path.join(appFolders, appFolder, 'Drops', filePath)
     return assetPath
-  }
+  },
+  setfile: async (args, fileDefinition) => {
+    const appFolders = get('folders').applications
+    const apps = await appsList()
+    const app = apps.filter(localapp => localapp.settings.name === args.app)[0]
+    const assets = JSON.parse( fs.readFileSync( path.join( appFolders, aptugo.friendly(app.settings.name), 'assets.json' ), { encoding: 'utf8'}, true) )
+    let foundAsset = assets.filter(asset => asset.id === args.id)
+    let currentAsset = foundAsset.length ? foundAsset[0] : {
+      name: args.filename,
+      id: args.id,
+      type: 'stylesheet'
+    }
+    
+    const saveFolder = path.join(appFolders, aptugo.friendly(app.settings.name), 'Drops')
+    fs.writeFileSync(path.join(saveFolder, `${currentAsset.id}_${currentAsset.name}`), JSON.parse(fileDefinition))
+    console.log( path.join(saveFolder, `${currentAsset.id}_${currentAsset.name}`) )
+  },
 }
