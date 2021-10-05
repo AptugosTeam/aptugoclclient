@@ -171,7 +171,6 @@ module.exports = async () => {
       
     })
     .catch((error) => {
-      spinner.stop()
       console.error(chalk.red.bold(error))
       cmd = 'config'
       subcmd = { _: ['ask','license'] }
