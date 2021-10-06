@@ -94,6 +94,13 @@ module.exports = {
       fs.writeFileSync(filePath, fileDetails.source)
     }
   },
+  renderPath: (file) => {
+    if (file.modelRelated) {
+      return file.path.replace(/{{(.*?)}}/g, `${file.subtype}[X]`)
+    } else {
+      return file.path
+    }
+  },
   fileSource: (templateID, fileID) => {
     const folders = get('folders')
     const templates = module.exports.list()
@@ -101,7 +108,7 @@ module.exports = {
     currentTemplate.files = getTree( path.join( folders.templates, currentTemplate._id ), '', true )
     const file = module.exports.findFileWithUniqueID(currentTemplate.files, fileID)
     if (!file) return 'Error: File not found'
-    const fileSource = fs.readFileSync(path.join(folders.templates, currentTemplate._id, file.completePath,file.path), 'utf8')
+    const fileSource = fs.readFileSync(path.join(folders.templates, currentTemplate._id, file.completePath,module.exports.renderPath(file)), 'utf8')
     return fileSource
   },
   get: (templateID, templateFolder) => {
