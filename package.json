@@ -1,6 +1,6 @@
 {
-  "name": "aptugoclient",
-  "version": "1.0.18",
+  "name": "aptugocli.ent",
+  "version": "1.0.19",
   "description": "Command line client for Aptugo",
   "main": "index.js",
   "engines": {
@@ -38,6 +38,7 @@
     "prettier": "^2.2.1",
     "prettier-plugin-organize-imports": "^1.1.1",
     "prompt": "^1.1.0",
+    "splitargs": "0.0.7",
     "twig": "^1.15.4",
     "typescript": "latest",
     "yargs": "^13.3.2"
