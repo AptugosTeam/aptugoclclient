@@ -12,12 +12,12 @@ function getInheritedChilds(element) {
   const parentsTree = getCascadingTree(element.unique_id)
   const elementsTreeTilPage = [element]
   let index = 0
-  let parentElement = aptugo.plain[parentsTree[index]]
+  let parentElement = aptugocli.plain[parentsTree[index]]
   if (parentElement) {
     while( parentElement.type !== 'page') {
       if (parentElement.type === 'element') elementsTreeTilPage.push(parentElement)
       index++
-      parentElement = aptugo.plain[parentsTree[index]]
+      parentElement = aptugocli.plain[parentsTree[index]]
     }
   }
 
@@ -25,13 +25,13 @@ function getInheritedChilds(element) {
   let toReturn = []
   
   for (var I = index + 1; I < parentsTree.length; I++) {
-    const theParent = aptugo.plain[parentsTree[I]]
+    const theParent = aptugocli.plain[parentsTree[I]]
     for (var O = 0; O < elementsTreeTilPage.length; O++) {
       const currentElement = elementsTreeTilPage[O]
       const preFound = theParent.children.find(child => child.value === currentElement.value)
       if (O === elementsTreeTilPage.length - 1) {
         const found = preFound && preFound.children ? preFound.children.filter(ff => ff.cascades) : []
-        found.forEach(indfound => toReturn.push(aptugo.plain[indfound.unique_id]))
+        found.forEach(indfound => toReturn.push(aptugocli.plain[indfound.unique_id]))
       }
     }
   }
@@ -42,8 +42,8 @@ module.exports = (page, parameters) => {
   buildPage = (page, parameters) => {
     // Load page
     const pageDefiniton = { ...loadPage(page.unique_id, parameters.appFolder), ...page }
-    aptugo.currentRenderingPage = pageDefiniton
-    log(`Building page: ${aptugo.currentRenderingPage.name}`, { type: 'title', level: parameters.level, unique_id: pageDefiniton.unique_id, verbosity: 6 })
+    aptugocli.currentRenderingPage = pageDefiniton
+    log(`Building page: ${aptugocli.currentRenderingPage.name}`, { type: 'title', level: parameters.level, unique_id: pageDefiniton.unique_id, verbosity: 6 })
 
     // Build Elements
     page.children.forEach(pageChild => {
@@ -70,10 +70,9 @@ module.exports = (page, parameters) => {
     // Finalize page build
     const renderedPage = twigRender({ data: '{{ content }}', rethrow: true }, parameters, pageDefiniton)
     log(`Rendered page: ${pageDefiniton.name}`, { type: 'tit', level: parameters.level, unique_id: pageDefiniton.unique_id, verbosity: 9 })
-    console.log(parameters.fullbuildfolder, aptugo.generationFolder, pageDefiniton.filename)
     if (pageDefiniton.filename) {
-      const pagePath = path.join(parameters.fullbuildfolder, aptugo.generationFolder, pageDefiniton.filename)
-      aptugo.writeFile(pagePath, renderedPage, true)
+      const pagePath = path.join(parameters.fullbuildfolder, aptugocli.generationFolder, pageDefiniton.filename)
+      aptugocli.writeFile(pagePath, renderedPage, true)
     }
   }
   buildPage(page, parameters)

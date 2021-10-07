@@ -4,9 +4,9 @@ const path = require('path')
 module.exports = (parameters) => {
   const assetsDefinition = JSON.parse( fs.readFileSync(path.join(parameters.appFolder, 'assets.json' ), { encoding: 'utf8'}, true) )
 
-  aptugo.createIfDoesntExists( path.join(parameters.fullbuildfolder, parameters.buildFolder, 'dist') )
-  aptugo.createIfDoesntExists( path.join(parameters.fullbuildfolder, parameters.buildFolder,  'dist', 'img') )
-  aptugo.createIfDoesntExists( path.join(parameters.fullbuildfolder, parameters.buildFolder,  'dist', 'css') )
+  aptugocli.createIfDoesntExists( path.join(parameters.fullbuildfolder, parameters.buildFolder, 'dist') )
+  aptugocli.createIfDoesntExists( path.join(parameters.fullbuildfolder, parameters.buildFolder,  'dist', 'img') )
+  aptugocli.createIfDoesntExists( path.join(parameters.fullbuildfolder, parameters.buildFolder,  'dist', 'css') )
 
   assetsDefinition.forEach(file => {
     const fileSourcePath = path.join(parameters.filesFolder, `${file.id}_${file.name}`)

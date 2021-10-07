@@ -72,34 +72,45 @@ const twigExtensions = () => {
 }
 
 module.exports = {
-  build: ({ app, type = 'Development', clean = false, skip = [] }) => {
+  build: async ({ app, type = 'Development', clean = false, skip = [] }) => {
     log(`Building ${app.settings.name} in ${type} mode`, { type: 'mainTitle' })
+    if (aptugo) aptugo.setFeedback('Setting up build...')
     const parameters = module.exports.buildParameters({ app, type, clean, variables: {}, skip })
     module.exports.firstStep_setupBuild(parameters).then(() => {
+      if (aptugo) aptugo.setFeedback('Build Setup...')
       module.exports.secondStep_copyStaticFiles(parameters).then(() => {
+        if (aptugo) aptugo.setFeedback('Copy Static Files...')
         module.exports.thirdStep_generatePages(parameters).then(() => {
+          if (aptugo) aptugo.setFeedback('Generate Pages...')
           module.exports.fourthStep_extraSettings(parameters).then(() => {
+            if (aptugo) aptugo.setFeedback('Rebuild Pages with extra settings...')
             module.exports.fifthStep_postBuild(parameters).then(() => {
+              if (aptugo) aptugo.setFeedback('Post build stuff...')
               module.exports.sixthStep_buildScripts(parameters).then(() => {
-                module.exports.lastStep_success(parameters)
+                if (aptugo) aptugo.setFeedback('Post build scripts...')
+                module.exports.lastStep_success(parameters).then(() => {
+                  if (aptugo) aptugo.setFeedback('done')
+                  // finished
+                }) 
               })
             })
           })
         })
       })
     })
+    return 'Started'
   },
 
   parseApplication: (application) => {
-    application.tables.forEach(table => aptugo.plain[table.unique_id] = table)
+    application.tables.forEach(table => aptugocli.plain[table.unique_id] = table)
     application.assets.forEach(asset => {
-      aptugo.plain[asset.id] = asset
-      aptugo.plainAssets[asset.id] = asset
+      aptugocli.plain[asset.id] = asset
+      aptugocli.plainAssets[asset.id] = asset
     })
     
     const navigateAndParseTree = (tree) => {
       return tree.map(item => {
-        aptugo.plain[item.unique_id] = item
+        aptugocli.plain[item.unique_id] = item
         if (item.type === 'page') {
           Object.keys(item).map(propertyName => {
             if (item[propertyName] && item[propertyName].substr && item[propertyName].substr(0,2) === '()') {
@@ -121,7 +132,7 @@ module.exports = {
     let output = ''
     try {
       const params = {
-        plainTables: Object.values(aptugo.plain)
+        plainTables: Object.values(aptugocli.plain)
       }
       output = module.exports.deserializeFunction(input).call({})(params)
     } catch(e) {
@@ -132,6 +143,7 @@ module.exports = {
   },
 
   deserializeFunction(funcString) {
+    if (!aptugo) var aptugo = aptugocli
     return new Function('builder', `return ${funcString}`)
   },
 
@@ -142,7 +154,7 @@ module.exports = {
     const template = getTemplate(settings.template)
     const buildFolder = settings.folder
     const fullbuildfolder = getConfig('folders').build
-    const appFolder =  path.join( getConfig('folders').applications, aptugo.friendly(application.settings.name) )
+    const appFolder =  path.join( getConfig('folders').applications, aptugocli.friendly(application.settings.name) )
     const filesFolder = path.join(appFolder, 'Drops')
 
     settings.variables && settings.variables.split('\n').forEach(thevar => {
@@ -152,7 +164,7 @@ module.exports = {
 
     if (!template) error('Error: Application does not have a template assigned (or it is missing)', true)
 
-    aptugo.activeParameters = {
+    aptugocli.activeParameters = {
       skip: buildData.skip,
       type: buildData.type,
       application,
@@ -167,21 +179,21 @@ module.exports = {
       variables: buildData.variables
     }
 
-    return aptugo.activeParameters
+    return aptugocli.activeParameters
   },
 
   firstStep_setupBuild: (parameters) => {
     return new Promise((resolve, reject) => {
       const start = new Date()
       const spinner = ora('Setting up build...').start()
-      aptugo.extraSettings = parameters.variables || {}
+      aptugocli.extraSettings = parameters.variables || {}
       if (parameters.doClean) {
         fs.rmdirSync( path.join(parameters.fullbuildfolder, parameters.buildFolder), { recursive: true })
       }
-      aptugo.createIfDoesntExists(path.join(parameters.fullbuildfolder, parameters.buildFolder))
+      aptugocli.createIfDoesntExists(path.join(parameters.fullbuildfolder, parameters.buildFolder))
 
-      aptugo.skipSettings = true
-      aptugo.filesWithExtraSettings = []
+      aptugocli.skipSettings = true
+      aptugocli.filesWithExtraSettings = []
       cache(false)
       twigExtensions()
       _twig({
@@ -194,10 +206,10 @@ module.exports = {
       const elementsFolder = parameters.template.files.filter(file => file.path === 'elements' || file.path === 'templatescripts')[0]
       if (!elementsFolder) error('ERROR IN TEMPLATE: Template does not contain an elements folder', false)
       else {
-        aptugo.loadedElements = loadElements(elementsFolder.children)
+        aptugocli.loadedElements = loadElements(elementsFolder.children)
         saveTwigTemplates(elementsFolder.children)
       }
-      aptugo.assets = parameters.application.assets
+      aptugocli.assets = parameters.application.assets
       const end = new Date()
       spinner.succeed(`Build set-up: ${humanizeDuration(end - start)}`);
       resolve()
@@ -230,7 +242,7 @@ module.exports = {
       spinner.stream = process.stdout
 
       if (parameters.skip.indexOf('pages') === -1) {
-        aptugo.generationFolder = parameters.template.renderingFolder ? path.join(parameters.buildFolder, parameters.template.renderingFolder ) : searchForRenderingPlaceholder(parameters.template.files, parameters.buildFolder)
+        aptugocli.generationFolder = parameters.template.renderingFolder ? path.join(parameters.buildFolder, parameters.template.renderingFolder ) : searchForRenderingPlaceholder(parameters.template.files, parameters.buildFolder)
         parameters.application.pages.forEach(page => {
           buildPage(page, parameters)
         })
@@ -250,8 +262,8 @@ module.exports = {
       const spinner = ora('Re-Generating pages with extra settings...\n').start()
       spinner.stream = process.stdout
       if (parameters.skip.indexOf('copy') === -1) {
-        aptugo.skipSettings = false
-        copyStaticFiles({ ...parameters, files: aptugo.filesWithExtraSettings })
+        aptugocli.skipSettings = false
+        copyStaticFiles({ ...parameters, files: aptugocli.filesWithExtraSettings })
         const end = new Date()
         spinner.succeed(`Static files re-generated: ${humanizeDuration(end - start)}`);
       } else {
@@ -279,7 +291,6 @@ module.exports = {
           })
 
           child.stderr.on('data', function (data) {
-            console.log(3)
             console.log(data.toString())
             // that.helper.error(`${data.toString()} ERRROR`, data.toString())
             // reject(data.toString())
@@ -379,15 +390,21 @@ module.exports = {
     })
   },
   lastStep_success: (parameters) => {
-    process.stdout.write(chalk.hex('#FF603D')(`\n\r
-    ┌────────────────────────┐
-    │                        │
-    │   Application Built!   │
-    │                        │
-    └────────────────────────┘
-    Your application has been built on folder:
-    ${path.join(parameters.fullbuildfolder, parameters.buildFolder)}
-    `))
-    process.exit(0)
+    return new Promise((resolve, reject) => {
+      const fromcommandline = !!require.main
+      if (fromcommandline) {
+        process.stdout.write(chalk.hex('#FF603D')(`\n\r
+        ┌────────────────────────┐
+        │                        │
+        │   Application Built!   │
+        │                        │
+        └────────────────────────┘
+        Your application has been built on folder:
+        ${path.join(parameters.fullbuildfolder, parameters.buildFolder)}
+        `))
+        process.exitCode(0)
+      }
+      resolve()
+    })
   }
 }

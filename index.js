@@ -5,6 +5,7 @@ const checkLicense = require('./utils/checkLicense')
 const ora = require('ora')
 const { check } = require('./utils/config')
 const fs = require('fs')
+var splitargs = require('splitargs')
 
 const prettier = require('prettier')
 const parserTypeScript = require('prettier/parser-typescript')
@@ -12,7 +13,7 @@ const parserBabel = require('prettier/parser-babel')
 const parserScss = require('prettier/parser-postcss')
 const organizeImports = require('prettier-plugin-organize-imports')
 
-global.aptugo = {
+global.aptugocli = {
   plain: {},
   plainAssets: {},
   plainTables: {},
@@ -80,7 +81,7 @@ global.aptugo = {
   writeFile: (filename, contents, pretify = true) => {
     if (pretify) {
       if (filename.substr(-2) === 'js') pretify = 'babel'
-      contents = aptugo.pretify(contents, pretify, filename)
+      contents = aptugocli.pretify(contents, pretify, filename)
     }
 
     try {
@@ -91,8 +92,14 @@ global.aptugo = {
   }
 }
 
-module.exports = async () => {
-  const args = minimist(process.argv.slice(2))
+module.exports = async (arguments, extraarguments = {}) => {
+  const fromcommandline = !!require.main
+  let args
+  if (fromcommandline) {
+    args = minimist(process.argv.slice(2))
+  } else {
+    args = minimist(splitargs(arguments))
+  }
 
   let cmd = args._[0] || 'help'
   let subcmd = args
@@ -104,76 +111,92 @@ module.exports = async () => {
   if (args.help || args.h) {
     cmd = 'help'
   }
-  // const spinner = ora('Checking License').start()
-  await checkLicense()
-    .then((result) => {
-      // spinner.stop()
-      try {
-
-        if (cmd !== 'config') {
-          const checkResult = check()
-          if (checkResult !== 0) {
+  
+  return await checkLicense().then((result) => {
+    try {
+      if (cmd !== 'config') {
+        const checkResult = check()
+        if (checkResult !== 0) {
+          if (fromcommandline) {
             console.error(chalk.blue.bold('Missing config'))
             cmd = 'config'
             subcmd = { _: ['config', 'ask', 'folders'] }
+          } else {
+            return 'You must config me'
           }
         }
-        switch (cmd) {
-          case 'config':
-            require('./cmds/config')(subcmd)
-            break
-      
-          case 'version':
-            require('./cmds/version')(subcmd)
-            break
-      
-          case 'help':
-            require('./cmds/help')(subcmd)
-            break
-      
-          case 'new':
-            require('./cmds/new')(subcmd)
-            break
-
-          case 'model':
-            require('./cmds/model')(subcmd)
-            break
-      
-          case 'remove':
-            require('./cmds/remove')(subcmd)
-            break
-
-          case 'build':
-            require('./cmds/build')(subcmd)
-            break
-
-          case 'structures':
-            require('./cmds/structures')(subcmd)
-            break
-
-          case 'templates':
-            require('./cmds/templates')(subcmd)
-            break
-          case 'assets':
-            require('./cmds/assets')(subcmd)
-            break
-          case 'renderer':
-            require('./cmds/renderer')(subcmd)
-            break
-          default:
-            error(`"${cmd}" is not a valid command!`, true)
-            break
-        }
-      } catch(e) {
-        console.error(e)
-        error(`Failed to execute command`, true)
       }
       
-    })
-    .catch((error) => {
-      console.error(chalk.red.bold(error))
-      cmd = 'config'
-      subcmd = { _: ['ask','license'] }
-      require('./cmds/config')(subcmd)
-    })
+      let output = ''
+      switch (cmd) {
+        case 'config':
+          output = require('./cmds/config')(subcmd)
+          break
+    
+        case 'version':
+          output = require('./cmds/version')(subcmd)
+          break
+    
+        case 'help':
+          output = require('./cmds/help')(subcmd)
+          break
+    
+        case 'new':
+          output = require('./cmds/new')(subcmd)
+          break
+
+        case 'model':
+          output = require('./cmds/model')(subcmd)
+          break
+    
+        case 'remove':
+          output = require('./cmds/remove')(subcmd)
+          break
+
+        case 'build':
+          output = require('./cmds/build')(subcmd)
+          break
+
+        case 'structures':
+          output = require('./cmds/structures')(subcmd)
+          break
+
+        case 'templates':
+          output = require('./cmds/templates')(subcmd, extraarguments)
+          break
+        case 'assets':
+          output = require('./cmds/assets')(subcmd, extraarguments)
+          break
+        case 'renderer':
+          output = require('./cmds/renderer')(subcmd)
+          break
+        default:
+          output = `"${cmd}" is not a valid command!`
+          break
+      }
+      if (output instanceof Promise) {
+        return output.then(res => {
+          return {
+            exitCode: 0,
+            data: res
+          }    
+        })
+      } else {
+        return {
+          exitCode: 0,
+          data: output
+        }
+      }
+    } catch(e) {
+      console.error(e)
+      error(`Failed to execute command`, true)
+    }
+    
+  })
+  .catch((error) => {
+    console.error(chalk.red.bold(error))
+    cmd = 'config'
+    subcmd = { _: ['ask','license'] }
+    require('./cmds/config')(subcmd)
+  })
 }

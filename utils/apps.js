@@ -32,7 +32,7 @@ module.exports = {
             return element.map(ele => {
               const eleDefinition = JSON.parse( fs.readFileSync( path.join( appFolderDefinition, appFolder, 'Pages', `${ele.unique_id}.json` ), { encoding: 'utf8'}, true) )
               if (ele.children) ele.children = makeItPlain(ele.children)
-              aptugo.plain[ele.unique_id] = { ...ele, ...eleDefinition }
+              aptugocli.plain[ele.unique_id] = { ...ele, ...eleDefinition }
               return { ...ele, ...eleDefinition }
             })
           }
@@ -40,10 +40,10 @@ module.exports = {
           app.pages = makeItPlain(app.pages)
           app.tables = app.tables.map(table => {
             const tableDefinition = JSON.parse( fs.readFileSync( path.join( appFolderDefinition, appFolder, 'Tables', `${table.unique_id}.json` ), { encoding: 'utf8'}, true) )
-            aptugo.plainTables[table.unique_id] = tableDefinition
+            aptugocli.plainTables[table.unique_id] = tableDefinition
             tableDefinition.fields.forEach(field => {
-              if (!aptugo.plainFields) aptugo.plainFields = {}
-              aptugo.plainFields[field.unique_id] = field
+              if (!aptugocli.plainFields) aptugocli.plainFields = {}
+              aptugocli.plainFields[field.unique_id] = field
             })
             return tableDefinition
           })
@@ -56,7 +56,7 @@ module.exports = {
   save: (app) => {
     const folders = get('folders')
     const appFolders = folders.applications
-    const saveFolder = path.join(appFolders, aptugo.friendly(app.settings.name))
+    const saveFolder = path.join(appFolders, aptugocli.friendly(app.settings.name))
 
     if (!fs.existsSync(saveFolder)) {
       fs.mkdirSync(saveFolder)
@@ -77,7 +77,7 @@ module.exports = {
   remove: (app) => {
     const folders = get('folders')
     const appFolders = folders.applications
-    const saveFolder = path.join(appFolders, aptugo.friendly(app.settings.name))
+    const saveFolder = path.join(appFolders, aptugocli.friendly(app.settings.name))
     fs.rmdirSync(saveFolder, { recursive: true })
   }
 } 

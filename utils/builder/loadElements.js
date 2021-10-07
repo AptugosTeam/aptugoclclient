@@ -6,8 +6,8 @@ module.exports = (elements) => {
   doloadElements = (elements, preset = '') => {
     const output = []
     elements.forEach(element => {
-      if (!aptugo.plain) aptugo.plain = {}
-      aptugo.plain[element.unique_id] = element
+      if (!aptugocli.plain) aptugocli.plain = {}
+      aptugocli.plain[element.unique_id] = element
       if (element.type === 'folder') {
         output.push( ...doloadElements(element.children, `${preset}${element.path}`))
       } else {

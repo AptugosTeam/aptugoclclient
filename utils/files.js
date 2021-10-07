@@ -31,7 +31,7 @@ const getTree = (folder, accumulatedPath = '', fix = false) => {
       }
       if (fs.lstatSync( path.join(folder, file) ).isDirectory()) {
         toPush.type = 'folder'
-        toPush.unique_id = aptugo.generateID()
+        toPush.unique_id = aptugocli.generateID()
         toPush.children = getTree( path.join(folder, file), path.join(accumulatedPath, file), fix )
         try {
           const folderSource = fs.readFileSync( path.join(folder, file, '_.yaml'), 'utf8')
@@ -45,11 +45,11 @@ const getTree = (folder, accumulatedPath = '', fix = false) => {
           toPush = { ...toPush, ...prefs }
           if (fix) {
             if (!prefs.unique_id) { // Add and save unique_id if not exists
-              toPush.unique_id = aptugo.generateID()
+              toPush.unique_id = aptugocli.generateID()
               fs.writeFileSync(path.join(folder, file), fsParseFileForStorage({ ...toPush, source }), { flag: 'w' } )
             }
           } else {
-            toPush.unique_id = prefs.unique_id || aptugo.generateID()
+            toPush.unique_id = prefs.unique_id || aptugocli.generateID()
           }
         }
       }

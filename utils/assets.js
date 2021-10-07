@@ -16,7 +16,7 @@ module.exports = {
     const appFolders = get('folders').applications
     const apps = await appsList()
     const app = apps.filter(localapp => localapp.settings.name === args.app)[0]
-    const assets = JSON.parse( fs.readFileSync( path.join( appFolders, aptugo.friendly(app.settings.name), 'assets.json' ), { encoding: 'utf8'}, true) )
+    const assets = JSON.parse( fs.readFileSync( path.join( appFolders, aptugocli.friendly(app.settings.name), 'assets.json' ), { encoding: 'utf8'}, true) )
     let foundAsset = assets.filter(asset => asset.id === args.id)
     let currentAsset = foundAsset.length ? foundAsset[0] : {
       name: args.filename,
@@ -24,8 +24,11 @@ module.exports = {
       type: 'stylesheet'
     }
     
-    const saveFolder = path.join(appFolders, aptugo.friendly(app.settings.name), 'Drops')
+    const saveFolder = path.join(appFolders, aptugocli.friendly(app.settings.name), 'Drops')
+    if (!fs.existsSync(saveFolder)) {
+      fs.mkdirSync(saveFolder, { recursive: true })
+    }
     fs.writeFileSync(path.join(saveFolder, `${currentAsset.id}_${currentAsset.name}`), JSON.parse(fileDefinition))
-    console.log( path.join(saveFolder, `${currentAsset.id}_${currentAsset.name}`) )
+    return path.join(saveFolder, `${currentAsset.id}_${currentAsset.name}`)
   },
 }

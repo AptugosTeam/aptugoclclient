@@ -55,45 +55,53 @@ const setfield = async (args) => {
   })
 }
 
-const setfile = async (args) => {
-  var r1 = readline.createInterface({ input: process.stdin, output: process.stdout })
-  r1.question('Paste definition here\n', function (def) {
-    const newdef = file(args.template, def)
-    r1.close()
-    process.stdin.destroy()
-    return newdef
-  })
+const setfile = async (args, extraarguments = null) => {
+  const fromcommandline = !!require.main
+  let newdef
+  if (fromcommandline) {
+    var r1 = readline.createInterface({ input: process.stdin, output: process.stdout })
+    r1.question('Paste definition here\n', function (def) {
+      newdef = file(args.template, def)
+      r1.close()
+      process.stdin.destroy()
+    })
+  } else {
+    newdef = file(args, extraarguments.file)
+  }
+  return newdef
 }
 
 const filesource = async (args) => {
   return source(args.template, args.file)
 }
 
-module.exports = async (args) => {
+let output 
+module.exports = async (args, extraarguments) => {
   switch (args._[1]) {
     case 'list':
-      console.log( await list(args) )
+      output = await list(args)
       break
     case 'version':
-      console.log( await version(args) )
+      output = await version(args)
       break
     case 'create':
-      console.log( await createTemplate(args) )
+      output = await createTemplate(args)
       break
     case 'delete':
-      console.log( await remove(args) )
+      output = await remove(args)
       break
     case 'setoption':
-      await setoption(args)
+      output = setoption(args)
       break
     case 'setfield':
-      await setfield(args)
+      output = setfield(args)
       break
     case 'setfile':
-      await setfile(args)
+      output = setfile(args, extraarguments)
       break
     case 'fileSource':
-      console.log( await filesource(args) )
+      output = await filesource(args)
       break
   }
+  return output
 }

@@ -16,7 +16,7 @@ module.exports = {
   },
   fixField: (field, force = false, table = 'not set') => {
     const newField = force ? {} : field
-    if (!newField.unique_id) newField.unique_id = aptugo.generateID()
+    if (!newField.unique_id) newField.unique_id = aptugocli.generateID()
     if (newField.CHARACTER_MAXIMUM_LENGTH) {
       newField.length = newField.CHARACTER_MAXIMUM_LENGTH
       delete(newField.CHARACTER_MAXIMUM_LENGTH)

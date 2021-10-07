@@ -64,6 +64,7 @@ module.exports = async (args) => {
       })
       break
     default:
+      console.log(args)
       console.log('Unrecognized options for config')
   }
 }

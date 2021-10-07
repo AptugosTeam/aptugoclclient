@@ -88,4 +88,4 @@ module.exports = {
   }
 } 
 
-aptugo.structures = module.exports
+aptugocli.structures = module.exports

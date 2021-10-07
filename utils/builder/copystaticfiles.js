@@ -17,7 +17,7 @@ module.exports = (parameters) => {
       if (!skip) {
         let fileName = prefile.path
         let partialPath = path.join(parameters.accumulated || '', fileName )
-        let sourcePath = path.join( get('folders').templates ,aptugo.activeParameters.template._id, partialPath )
+        let sourcePath = path.join( get('folders').templates ,aptugocli.activeParameters.template._id, partialPath )
         let fullPath = prefile.fullPath || path.join(parameters.fullbuildfolder, parameters.buildFolder, partialPath)
 
         if ( isBinary(sourcePath) ) {
@@ -26,7 +26,7 @@ module.exports = (parameters) => {
         } else {
           let [postfile,fs] = fsLoadAndParseFile({ unique_id: prefile.unique_id })
           const file = { ...prefile, ...postfile }
-          aptugo.currentFile = {
+          aptugocli.currentFile = {
             ...file,
             fullPath: fullPath
           }
@@ -38,14 +38,14 @@ module.exports = (parameters) => {
                 let modelfileName = calculatedFilename.render({ table: parameters.application.tables[table] })
                 let modelPartialPath = path.join(parameters.accumulated || '', modelfileName )
                 fullPath = path.join(parameters.fullbuildfolder, parameters.buildFolder, modelfileName)
-                aptugo.currentFile = {
+                aptugocli.currentFile = {
                   ...file,
                   fullPath: fullPath
                 }
                 parameters.table = parameters.application.tables[table]
 
                 if (file.type === 'folder') {
-                  aptugo.createIfDoesntExists(fullPath)
+                  aptugocli.createIfDoesntExists(fullPath)
                   if (file.children && file.children.length) {
                     doCopyStaticFiles({
                       ...parameters,
@@ -58,7 +58,7 @@ module.exports = (parameters) => {
                   try {
                     var contents = twigRender({ data: fs || ''}, parameters)
                     log(`Copying model file: ${fullPath}`, { type: 'advance', level: parameters.level, verbosity: 7 })
-                    aptugo.writeFile( fullPath, contents, true )
+                    aptugocli.writeFile( fullPath, contents, true )
                   } catch(e) {
                     console.error('Error compiling template for file: ', fileName, e)
                   }
@@ -66,7 +66,7 @@ module.exports = (parameters) => {
               } 
             }
           } else if (file.type === 'folder') {
-            aptugo.createIfDoesntExists(fullPath)
+            aptugocli.createIfDoesntExists(fullPath)
             log(`Creating folder: ${fullPath} ${parameters.level}`, { type: 'advance', level: parameters.level, verbosity: 7 })
             if (file.children && file.children.length) {
               doCopyStaticFiles({
@@ -80,7 +80,7 @@ module.exports = (parameters) => {
             try {
               var contents = twigRender({ data: fs || ''}, parameters)
               log(`Copying static file: ${fullPath}`, { type: 'advance', level: parameters.level, verbosity: 7 })
-              aptugo.writeFile( fullPath, contents, true )
+              aptugocli.writeFile( fullPath, contents, true )
             } catch(e) {
               error('Error compiling template for file: ', fileName, e)
             }

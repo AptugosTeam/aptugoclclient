@@ -177,7 +177,7 @@ module.exports = {
   fsLoadFileSource: (params) => {
     let template, file
     if (!params.file) {
-      template = aptugo.activeParameters.template
+      template = aptugocli.activeParameters.template
       file = params.unique_id
       ? module.exports.findFileWithUniqueID(template.files, params.unique_id , path.join( get('folders').templates ,template._id))
       : module.exports.findFileWithPath(template.files, params.path, path.join( get('folders').templates ,template._id))

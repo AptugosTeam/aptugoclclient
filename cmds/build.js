@@ -60,5 +60,9 @@ module.exports = async (args) => {
   if (args.skip) {
     args.skip = args.skip.split(',')
   }
-  build(args)
+  return build(args).then(res => {
+    console.log('res', res)
+    return res
+  })
+  // return build(args)
 }
