@@ -326,10 +326,13 @@ module.exports = {
     return new Promise((resolve, reject) => {
       // FIX PATH
       let returnValue = {}
-      const result = execSync(`${os.userInfo().shell} -ilc 'echo -n "_SHELL_ENV_DELIMITER_"; env; echo -n "_SHELL_ENV_DELIMITER_"; exit'`).toString()
-      for (const line of result.split('\n').filter(line => Boolean(line))) {
-        const [key, ...values] = line.split('=');
-        returnValue[key] = values.join('=');
+      try {
+        const result = execSync(`${ os.userInfo().shell} -ilc 'echo -n "_SHELL_ENV_DELIMITER_"; env; echo -n "_SHELL_ENV_DELIMITER_"; exit'`).toString()
+        for (const line of result.split('\n').filter(line => Boolean(line))) {
+          const [key, ...values] = line.split('=');
+          returnValue[key] = values.join('=');
+        }
+      } catch(e) {
       }
       if (returnValue.PATH) process.env.PATH = returnValue.PATH
 
