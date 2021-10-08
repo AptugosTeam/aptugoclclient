@@ -1,5 +1,5 @@
 {
-  "name": "aptugocli.ent",
+  "name": "aptugoclient",
   "version": "1.0.19",
   "description": "Command line client for Aptugo",
   "main": "index.js",
