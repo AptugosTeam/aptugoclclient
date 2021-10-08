@@ -1,6 +1,6 @@
 {
   "name": "aptugoclient",
-  "version": "1.0.19",
+  "version": "1.0.20",
   "description": "Command line client for Aptugo",
   "main": "index.js",
   "engines": {
