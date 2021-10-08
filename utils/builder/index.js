@@ -71,34 +71,88 @@ const twigExtensions = () => {
   
 }
 
+if (typeof aptugo === undefined) {
+  console.log('aptugo is false', typeof aptugo )
+  var aptugo = false
+}
 module.exports = {
-  build: async ({ app, type = 'Development', clean = false, skip = [] }) => {
+  build: async ({ app, type = 'Development', clean = false, skip = [], only = null }) => {
     log(`Building ${app.settings.name} in ${type} mode`, { type: 'mainTitle' })
     if (aptugo) aptugo.setFeedback('Setting up build...')
     const parameters = module.exports.buildParameters({ app, type, clean, variables: {}, skip })
-    module.exports.firstStep_setupBuild(parameters).then(() => {
-      if (aptugo) aptugo.setFeedback('Build Setup...')
-      module.exports.secondStep_copyStaticFiles(parameters).then(() => {
-        if (aptugo) aptugo.setFeedback('Copy Static Files...')
-        module.exports.thirdStep_generatePages(parameters).then(() => {
-          if (aptugo) aptugo.setFeedback('Generate Pages...')
-          module.exports.fourthStep_extraSettings(parameters).then(() => {
-            if (aptugo) aptugo.setFeedback('Rebuild Pages with extra settings...')
-            module.exports.fifthStep_postBuild(parameters).then(() => {
-              if (aptugo) aptugo.setFeedback('Post build stuff...')
-              module.exports.sixthStep_buildScripts(parameters).then(() => {
-                if (aptugo) aptugo.setFeedback('Post build scripts...')
-                module.exports.lastStep_success(parameters).then(() => {
-                  if (aptugo) aptugo.setFeedback('done')
-                  // finished
-                }) 
+
+    if (only) {
+      switch (only) {
+        case 'setup':
+          if (aptugo) aptugo.setFeedback('Build Setup...')
+          return module.exports.firstStep_setupBuild(parameters).then(() => {
+            if (aptugo) aptugo.setFeedback('Build Setup finished.')
+            return 'finished setup'
+          })
+          break
+        case 'copy':
+          if (aptugo) aptugo.setFeedback('Copy Static Files...')
+          return module.exports.secondStep_copyStaticFiles(parameters).then(() => {
+            if (aptugo) aptugo.setFeedback('Copy Static Files finished.')
+            return 'finished copy'
+          })
+          break
+        case 'pages':
+          if (aptugo) aptugo.setFeedback('Generate Pages and Elements...')
+          return module.exports.thirdStep_generatePages(parameters).then(() => {
+            if (aptugo) aptugo.setFeedback('Generate Pages and Elements finished.')
+            return 'finished pages'
+          })
+          break
+        case 'extra':
+          if (aptugo) aptugo.setFeedback('Generate Extra Settings...')
+          return module.exports.fourthStep_extraSettings(parameters).then(() => {
+            if (aptugo) aptugo.setFeedback('Generate Extra Settings finished.')
+            return 'finished extra'
+          })
+          break
+        case 'post':
+          if (aptugo) aptugo.setFeedback('Post Build Scripts...')
+          return module.exports.fifthStep_postBuild(parameters).then(() => {
+            if (aptugo) aptugo.setFeedback('Post Build Scripts finished.')
+            return 'finished post'
+          })
+          break
+        case 'buildscripts':
+          if (aptugo) aptugo.setFeedback('Build Scripts...')
+          return module.exports.sixthStep_buildScripts(parameters).then(() => {
+            if (aptugo) aptugo.setFeedback('Build Scripts finished.')
+            return 'finished buildscripts'
+          })
+          break
+      }
+      return 'error' + only
+    } else {
+      module.exports.firstStep_setupBuild(parameters).then(() => {
+        if (aptugo) aptugo.setFeedback('Build Setup...')
+        module.exports.secondStep_copyStaticFiles(parameters).then(() => {
+          if (aptugo) aptugo.setFeedback('Copy Static Files...')
+          module.exports.thirdStep_generatePages(parameters).then(() => {
+            if (aptugo) aptugo.setFeedback('Generate Pages...')
+            module.exports.fourthStep_extraSettings(parameters).then(() => {
+              if (aptugo) aptugo.setFeedback('Rebuild Pages with extra settings...')
+              module.exports.fifthStep_postBuild(parameters).then(() => {
+                if (aptugo) aptugo.setFeedback('Post build stuff...')
+                module.exports.sixthStep_buildScripts(parameters).then(() => {
+                  if (aptugo) aptugo.setFeedback('Post build scripts...')
+                  module.exports.lastStep_success(parameters).then(() => {
+                    if (aptugo) aptugo.setFeedback('done')
+                    // finished
+                  }) 
+                })
               })
             })
           })
         })
       })
-    })
-    return 'Started'
+      return 'built full'
+    }
+    
   },
 
   parseApplication: (application) => {
@@ -405,7 +459,7 @@ module.exports = {
         Your application has been built on folder:
         ${path.join(parameters.fullbuildfolder, parameters.buildFolder)}
         `))
-        process.exitCode(0)
+        process.exit(0)
       }
       resolve()
     })

@@ -94,7 +94,6 @@ module.exports = (element, parameters) => {
 
       if (element.value === 'field') {
         if (element.values.fieldVariable) {
-          console.log('Var to Show', element)
           buildElement({ ...element, value: `FieldsVarshow` }, parameters)
         } else if (element.values.Field) {
           const fieldToRender = aptugocli.plainFields[element.values.Field]

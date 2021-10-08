@@ -9,7 +9,6 @@ const typeSubtitleB = chalk.blue
 const softwarning = chalk.keyword('gray')
 const warning = chalk.keyword('red')
 
-const logLevel = 0
 const debugElement = null
 module.exports = (message, options) => {
   let output = ''
@@ -25,7 +24,10 @@ module.exports = (message, options) => {
   else if (options.type === 'subtitle2') output += `${typeSubtitleB(message)}`
   else output += `${message}`
 
-  if (options.verbosity <= logLevel || (debugElement && options.id === debugElement)) console.log( logLevel, output )
+  if (options.verbosity <= aptugocli.loglevel || (debugElement && options.id === debugElement)) {
+    console.log( `${output} (${options.verbosity})` )
+    if (typeof aptugo !== undefined) aptugo.setFeedback(`${output} (${options.verbosity})`)
+  }
   if (options.exit) process.exit(1)
   
 }

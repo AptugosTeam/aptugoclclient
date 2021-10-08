@@ -1,12 +1,11 @@
 const chalk = require("chalk")
 const minimist = require('minimist')
-const log = require('./utils/log')
 const checkLicense = require('./utils/checkLicense')
 const ora = require('ora')
 const { check } = require('./utils/config')
 const fs = require('fs')
 var splitargs = require('splitargs')
-
+const log = require('./utils/log')
 const prettier = require('prettier')
 const parserTypeScript = require('prettier/parser-typescript')
 const parserBabel = require('prettier/parser-babel')
@@ -14,6 +13,7 @@ const parserScss = require('prettier/parser-postcss')
 const organizeImports = require('prettier-plugin-organize-imports')
 
 global.aptugocli = {
+  loglevel: 0,
   plain: {},
   plainAssets: {},
   plainTables: {},
@@ -111,6 +111,12 @@ module.exports = async (arguments, extraarguments = {}) => {
   if (args.help || args.h) {
     cmd = 'help'
   }
+
+  if (args.loglevel) {
+    console.log('Setting loglevel to ', args.loglevel)
+    aptugocli.loglevel = args.loglevel
+  }
+  
   
   return await checkLicense().then((result) => {
     try {
