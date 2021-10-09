@@ -378,6 +378,7 @@ module.exports = {
   },
   sixthStep_buildScripts: (parameters) => {
     return new Promise((resolve, reject) => {
+      var isWin = process.platform === "win32"
       // FIX PATH
       let returnValue = {}
       try {
@@ -398,12 +399,13 @@ module.exports = {
         let command = null
         const folders = getConfig('folders')
         if (parameters.type === 'Development') {
-          const scriptFolder = path.join(folders.templates, parameters.settings.template, 'templatescripts', 'development.js') 
+          
+          const scriptFolder = path.join(folders.templates, parameters.settings.template, 'templatescripts', isWin ? 'development.bat' : 'development.js') 
           if ( fs.existsSync( scriptFolder ) ) {
             command = scriptFolder
           }
         } else {
-          const scriptFolder = path.join(folders.templates, parameters.settings.template, 'templatescripts', 'production.js')
+          const scriptFolder = path.join(folders.templates, parameters.settings.template, 'templatescripts', isWin ? 'production.bat' : 'production.js')
           if ( fs.existsSync( scriptFolder ) ) {
             command = scriptFolder
           }
