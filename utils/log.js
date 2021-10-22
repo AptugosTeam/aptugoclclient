@@ -26,7 +26,7 @@ module.exports = (message, options) => {
 
   if (options.verbosity <= aptugocli.loglevel || (debugElement && options.id === debugElement)) {
     console.log( `${output} (${options.verbosity})` )
-    if (typeof aptugo !== undefined) aptugo.setFeedback(`${output} (${options.verbosity})`)
+    if (typeof aptugo !== 'undefined') aptugo.setFeedback(`${output} (${options.verbosity})`)
   }
   if (options.exit) process.exit(1)
   

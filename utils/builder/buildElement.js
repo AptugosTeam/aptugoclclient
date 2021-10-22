@@ -111,7 +111,7 @@ module.exports = (element, parameters) => {
       
       const inherits = getInheritedChilds(element)
       inherits.forEach(inherit => {
-        buildElement(inherit, { ...parameters, level: parameters.level + 1 } )
+        if ( shouldaddinherit(element, inherit) ) buildElement(inherit, { ...parameters, level: parameters.level + 1 } )
       })
   
       // Loads full element definition
@@ -147,9 +147,22 @@ module.exports = (element, parameters) => {
         console.error(e)
         error(`Problems building ${element.value}`, true)
       }
+
       return toReturn
     }
     
+  },
+  // If child with the same edited name is present as an element child, ignore the inherit
+  shouldaddinherit = (element, inherit) => {
+    let toreturn = true
+    element.children && element.children.find(ele => {
+      if (ele.name !== ele.value) {
+        if (inherit.name === ele.name) {
+          toreturn = false
+        }
+      }
+    })
+    return toreturn
   },
   renderElement = (element, parameters) => {
     log(`Rendering element: ${element.name} (${element.value} - ${parameters.page.unique_id} - ${element.unique_id})`, { type: 'advance', level: parameters.level, verbosity: 8, id: element.unique_id })
@@ -166,11 +179,24 @@ module.exports = (element, parameters) => {
     
     const inherits = getInheritedChilds(element)
     let inheritedContent = ''
+
+    
+
     if (inherits.length) {
       inherits.forEach(inherit => {
         if (inherit.forEach) {
-          inherit.forEach(sub => inheritedContent += sub.rendered)
-        } else inheritedContent += inherit.rendered
+          inherit.forEach(sub => {
+            if (shouldaddinherit(element, inherit)) {
+              log(`Adding inherit : ${sub.name} (${sub.value} - ${parameters.page.unique_id} - ${sub.unique_id})`, { type: 'advance', level: parameters.level + 1, verbosity: 9, id: sub.unique_id })
+              inheritedContent += sub.rendered
+            }
+          })
+        } else {
+          if (shouldaddinherit(element, inherit)) {
+            log(`Adding inherit : ${inherit.name} (${inherit.value} - ${parameters.page.unique_id} - ${inherit.unique_id})`, { type: 'advance', level: parameters.level + 1, verbosity: 9, id: inherit.unique_id })
+            inheritedContent += inherit.rendered
+          }
+        }
       })
     }
 
@@ -199,13 +225,16 @@ module.exports = (element, parameters) => {
     }
     
     try {
-      if (inheritedContent !== '') parameters.content = inheritedContent + parameters.content
+      if (inheritedContent !== '') {
+        parameters.content = inheritedContent + parameters.content
+      }
       toReturn += twigRender({ ref: elementPath, debug: false, trace: false, rethrow: true }, parameters, aptugocli.currentRenderingElement)
       broughtElement.rendered = toReturn
     } catch(e) {
       console.error(e)
       error(`Problems rendering ${element.value}`, true)
     }
+
     return toReturn
   }
   

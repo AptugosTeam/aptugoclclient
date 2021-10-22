@@ -117,7 +117,6 @@ module.exports = async (arguments, extraarguments = {}) => {
     aptugocli.loglevel = args.loglevel
   }
   
-  
   return await checkLicense().then((result) => {
     try {
       if (cmd !== 'config') {
