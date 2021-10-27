@@ -74,6 +74,7 @@ global.aptugocli = {
         plugins: [parserTypeScript, parserBabel, parserScss, organizeImports]
       })
     } catch(e) {
+      console.log(e, fs.existsSync(filename))
       log(`Could not prettify file ${filename} using ${parser}`, { type: 'warning' })
     }
     return toReturn
