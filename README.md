@@ -6,10 +6,10 @@ It is language agnostic and can create MVC systems, or front/back end splits.
 
 **📚 Documentation:** [Comming soon](https://docs.aptugo.com/)
 
-**📦 Package:** [npm](https://www.npmjs.com/package/aptugocli.ent)
+**📦 Package:** [npm](https://www.npmjs.com/package/aptugoclient)
 
-![version](https://img.shields.io/npm/v/aptugocli.ent)
-![version](https://img.shields.io/npm/dm/aptugocli.ent)
+![version](https://img.shields.io/npm/v/aptugoclient)
+![version](https://img.shields.io/npm/dm/aptugoclient)
 
 ---
 
@@ -18,7 +18,7 @@ It is language agnostic and can create MVC systems, or front/back end splits.
 Install normally as you would do with every package (recommended to be installed globally), as Aptugo doesn't leave traces of Aptugo in your applications.
 
 ```bash
-npm i aptugocli.ent -g
+npm i aptugoclient -g
 ```
 
 You also need to have a templating system, you can use Aptugo's public template/boilerplate, which comes with common options and extremelly clean:
