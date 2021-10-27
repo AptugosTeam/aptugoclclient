@@ -18,7 +18,9 @@ module.exports = (parameters) => {
         let fileName = prefile.path
         let partialPath = path.join(parameters.accumulated || '', fileName )
         let sourcePath = path.join( get('folders').templates ,aptugocli.activeParameters.template._id, partialPath )
+        let fullPathWithoutFile = prefile.fullPathWithoutFile || path.join(parameters.fullbuildfolder, parameters.buildFolder, parameters.accumulated || '')
         let fullPath = prefile.fullPath || path.join(parameters.fullbuildfolder, parameters.buildFolder, partialPath)
+        
 
         if ( isBinary(sourcePath) ) {
           log(`Copying binary file: ${fullPath}`, { type: 'advance', level: parameters.level, verbosity: 7 })
@@ -28,19 +30,21 @@ module.exports = (parameters) => {
           const file = { ...prefile, ...postfile }
           aptugocli.currentFile = {
             ...file,
-            fullPath: fullPath
+            fullPath: fullPath,
+            fullPathWithoutFile: fullPathWithoutFile
           }
 
           if (file.modelRelated) {
             for (var table in parameters.application.tables) {
               if (file.subtype === 'Any' || (file.subtype === parameters.application.tables[table].subtype)) {
-                let calculatedFilename = twig.twig({ data: path.join(parameters.accumulated || '', file.path ) })
+                let calculatedFilename = twig.twig({ data: path.join(file.path) })
                 let modelfileName = calculatedFilename.render({ table: parameters.application.tables[table] })
                 let modelPartialPath = path.join(parameters.accumulated || '', modelfileName )
-                fullPath = path.join(parameters.fullbuildfolder, parameters.buildFolder, modelfileName)
+                fullPath = prefile.fullPathWithoutFile ? path.join(prefile.fullPathWithoutFile, modelfileName): path.join(parameters.fullbuildfolder, parameters.buildFolder, modelPartialPath)
                 aptugocli.currentFile = {
                   ...file,
-                  fullPath: fullPath
+                  fullPath: fullPath,
+                  fullPathWithoutFile: fullPathWithoutFile
                 }
                 parameters.table = parameters.application.tables[table]
 
@@ -50,14 +54,13 @@ module.exports = (parameters) => {
                     doCopyStaticFiles({
                       ...parameters,
                       level: parameters.level + 1,
-                      files: [...file.children],
-                      accumulated: modelPartialPath
+                      files: [...file.children]
                     })
                   }
                 } else {
+                  log(`Copying model file: ${fullPath}`, { type: 'advance', level: parameters.level, verbosity: 7 })
                   try {
                     var contents = twigRender({ data: fs || ''}, parameters)
-                    log(`Copying model file: ${fullPath}`, { type: 'advance', level: parameters.level, verbosity: 7 })
                     aptugocli.writeFile( fullPath, contents, true )
                   } catch(e) {
                     console.error('Error compiling template for file: ', fileName, e)
