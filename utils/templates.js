@@ -37,6 +37,7 @@ module.exports = {
     return version
   },
   create: (args) => {
+    console.log(args)
     args = JSON.parse(args)
     const folders = get('folders')
     const templateDefinitionFolder = path.join(folders.templates, args._id)

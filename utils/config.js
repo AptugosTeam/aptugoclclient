@@ -1,4 +1,5 @@
 const Conf = require('conf')
+const { execSync } = require('child_process')
 
 module.exports = {
   get: (varName = undefined) => {
@@ -34,5 +35,41 @@ module.exports = {
     } else {
       return 0
     }
+  },
+  verifySystem: () => {
+    verifyNode = function() {
+      try {
+        return execSync(`node -v`).toString().trim()
+      } catch(e) {
+        return 'error'
+      }
+    }
+
+    verifyMongo = function() {
+      const regex = /version v([0-9.]*)/gm;
+      try {
+        const str = execSync(`mongod --version`).toString()
+        const m = regex.exec(str)
+        return m[1]
+      } catch(e) {
+        return 'error'
+      }
+    }
+
+    verifyPNPM = function() {
+      try {
+        return execSync(`pnpm -v`).toString().trim()
+      } catch(e) {
+        return 'error'
+      }
+    }
+
+    return new Promise((resolve, reject) => {
+      resolve({
+        node: verifyNode(),
+        mongo: verifyMongo(),
+        pnpm: verifyPNPM()
+      })
+    })
   }
 } 

@@ -1,4 +1,4 @@
-const { get, set, clear } = require('../utils/config')
+const { get, set, clear, verifySystem } = require('../utils/config')
 const prompt = require('prompt')
 const homedir = require('os').homedir()
 
@@ -39,6 +39,8 @@ function onErr(err) {
 
 module.exports = async (args) => {
   switch (args._[1]) {
+    case 'check':
+      return await verifySystem()
     case 'list':
       const allOptions = get()
       console.log(`All configured options:\n`, JSON.parse(JSON.stringify(allOptions)) )
