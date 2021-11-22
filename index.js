@@ -135,6 +135,10 @@ module.exports = async (arguments, extraarguments = {}) => {
       
       let output = ''
       switch (cmd) {
+        case 'control':
+          output = require('./cmds/control')(subcmd)
+          break
+
         case 'config':
           output = require('./cmds/config')(subcmd)
           break

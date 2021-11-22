@@ -41,6 +41,7 @@ module.exports = async (args) => {
   switch (args._[1]) {
     case 'check':
       return await verifySystem()
+      break
     case 'list':
       const allOptions = get()
       console.log(`All configured options:\n`, JSON.parse(JSON.stringify(allOptions)) )
