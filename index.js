@@ -186,12 +186,14 @@ module.exports = async (arguments, extraarguments = {}) => {
       }
       if (output instanceof Promise) {
         return output.then(res => {
+          if (fromcommandline) console.log(res)
           return {
             exitCode: 0,
             data: res
           }    
         })
       } else {
+        if (fromcommandline) console.log(output)
         return {
           exitCode: 0,
           data: output
