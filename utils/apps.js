@@ -58,13 +58,9 @@ module.exports = {
     const appFolders = folders.applications
     const saveFolder = path.join(appFolders, aptugocli.friendly(app.settings.name))
 
-    if (!fs.existsSync(saveFolder)) {
-      fs.mkdirSync(saveFolder)
-      fs.mkdirSync(path.join(saveFolder,'Tables'))
-      fs.mkdirSync(path.join(saveFolder,'Pages'))
-    }
-    if (!fs.existsSync(path.join(saveFolder,'Tables'))) fs.mkdirSync(path.join(saveFolder,'Tables'))
-    if (!fs.existsSync(path.join(saveFolder,'Pages'))) fs.mkdirSync(path.join(saveFolder,'Pages'))
+    aptugocli.createIfDoesntExists(saveFolder)
+    aptugocli.createIfDoesntExists(path.join(saveFolder,'Tables'))
+    aptugocli.createIfDoesntExists(path.join(saveFolder,'Pages'))
 
     let { _id, createdAt, modifiedAt, ...rest } = app
     modifiedAt = new Date().getTime()

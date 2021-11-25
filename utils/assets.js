@@ -25,9 +25,7 @@ module.exports = {
     }
     
     const saveFolder = path.join(appFolders, aptugocli.friendly(app.settings.name), 'Drops')
-    if (!fs.existsSync(saveFolder)) {
-      fs.mkdirSync(saveFolder, { recursive: true })
-    }
+    aptugocli.createIfDoesntExists(saveFolder)
     fs.writeFileSync(path.join(saveFolder, `${currentAsset.id}_${currentAsset.name}`), JSON.parse(fileDefinition))
     return path.join(saveFolder, `${currentAsset.id}_${currentAsset.name}`)
   },
