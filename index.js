@@ -33,6 +33,7 @@ global.aptugocli = {
   createIfDoesntExists: (folderPath) => {
     if (!fs.existsSync(folderPath)) {
       fs.mkdirSync(folderPath, { recursive: true })
+      fs.chmodSync(folderPath, 777)
     }
   },
   pretify: (input, parser, filename) => {
