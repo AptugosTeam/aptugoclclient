@@ -56,6 +56,7 @@ const twigExtensions = () => {
     if (typeof value === "number") return `"${value}"`
     if (/\${.*}/.exec(value)) return "{`" + value + "`}"
     else if (value.substr(0,1) === '{') return value
+    else if (value.substr(0,4) === 'var:') return value.substr(4)
     else return `"${value}"`
   })
 
