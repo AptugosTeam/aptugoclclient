@@ -62,9 +62,9 @@ module.exports = {
     aptugocli.createIfDoesntExists(path.join(saveFolder,'Tables'))
     aptugocli.createIfDoesntExists(path.join(saveFolder,'Pages'))
 
-    let { _id, createdAt, modifiedAt, ...rest } = app
+    let { _id, createdAt, modifiedAt, lastBuild, ...rest } = app
     modifiedAt = new Date().getTime()
-    write({ saveFolder: saveFolder, filename: 'basics.json', content: { _id, createdAt, modifiedAt, settings: { ...app.settings } } })
+    write({ saveFolder: saveFolder, filename: 'basics.json', content: { _id, createdAt, modifiedAt, lastBuild, settings: { ...app.settings } } })
     if (app.tables) write({ saveFolder: saveFolder, filename: 'tables.json', content: app.tables, clean: 'Tables' })
     if (app.pages) write({ saveFolder: saveFolder, filename: 'pages.json', content: app.pages, clean: 'Pages' })
     if (app.assets) write({ saveFolder: saveFolder, filename: 'assets.json', content: app.assets })
