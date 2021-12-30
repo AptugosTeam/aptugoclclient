@@ -180,6 +180,11 @@ module.exports = async (arguments, extraarguments = {}) => {
         case 'renderer':
           output = require('./cmds/renderer')(subcmd)
           break
+        case 'utils':
+          if (subcmd._.slice(2).length) {
+            output = aptugocli[subcmd._[1]].apply(this, subcmd._.slice(2))
+          }
+          break
         default:
           output = `"${cmd}" is not a valid command!`
           break
