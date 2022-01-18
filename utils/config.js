@@ -40,8 +40,13 @@ module.exports = {
   verifySystem: () => {
     verifyNode = function() {
       try {
-        return spawnSync(`node -v`, { shell: true }).stdout.toString().trim()
+        const regex = /v([0-9.]*)/gm;
+        const ss = spawnSync(`node -v`, { shell: true })
+        const str = ss.stdout.toString()
+        const m = regex.exec(str)
+        return m[1]
       } catch(e) {
+        console.log(e)
         return 'error'
       }
     }
@@ -72,7 +77,11 @@ module.exports = {
 
     verifyPNPM = function() {
       try {
-        return spawnSync(`pnpm -v`, { shell: true }).stdout.toString().trim()
+        const regex = /([0-9.]*)/gm;
+        const ss = spawnSync(`pnpm -v`, { shell: true })
+        const str = ss.stdout.toString()
+        const m = regex.exec(str)
+        return m[1]
       } catch(e) {
         return 'error'
       }

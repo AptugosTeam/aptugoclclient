@@ -11,6 +11,7 @@ const te = require('./twigExtensions')
 const saveTwigTemplates = require('./twigTemplates')
 const { extendFilter, extendFunction, twig: _twig, cache } = require('twig/twig.js')
 const copyStaticFiles = require('./copystaticfiles')
+const copyExtraFiles = require('./copyextrafiles')
 const buildPage  = require('./buildpage')
 const log = require('../log')
 const ora = require('ora')
@@ -105,6 +106,12 @@ module.exports = {
             return 'finished pages'
           })
           break
+        case 'extraFiles':
+          if (aptugo) aptugo.setFeedback('Copy Files required by Elements...')
+          return module.exports.fourthStep_extraFiles(parameters).then(() => {
+            if (aptugo) aptugo.setFeedback('Copy Files Required finished.')
+            return 'finished extrafiles'
+          })
         case 'extra':
           if (aptugo) aptugo.setFeedback('Generate Extra Settings...')
           return module.exports.fourthStep_extraSettings(parameters).then(() => {
@@ -135,16 +142,19 @@ module.exports = {
           if (aptugo) aptugo.setFeedback('Copy Static Files...')
           module.exports.thirdStep_generatePages(parameters).then(() => {
             if (aptugo) aptugo.setFeedback('Generate Pages...')
-            module.exports.fourthStep_extraSettings(parameters).then(() => {
-              if (aptugo) aptugo.setFeedback('Rebuild Pages with extra settings...')
-              module.exports.fifthStep_postBuild(parameters).then(() => {
-                if (aptugo) aptugo.setFeedback('Post build stuff...')
-                module.exports.sixthStep_buildScripts(parameters).then(() => {
-                  if (aptugo) aptugo.setFeedback('Post build scripts...')
-                  module.exports.lastStep_success(parameters).then(() => {
-                    if (aptugo) aptugo.setFeedback('done')
-                    // finished
-                  }) 
+            module.exports.fourthStep_extraFiles(parameters).then(() => {
+              if (aptugo) aptugo.setFeedback('Copy Files Required by Elements...')
+              module.exports.fourthStep_extraSettings(parameters).then(() => {
+                if (aptugo) aptugo.setFeedback('Rebuild Pages with extra settings...')
+                module.exports.fifthStep_postBuild(parameters).then(() => {
+                  if (aptugo) aptugo.setFeedback('Post build stuff...')
+                  module.exports.sixthStep_buildScripts(parameters).then(() => {
+                    if (aptugo) aptugo.setFeedback('Post build scripts...')
+                    module.exports.lastStep_success(parameters).then(() => {
+                      if (aptugo) aptugo.setFeedback('done')
+                      // finished
+                    }) 
+                  })
                 })
               })
             })
@@ -249,6 +259,7 @@ module.exports = {
 
       aptugocli.skipSettings = true
       aptugocli.filesWithExtraSettings = []
+      aptugocli.filesRequiredByElements = []
       cache(false)
       twigExtensions()
       _twig({
@@ -311,6 +322,23 @@ module.exports = {
     })
   },
 
+  fourthStep_extraFiles: (parameters) => {
+    return new Promise((resolve, reject) => {
+      const start = new Date()
+      const spinner = ora('Copying extra files from elements...\n').start()
+      spinner.stream = process.stdout
+      if (parameters.skip.indexOf('extraFiles') === -1) {
+        copyExtraFiles({ ...parameters, files: aptugocli.filesRequiredByElements })
+        const end = new Date()
+        spinner.info(`Extra Files copied: ${humanizeDuration(end - start)}`)
+      } else {
+        const end = new Date()
+        spinner.info(`Extra Files from elements skiped: ${humanizeDuration(end - start)}`)
+      }
+      resolve()
+    })
+  },
+
   fourthStep_extraSettings: (parameters) => {
     return new Promise((resolve, reject) => {
       const start = new Date()
@@ -328,6 +356,7 @@ module.exports = {
       resolve()
     })
   },
+
   fifthStep_postBuild: (parameters) => {
     return new Promise((resolve, reject) => {
       const start = new Date()
@@ -377,6 +406,7 @@ module.exports = {
       }
     })
   },
+
   sixthStep_buildScripts: (parameters) => {
     return new Promise((resolve, reject) => {
       var isWin = process.platform === "win32"
@@ -449,6 +479,7 @@ module.exports = {
       }
     })
   },
+
   lastStep_success: (parameters) => {
     return new Promise((resolve, reject) => {
       const fromcommandline = !!require.main

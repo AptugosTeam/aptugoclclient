@@ -120,15 +120,33 @@ module.exports = (element, parameters) => {
       if (parameters.element.values) parameters.element.values = parseElementValues(parameters.element.values, parameters)
       aptugocli.currentRenderingElement = parameters.element
       
-      // Brings delayed content matching this element
-      parameters.delayed = parameters.page.delays ? parameters.page.delays[parameters.element.value] || [] : []
-      parameters.delayed = parameters.delayed.concat(inherits.map(inherit => inherit.delays))
-      
       // handle FIELDS special case
       const broughtElement = aptugocli.loadedElements.find(item => item.path === `${parameters.element.value}.tpl`)
-      elementPath = broughtElement.realPath || `${element.value}.tpl`
+      elementPath = broughtElement.realPath || `${element.value}.tpl`
       
-  
+      // Brings delayed content matching this element
+      parameters.delayed = []
+      if (parameters.page.delays) {
+        if (broughtElement.usesDelays) { // Non-linear use of delays
+          const res = broughtElement.usesDelays.filter(item => parameters.page.delays[item])
+          res.forEach(section => {
+            parameters.delayed.push({ [section]: parameters.page.delays[section] })
+          })
+        }
+        if (parameters.page.delays[parameters.element.value]) {
+          parameters.delayed = parameters.delayed.concat(parameters.page.delays[parameters.element.value])
+        }
+        parameters.delayed = parameters.delayed.concat(inherits.map(inherit => inherit.delays))
+      } 
+
+      // Check for Element Extra Files
+      if (broughtElement.extraFiles) {
+        const extraFilesLoaded = broughtElement.extraFiles.map(ef => {
+          return { ...ef, ...parameters }
+        })
+        aptugocli.filesRequiredByElements.push(...extraFilesLoaded)
+      }
+
       // Check for Element Extra Settings
       if (broughtElement.settings) {
         broughtElement.settings.forEach(setting => {
@@ -204,11 +222,10 @@ module.exports = (element, parameters) => {
     aptugocli.currentRenderingElement = { ...element, ...elementDefiniton }
     if (aptugocli.currentRenderingElement.values) aptugocli.currentRenderingElement.values = parseElementValues(aptugocli.currentRenderingElement.values, parameters)
 
-    parameters.delayed = parameters.page.delays ? parameters.page.delays[aptugocli.currentRenderingElement.value] || [] : []
-    // parameters.delayed = parameters.delayed.concat(inherits.map(inherit => inherit.delays))
+    parameters.delayed = parameters.page.delays ? parameters.page.delays[aptugocli.currentRenderingElement.value] || [] : []
     parameters.element = aptugocli.currentRenderingElement
     const broughtElement = aptugocli.loadedElements.find(item => item.path === `${aptugocli.currentRenderingElement.value}.tpl`)
-    let elementPath = broughtElement.realPath || `${element.value}.tpl`
+    let elementPath = broughtElement.realPath || `${element.value}.tpl`
     
     // console.log( aptugocli.currentRenderingElement.value  )
     if (aptugocli.currentRenderingElement.value === 'field') {

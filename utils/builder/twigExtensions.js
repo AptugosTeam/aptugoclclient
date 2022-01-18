@@ -93,7 +93,7 @@ module.exports = {
   },
   saveDelayed: (section, content, priority = 5) => {
     if (!aptugocli.skipDelaySaving) {
-      let delays = aptugocli.currentRenderingPage.delays || {}
+      let delays = aptugocli.currentRenderingPage.delays || {}
       if (!delays[section]) delays[section] = []
       if (delays[section].indexOf(content.trim()) < 0) {
         if (priority === 1) delays[section].unshift(content.trim())
