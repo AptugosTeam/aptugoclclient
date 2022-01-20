@@ -120,7 +120,7 @@ module.exports = async (arguments, extraarguments = {}) => {
   
   return await checkLicense().then((result) => {
     try {
-      if (cmd !== 'config') {
+      if (cmd !== 'config' && cmd !== 'utils') {
         const checkResult = check()
         if (checkResult !== 0) {
           if (fromcommandline) {
