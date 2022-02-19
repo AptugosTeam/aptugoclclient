@@ -54,7 +54,7 @@ global.aptugocli = {
           parser = 'scss'
           break
         default:
-          log(`Could not find a good parser for file ${filename} using ${parser}`, { type: 'softwarning' })
+          log(`Could not find a good parser for file ${filename} using ${parser}`, { type: 'softwarning', level: 2 })
           return input
       }
     }
@@ -74,7 +74,6 @@ global.aptugocli = {
         plugins: [parserTypeScript, parserBabel, parserScss, organizeImports]
       })
     } catch(e) {
-      console.log(e, fs.existsSync(filename))
       log(`Could not prettify file ${filename} using ${parser}`, { type: 'warning' })
     }
     return toReturn
@@ -113,8 +112,8 @@ module.exports = async (arguments, extraarguments = {}) => {
     cmd = 'help'
   }
 
-  if (args.loglevel) {
-    console.log('Setting loglevel to ', args.loglevel)
+  if (args.loglevel && args.loglevel !== aptugocli.loglevel) {
+    console.debug(`Setting loglevel to ${args.loglevel}`)
     aptugocli.loglevel = args.loglevel
   }
   
@@ -191,11 +190,16 @@ module.exports = async (arguments, extraarguments = {}) => {
       }
       if (output instanceof Promise) {
         return output.then(res => {
-          if (fromcommandline) console.log(res)
-          return {
-            exitCode: 0,
-            data: res
-          }    
+          if (res.exitCode) {
+            if (fromcommandline) throw(res)
+            return res
+          } else {
+            if (fromcommandline) console.log(res)
+            return {
+              exitCode: 0,
+              data: res
+            }
+          }
         })
       } else {
         if (fromcommandline) console.log(output)
@@ -211,9 +215,6 @@ module.exports = async (arguments, extraarguments = {}) => {
     
   })
   .catch((error) => {
-    console.error(chalk.red.bold(error))
-    cmd = 'config'
-    subcmd = { _: ['ask','license'] }
-    require('./cmds/config')(subcmd)
+    aptugo.setFeedback(error.message, true)
   })
 }

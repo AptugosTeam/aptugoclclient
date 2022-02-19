@@ -40,6 +40,7 @@ function getInheritedChilds(element) {
 
 module.exports = (page, parameters) => {
   buildPage = (page, parameters) => {
+    if (parameters.stoped) return
     // Load page
     const pageDefiniton = { ...loadPage(page.unique_id, parameters.appFolder), ...page }
     aptugocli.currentRenderingPage = pageDefiniton

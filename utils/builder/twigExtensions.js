@@ -9,11 +9,8 @@ module.exports = {
     //   return builderObj.plainPages[value]
   },
   fieldData: (value) => {
-    // if (!value) return
+    if (!value) return
     let fieldDefinition = value
-    if (!value) {
-      console.log('value', value, aptugocli.currentRenderingElement.name, aptugocli.currentRenderingPage.name)
-    }
     if (value.type === 'element') return value
     
     if (!value.unique_id) {

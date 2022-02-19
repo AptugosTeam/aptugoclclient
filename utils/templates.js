@@ -33,8 +33,12 @@ module.exports = {
   },
   version: (args) => {
     const folders = get('folders')
-    const version = fs.readFileSync( path.join(folders.templates, '..', 'version.txt'), { encoding: 'utf8' } )
-    return version
+    if ( folders.templates && fs.existsSync( path.join(folders.templates, 'version.txt') ) ) {
+      const version = fs.readFileSync( path.join(folders.templates, 'version.txt'), { encoding: 'utf8' } )
+      return version
+    } else {
+      return 'unknown'
+    }
   },
   create: (args) => {
     console.log(args)

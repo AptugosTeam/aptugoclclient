@@ -12,6 +12,8 @@ const warning = chalk.keyword('red')
 const debugElement = null
 module.exports = (message, options) => {
   let output = ''
+  let func = 'log'
+  let text = ''
   if (!options.verbosity) options.verbosity = 1
   if (options.level) output = ' '.repeat(options.level * 2)
 
@@ -24,10 +26,16 @@ module.exports = (message, options) => {
   else if (options.type === 'subtitle2') output += `${typeSubtitleB(message)}`
   else output += `${message}`
 
-  if (options.verbosity <= aptugocli.loglevel || (debugElement && options.id === debugElement)) {
-    console.log( `${output} (${options.verbosity})` )
-    if (typeof aptugo !== 'undefined') aptugo.setFeedback(`${output} (${options.verbosity})`)
-  }
-  if (options.exit) process.exit(1)
   
+  if (options.verbosity <= aptugocli.loglevel || (debugElement && options.id === debugElement)) {
+    if (options.verbosity === 1) {
+      func = 'info'
+      text = output
+    } else {
+      func = 'log'
+      text = `${output} (${options.verbosity})`
+    }
+    // if (typeof aptugo !== 'undefined') aptugo.setFeedback(`${output} (${options.verbosity})`)
+    console[func](text)
+  }  
 }

@@ -6,7 +6,12 @@ const cliSelect = require('cli-select')
 const log = require('../utils/log')
 
 module.exports = async (args) => {
-  log('Application Build', { type: 'mainTitle' })
+  if (args.only) {
+    log(`Application Build: ${args.only}`, { type: 'mainTitle' })
+  } else {
+    log('Application Build', { type: 'mainTitle' })
+  }
+  
   let appSelected
   let typeSelected
   const apps = await appsList()
@@ -62,6 +67,11 @@ module.exports = async (args) => {
   }
   return build(args).then(res => {
     return res
+  }).catch(e => {
+    return {
+      exitCode: 1,
+      data: e
+    }
   })
   // return build(args)
 }

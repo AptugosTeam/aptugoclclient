@@ -7,7 +7,6 @@ module.exports = (twigParameters, parameters, element) => {
   try {
     toReturn = template.render({ ...parameters, builder: aptugocli })
   } catch(e) {
-    console.error(e, element)
     error(`Problem rendering ${element.value}`, true)
   }
   return toReturn

@@ -36,6 +36,7 @@ function getInheritedChilds(element) {
 
 module.exports = (element, parameters) => {
   buildField = (parameters) => {
+    if (parameters.stoped) return
     let elementPath
     if (parameters.element.values.Field) {
       const fieldToRender = aptugocli.plainFields[parameters.element.values.Field]
@@ -84,6 +85,7 @@ module.exports = (element, parameters) => {
     return newValues
   },
   buildElement = (element, parameters) => {
+    if (parameters.stoped) return
     if (parameters.render) return renderElement(element, parameters)
     else {
       log(`Building element: ${element.name} (${element.value} - ${parameters.page.name} - ${element.unique_id})`, { type: 'advance', level: parameters.level, verbosity: 8, id: element.unique_id })
@@ -183,6 +185,7 @@ module.exports = (element, parameters) => {
     return toreturn
   },
   renderElement = (element, parameters) => {
+    if (parameters.stoped) return
     log(`Rendering element: ${element.name} (${element.value} - ${parameters.page.unique_id} - ${element.unique_id})`, { type: 'advance', level: parameters.level, verbosity: 8, id: element.unique_id })
     let toReturn = ''
     let subElementsContent = ''
@@ -248,7 +251,6 @@ module.exports = (element, parameters) => {
       toReturn += twigRender({ ref: elementPath, debug: false, trace: false, rethrow: true }, parameters, aptugocli.currentRenderingElement)
       broughtElement.rendered = toReturn
     } catch(e) {
-      console.error(e)
       error(`Problems rendering ${element.value}`, true)
     }
 
