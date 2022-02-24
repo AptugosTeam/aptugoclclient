@@ -4,7 +4,7 @@ const util = require('util')
 const fs = require('fs')
 const { get: getTemplate, searchForRenderingPlaceholder } = require('../templates')
 const { get: getConfig } = require('../config')
-const { load: loadApp } = require('../apps')
+const { load: loadApp, save } = require('../apps')
 const copyAssets = require('./copyassets')
 const loadElements = require('./loadElements')
 const te = require('./twigExtensions')
@@ -18,8 +18,18 @@ const ora = require('ora')
 const chalk = require('chalk')
 const humanizeDuration = require("humanize-duration")
 const {spawn, execSync} = require('child_process')
+const AdmZip = require("adm-zip")
 const error = require('../error')
 const errored = false
+const { randomFillSync } = require('crypto')
+const { default: axios } = require('axios')
+const fmdata = require('formdata-node')
+
+const random = (() => {
+  const buf = Buffer.alloc(16)
+  return () => randomFillSync(buf).toString('hex')
+})()
+
 const twigExtensions = () => {
   extendFunction('parse', te.parse)
   extendFunction('includeTemplate', te.includeTemplate)
@@ -76,31 +86,31 @@ const twigExtensions = () => {
 module.exports = {
   build: async ({ app, type = 'Development', clean = false, skip = [], only = null }) => {
     if (!only) log(`Building ${app.settings.name} in ${type} mode`, { type: 'mainTitle' })
-    if (aptugo) aptugo.setFeedback('Setting up build...')
+    if (typeof aptugo !== 'undefined') aptugo.setFeedback('Setting up build...')
     const parameters = module.exports.buildParameters({ app, type, clean, variables: {}, skip })
 
     if (only) {
       switch (only) {
         case 'setup':
-          if (aptugo) aptugo.setFeedback('Build Setup...')
+          if (typeof aptugo !== 'undefined') aptugo.setFeedback('Build Setup...')
           return module.exports.firstStep_setupBuild(parameters).then(() => {
-            if (aptugo) aptugo.setFeedback('Build Setup finished.')
+            if (typeof aptugo !== 'undefined') aptugo.setFeedback('Build Setup finished.')
             return 'finished setup'
           })
           break
         case 'check':
-          if (aptugo) aptugo.setFeedback('Checking your Application...')
+          if (typeof aptugo !== 'undefined') aptugo.setFeedback('Checking your Application...')
           return module.exports.secondStep_checkApplication(parameters).then((response) => {
-            if (aptugo) aptugo.setFeedback('Finished Checking your Application.')
+            if (typeof aptugo !== 'undefined') aptugo.setFeedback('Finished Checking your Application.')
             return 'finished check'
           }).catch(e => {
-            if (aptugo) aptugo.setFeedback('Ran into an issue checking your application.', true)
+            if (typeof aptugo !== 'undefined') aptugo.setFeedback('Ran into an issue checking your application.', true)
             return e
           }) 
         case 'copy':
-          if (aptugo) aptugo.setFeedback('Copy Static Files...')
+          if (typeof aptugo !== 'undefined') aptugo.setFeedback('Copy Static Files...')
           return module.exports.thirdStep_copyStaticFiles(parameters).then((res) => {
-            if (aptugo) aptugo.setFeedback('Copy Static Files finished.')
+            if (typeof aptugo !== 'undefined') aptugo.setFeedback('Copy Static Files finished.')
             return 'finished copy'
           }).catch(e => {
             console.log('caught eerrrorr', e)
@@ -109,9 +119,9 @@ module.exports = {
           break
         case 'pages':
           if (parameters.stoped) return
-          if (aptugo) aptugo.setFeedback('Generate Pages and Elements...')
+          if (typeof aptugo !== 'undefined') aptugo.setFeedback('Generate Pages and Elements...')
           return module.exports.fourthStep_generatePages(parameters).then(() => {
-            if (aptugo) aptugo.setFeedback('Generate Pages and Elements finished.')
+            if (typeof aptugo !== 'undefined') aptugo.setFeedback('Generate Pages and Elements finished.')
             return 'finished pages'
           }).catch(e => {
             conosle.log('caught somethign here')
@@ -120,54 +130,61 @@ module.exports = {
           break
         case 'extraFiles':
           if (parameters.stoped) return
-          if (aptugo) aptugo.setFeedback('Copy Files required by Elements...')
+          if (typeof aptugo !== 'undefined') aptugo.setFeedback('Copy Files required by Elements...')
           return module.exports.fifthStep_extraFiles(parameters).then(() => {
-            if (aptugo) aptugo.setFeedback('Copy Files Required finished.')
+            if (typeof aptugo !== 'undefined') aptugo.setFeedback('Copy Files Required finished.')
             return 'finished extrafiles'
           })
         case 'extra':
           if (parameters.stoped) return
-          if (aptugo) aptugo.setFeedback('Generate Extra Settings...')
+          if (typeof aptugo !== 'undefined') aptugo.setFeedback('Generate Extra Settings...')
           return module.exports.fifthStep_extraSettings(parameters).then(() => {
-            if (aptugo) aptugo.setFeedback('Generate Extra Settings finished.')
+            if (typeof aptugo !== 'undefined') aptugo.setFeedback('Generate Extra Settings finished.')
             return 'finished extra'
           })
           break
         case 'post':
-          if (aptugo) aptugo.setFeedback('Post Build Scripts...')
+          if (typeof aptugo !== 'undefined') aptugo.setFeedback('Post Build Scripts...')
           return module.exports.sixthStep_postBuild(parameters).then(() => {
-            if (aptugo) aptugo.setFeedback('Post Build Scripts finished.')
+            if (typeof aptugo !== 'undefined') aptugo.setFeedback('Post Build Scripts finished.')
             return 'finished post'
           })
           break
         case 'buildscripts':
-          if (aptugo) aptugo.setFeedback('Build Scripts...')
+          if (typeof aptugo !== 'undefined') aptugo.setFeedback('Build Scripts...')
           return module.exports.seventhStep_buildScripts(parameters).then(() => {
-            if (aptugo) aptugo.setFeedback('Build Scripts finished.')
+            if (typeof aptugo !== 'undefined') aptugo.setFeedback('Build Scripts finished.')
             return 'finished buildscripts'
+          })
+          break
+        case 'deploy':
+          if (typeof aptugo !== 'undefined') aptugo.setFeedback('Deployment Started...')
+          return module.exports.eightStep_deploy(parameters).then(() => {
+            if (typeof aptugo !== 'undefined') aptugo.setFeedback('Deployment Finished!')
+            return 'finished deployment'
           })
           break
       }
       return 'error' + only
     } else {
       module.exports.firstStep_setupBuild(parameters).then(() => {
-        if (aptugo) aptugo.setFeedback('Build Setup...')
+        if (typeof aptugo !== 'undefined') aptugo.setFeedback('Build Setup...')
         module.exports.secondStep_checkApplication(parameters).then(() => {
-          if (aptugo) aptugo.setFeedback('Check your Application...')
+          if (typeof aptugo !== 'undefined') aptugo.setFeedback('Check your Application...')
           module.exports.thirdStep_copyStaticFiles(parameters).then(() => {
-            if (aptugo) aptugo.setFeedback('Copy Static Files...')
+            if (typeof aptugo !== 'undefined') aptugo.setFeedback('Copy Static Files...')
             module.exports.fourthStep_generatePages(parameters).then(() => {
-              if (aptugo) aptugo.setFeedback('Generate Pages...')
+              if (typeof aptugo !== 'undefined') aptugo.setFeedback('Generate Pages...')
               module.exports.fifthStep_extraFiles(parameters).then(() => {
-                if (aptugo) aptugo.setFeedback('Copy Files Required by Elements...')
+                if (typeof aptugo !== 'undefined') aptugo.setFeedback('Copy Files Required by Elements...')
                 module.exports.fifthStep_extraSettings(parameters).then(() => {
-                  if (aptugo) aptugo.setFeedback('Rebuild Pages with extra settings...')
+                  if (typeof aptugo !== 'undefined') aptugo.setFeedback('Rebuild Pages with extra settings...')
                   module.exports.sixthStep_postBuild(parameters).then(() => {
-                    if (aptugo) aptugo.setFeedback('Post build stuff...')
+                    if (typeof aptugo !== 'undefined') aptugo.setFeedback('Post build stuff...')
                     module.exports.seventhStep_buildScripts(parameters).then(() => {
-                      if (aptugo) aptugo.setFeedback('Post build scripts...')
+                      if (typeof aptugo !== 'undefined') aptugo.setFeedback('Post build scripts...')
                       module.exports.lastStep_success(parameters).then(() => {
-                        if (aptugo) aptugo.setFeedback('done')
+                        if (typeof aptugo !== 'undefined') aptugo.setFeedback('done')
                         // finished
                       }) 
                     })
@@ -487,17 +504,17 @@ module.exports = {
         let command = null
         const folders = getConfig('folders')
         if (parameters.type === 'Development') {
-          
-          const scriptFolder = path.join(folders.templates, parameters.settings.template, 'templatescripts', isWin ? 'development.bat' : 'development.js') 
+          const scriptFolder = path.join(folders.templates, parameters.settings.template, 'templatescripts', isWin ? 'development.bat' : 'development.sh') 
           if ( fs.existsSync( scriptFolder ) ) {
             command = scriptFolder
           }
         } else {
-          const scriptFolder = path.join(folders.templates, parameters.settings.template, 'templatescripts', isWin ? 'production.bat' : 'production.js')
+          const scriptFolder = path.join(folders.templates, parameters.settings.template, 'templatescripts', isWin ? 'production.bat' : 'production.sh')
           if ( fs.existsSync( scriptFolder ) ) {
             command = scriptFolder
           }
         }
+
         if (command) {
           const baseFilesFolder = path.join(parameters.fullbuildfolder, parameters.buildFolder)
           const child = spawn(`cd ${baseFilesFolder} && ${command}`, {
@@ -535,6 +552,90 @@ module.exports = {
         resolve()
       }
     })
+  },
+
+  eightStep_deploy: (parameters) => {
+    // zip front-end
+    let zipFilesFolder = path.join(parameters.fullbuildfolder, parameters.buildFolder, 'build')
+    let saveTo = path.join(os.tmpdir(), 'aptugo', `aptugoapp-build-${random()}.zip`)
+    var zip = new AdmZip()
+
+    let dirFiles = fs.readdirSync(zipFilesFolder)
+    dirFiles.forEach((file) => {
+      if(fs.lstatSync(path.join(zipFilesFolder, file)).isDirectory()) {
+        console.log('...adding directory', file)
+        zip.addLocalFolder(path.join(zipFilesFolder, file), file)
+      } else {
+        console.log('...adding file', file)
+        zip.addLocalFile(path.join(zipFilesFolder, file))
+      }
+     })
+
+    zip.writeZip(saveTo)
+    
+    
+    // post
+    const url = aptugocli.friendly(parameters.application.settings.name)
+    const buffer = zip.toBuffer()
+    const data = new FormData();
+    const blob = new Blob([buffer],{type : 'multipart/form-data'});
+    data.append('data', blob);
+    const options = {
+      url: 'https://appuploader.aptugo.app:8500?appName=' + url,
+      method: 'POST',
+      headers: { 'content-type': 'multipart/form-data' },
+      data
+    };
+    
+    axios(options)
+      .then(response => {
+        console.warn('uploaded', response)
+      })
+      .catch(error => {
+        console.warn('erorr uploading', error)
+    
+      })
+    
+    // zip backend
+    const zipFilesFolderbe = path.join(parameters.fullbuildfolder, parameters.buildFolder, 'back-end')
+    saveTo = path.join(os.tmpdir(), 'aptugo', `aptugoapp-build-backend-${random()}.zip`)
+    var zipbe = new AdmZip()
+
+    dirFiles = fs.readdirSync(zipFilesFolderbe)
+    dirFiles.forEach((file) => {
+      if (file !== 'node_modules') {
+        if(fs.lstatSync(path.join(zipFilesFolderbe, file)).isDirectory()) {
+          console.log('...adding directory', file)
+          zipbe.addLocalFolder(path.join(zipFilesFolderbe, file), file)
+        } else {
+          console.log('...adding file', file)
+          zipbe.addLocalFile(path.join(zipFilesFolderbe, file))
+        }
+      }
+     })
+
+    zipbe.writeZip(saveTo)
+    
+    // post back-end
+    const bebuffer = zipbe.toBuffer()
+    const bedata = new FormData();
+    const beblob = new Blob([bebuffer],{type : 'multipart/form-data'});
+    bedata.append('data', beblob);
+    const beoptions = {
+      url: 'https://appuploader.aptugo.app:8500?type=be&appName=' + parameters.settings.apiURL.substring(8),
+      method: 'POST',
+      headers: { 'content-type': 'multipart/form-data' },
+      data: bedata
+    }
+    
+    axios(beoptions)
+      .then(response => {
+        console.warn('uploaded', response)
+      })
+      .catch(error => {
+        console.warn('erorr uploading', error)
+    
+      })
   },
 
   lastStep_success: (parameters) => {

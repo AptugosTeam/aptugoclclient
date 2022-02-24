@@ -215,6 +215,7 @@ module.exports = async (arguments, extraarguments = {}) => {
     
   })
   .catch((error) => {
-    aptugo.setFeedback(error.message, true)
+    if (typeof aptugo !== 'undefined') aptugo.setFeedback(error.message, true)
+    else console.log('ERROR:', error)
   })
 }
