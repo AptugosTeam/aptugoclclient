@@ -51,7 +51,7 @@ module.exports = async (args) => {
       console.log(`All configured options cleared\n`)
       break
     case 'set':
-      set(args.var, args.value)
+      return { exitCode: 0, message: set(args.var, args.value) }
       break
     case 'ask':
       prompt.start()

@@ -96,6 +96,8 @@ module.exports = {
           return module.exports.firstStep_setupBuild(parameters).then(() => {
             if (typeof aptugo !== 'undefined') aptugo.setFeedback('Build Setup finished.')
             return 'finished setup'
+          }).catch(e => {
+            console.log('caught Error on SetupBuild', e)
           })
           break
         case 'check':
