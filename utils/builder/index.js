@@ -329,6 +329,10 @@ module.exports = {
         // Check Tables
         const tables = parameters.application.tables
         tables.forEach(table => {
+          if ( aptugocli.friendly(table.name) === aptugocli.friendly(table.singleName) ) {
+            throw { element: table, error: 'tablenamesame', type: 'table' }
+          }
+          
           table.fields.forEach(field => {
             const definition = parameters.template.fields.find(tplfield => tplfield.value === field.data_type)
             if (!definition) throw { element: field, error: 'nodefinition', type: 'field' }
@@ -341,7 +345,8 @@ module.exports = {
         resolve()
       } catch(e) {
         const theError = { exitCode: 124, message: 'something fishy', element: e.element, type: e.type || 'element' }
-        if (e.error === 'missingrequired') theError.message = `${e.element.column_name} has unfilled required definitions`
+        if (e.error === 'tablenamesame') theError.message = `${e.element.name} can not have the same name for Single Values`
+        else if (e.error === 'missingrequired') theError.message = `${e.element.column_name} has unfilled required definitions`
         else if (e.error === 'nodefinition') theError.message = `Your template does not support fields of type: ${e.element.data_type}`
         reject(theError)
       }
@@ -530,6 +535,7 @@ module.exports = {
           })
 
           child.stdout.on('data', function (data) {
+
             log(data.toString(), { verbosity: 8 })
           })
 
