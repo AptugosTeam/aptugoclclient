@@ -583,7 +583,7 @@ module.exports = {
     
     
     // post
-    const url = aptugocli.friendly(parameters.application.settings.name)
+    const url = parameters.settings.url.substring(8).toLowerCase()
     const buffer = zip.toBuffer()
     const data = new FormData();
     const blob = new Blob([buffer],{type : 'multipart/form-data'});
