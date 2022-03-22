@@ -21,7 +21,7 @@ const list = async (args) => {
 module.exports = async (args) => {
   switch (args._[1]) {
     case 'list':
-      console.log( await list(args) )
+      return await list(args)
       break
   }
 }

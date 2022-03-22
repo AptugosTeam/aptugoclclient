@@ -364,7 +364,7 @@ module.exports = {
           copyAssets(parameters)
           copyStaticFiles(parameters)
         } catch(e) {
-          console.log('------ caughtya!!!')
+          console.log('------ caughtya!!!', e)
           reject()
         }
         

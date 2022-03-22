@@ -194,7 +194,10 @@ module.exports = async (arguments, extraarguments = {}) => {
             if (fromcommandline) throw(res)
             return res
           } else {
-            if (fromcommandline) console.log(res)
+            if (fromcommandline) {
+              if (args.pipe) return console.log(JSON.stringify(res))
+              else console.log(res)
+            }
             return {
               exitCode: 0,
               data: res
