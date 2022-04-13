@@ -1,4 +1,9 @@
-const { list: structList } = require('../utils/structures')
+const { 
+  list: structList,
+  icon: structIcon
+} = require('../utils/structures')
+
+
 const Table = require('cli-table');
 
 const list = async (args) => {
@@ -18,10 +23,18 @@ const list = async (args) => {
   else return simpleList
 }
 
+const icon = async(args) => {
+  const res = await structIcon(args.structure)
+  return res
+}
+
 module.exports = async (args) => {
   switch (args._[1]) {
     case 'list':
       return await list(args)
+      break
+    case 'icon':
+      return await icon(args)
       break
   }
 }

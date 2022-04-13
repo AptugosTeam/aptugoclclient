@@ -16,17 +16,20 @@ module.exports = {
     structFolders.forEach(structFolder => {
       try {
         const structDefinition = JSON.parse( fs.readFileSync(path.join(folders.structures,structFolder,'structure.json'), { encoding: 'utf8'}, true) )
-        toReturn.push(structDefinition)
+        toReturn.push({ ...structDefinition, fullFolder: path.join(folders.structures,structFolder) })
       } catch(e) {}
     })
     return toReturn
   },
 
-  findStructure: (structureName) => {
-    const struct = module.exports.list().find(s => s.name === structureName)
+  findStructure: (structureNameOrID) => {
+    const struct = module.exports.list().find(s => {
+      if (s.name === structureNameOrID) return s
+      else if (s._id === String(structureNameOrID)) return s
+    })
     if (struct) return struct
     else {
-      error(`Could not find a structure named: ${structureName}`, true)
+      error(`Could not find a structure named (or with id): ${structureNameOrID}`, true)
     }
   },
 
@@ -51,8 +54,10 @@ module.exports = {
     })
 
     const init = fs.readFileSync(path.join(folders.structures,currentStructureFolder,'init.js'), { encoding: 'utf8'}, true)
-    const initFunction = new AsyncFunction('Application', 'State', 'Parameters', 'Store', init)
-    returned = await initFunction( state.app, state, parameters, {} )
+    const initFunction = new AsyncFunction('Application', 'State', 'Parameters', 'Store', 'aptugo', init)
+
+    returned = await initFunction( state.app, state, parameters, {}, aptugocli )
+
     if (returned) {
       if (returned.error) {
         error(returned.error, true)
@@ -63,8 +68,8 @@ module.exports = {
     }
 
     const code = fs.readFileSync(path.join(folders.structures,currentStructureFolder,'code.js'), { encoding: 'utf8'}, true)
-    const codeFunction = new AsyncFunction('Application', 'State', 'Parameters', 'Store', code)
-    returned = await codeFunction( state.app, state, parameters, {} )
+    const codeFunction = new AsyncFunction('Application', 'State', 'Parameters', 'Store', 'aptugo', code)
+    returned = await codeFunction( state.app, state, parameters, {}, aptugocli )
     if (returned) { 
       if (returned.pages) returned.pages = fixPages(returned.pages)
       if (returned.tables) returned.tables = fixTables(returned.tables)
@@ -73,8 +78,8 @@ module.exports = {
 
     const postinit = fs.readFileSync(path.join(folders.structures,currentStructureFolder,'postinit.js'), { encoding: 'utf8'}, true)
     if (postinit) {
-      const piFunction = new AsyncFunction('Application', 'State', 'Parameters', 'Store', postinit)
-      returned = await piFunction( state.app, state, parameters, {} )
+      const piFunction = new AsyncFunction('Application', 'State', 'Parameters', 'Store', 'aptugo', postinit)
+      returned = await piFunction( state.app, state, parameters, {}, aptugocli )
     } else {
       error(`Skiping post init for ${structure.name}`, false)
     }
@@ -85,6 +90,18 @@ module.exports = {
       state.app = returned 
     }
     return returned
+  },
+
+  icon: (structure, parameters) => {
+    if (typeof structure !== 'object') {
+      structure = module.exports.findStructure(structure)
+    }
+    if (structure) {
+      return path.join(structure.fullFolder, structure.icon)
+    } else {
+      error(`Could not find structure: ${structure}`)
+    }
+    
   }
 } 
 

@@ -10,6 +10,7 @@ module.exports = async (args) => {
   console.log( chalk.keyword('orange')('Creating a new Aptugo application') )
 
   // App Name
+  console.log(args)
   let appname = args._[1]
   if (!args._[1]) {
     prompt.start()
@@ -22,20 +23,28 @@ module.exports = async (args) => {
   }
 
   // App Template
-  console.log( chalk.keyword('orange')('\nSelect the template to use:') )
-  const structs = await structList()
-  const templateStructs = structs.filter(struct => struct.type === 'template')
-  let apptemplate = await cliSelect({
-    values: templateStructs,
-    cleanup: false,
-    valueRenderer: (value, selected) => {
-      return `${value.name} - ${value.desc}`
-    },
-  })
-
+  let apptemplate = {}
+  if (!args.template) {
+    console.log( chalk.keyword('orange')('\nSelect the template to use:') )
+    const structs = await structList()
+    const templateStructs = structs.filter(struct => struct.type === 'template')
+    apptemplate = await cliSelect({
+      values: templateStructs,
+      cleanup: false,
+      valueRenderer: (value, selected) => {
+        return `${value.name} - ${value.desc}`
+      },
+    })
+  } else {
+    const structs = await structList()
+    const templateStructs = structs.filter(struct => struct._id === String(args.template))
+    apptemplate.value = templateStructs[0]
+  }
+  
   // Structure Run
   const result = await structRun(apptemplate.value, { Name: appname } )
   save(result)
+
   console.log( chalk.bgKeyword('orange').black.bold('\n\nSuccessfuly created\n\n') )
   // Build App
   require('./build')({ app: result, type: 'Development' })

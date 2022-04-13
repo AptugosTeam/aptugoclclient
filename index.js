@@ -89,6 +89,11 @@ global.aptugocli = {
     } catch (e) {
       console.error('error writing file', e)
     }
+  },
+  ls: {
+    getItem: (itemName) => {
+      return 'lite'
+    }
   }
 }
 
@@ -121,6 +126,7 @@ module.exports = async (arguments, extraarguments = {}) => {
     try {
       if (cmd !== 'config' && cmd !== 'utils') {
         const checkResult = check()
+        console.log( checkResult )
         if (checkResult !== 0) {
           if (fromcommandline) {
             console.error(chalk.blue.bold('Missing config'))
@@ -196,7 +202,7 @@ module.exports = async (arguments, extraarguments = {}) => {
           } else {
             if (fromcommandline) {
               if (args.pipe) return console.log(JSON.stringify(res))
-              else console.log(res)
+              else process.stdout.write(res)
             }
             return {
               exitCode: 0,
