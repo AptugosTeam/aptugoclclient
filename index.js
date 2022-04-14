@@ -17,6 +17,7 @@ global.aptugocli = {
   plain: {},
   plainAssets: {},
   plainTables: {},
+  plainPages: {},
   activeParameters: {},
   extraSettings: [],
   friendly: (value) => {

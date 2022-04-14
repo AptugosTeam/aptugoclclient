@@ -219,6 +219,8 @@ module.exports = {
       return tree.map(item => {
         aptugocli.plain[item.unique_id] = item
         if (item.type === 'page') {
+          aptugocli.plain[page.unique_id] = item
+          aptugocli.plainPages[page.unique_id] = item
           Object.keys(item).map(propertyName => {
             if (item[propertyName] && item[propertyName].substr && item[propertyName].substr(0,2) === '()') {
               let replacedValue = item[propertyName].replace('aptugo.store.getState().application.tables','params.plainTables')
@@ -344,7 +346,6 @@ module.exports = {
             })
           })
         })
-        resolve()
       } catch(e) {
         const theError = { exitCode: 124, message: 'something fishy', element: e.element, type: e.type || 'element' }
         if (e.error === 'tablenamesame') theError.message = `${e.element.name} can not have the same name for Single Values`
@@ -352,6 +353,19 @@ module.exports = {
         else if (e.error === 'nodefinition') theError.message = `Your template does not support fields of type: ${e.element.data_type}`
         reject(theError)
       }
+
+      try {
+        // Check Pages
+        // console.log(parameters)
+        const pages = parameters.application.pages
+        pages.forEach(page => {
+          // console.log(page)
+        })
+      } catch(e) {
+        reject(e)
+      }
+
+      resolve()
     })
   },
 
