@@ -5,12 +5,13 @@ const getPrompt = require('util').promisify(prompt.get).bind(prompt)
 const cliSelect = require('cli-select')
 const { list: structList, run: structRun } = require('../utils/structures')
 const { save } = require('../utils/apps')
+const log = require('../utils/log')
 
 module.exports = async (args) => {
-  console.log( chalk.keyword('orange')('Creating a new Aptugo application') )
-
+  const fromcommandline = !!require.main
+  log('Creating a new Aptugo application', { type: 'mainTitle' })
+  
   // App Name
-  console.log(args)
   let appname = args._[1]
   if (!args._[1]) {
     prompt.start()
@@ -25,7 +26,7 @@ module.exports = async (args) => {
   // App Template
   let apptemplate = {}
   if (!args.template) {
-    console.log( chalk.keyword('orange')('\nSelect the template to use:') )
+    log('Select the template to use:', { type: 'promptHeader'})
     const structs = await structList()
     const templateStructs = structs.filter(struct => struct.type === 'template')
     apptemplate = await cliSelect({
@@ -44,8 +45,16 @@ module.exports = async (args) => {
   // Structure Run
   const result = await structRun(apptemplate.value, { Name: appname } )
   save(result)
+  log('Successfuly created')
 
-  console.log( chalk.bgKeyword('orange').black.bold('\n\nSuccessfuly created\n\n') )
   // Build App
-  require('./build')({ app: result, type: 'Development' })
+  if (!args.nobuild) {
+    const thebuilder = require('./build')
+    var output = await thebuilder({
+      app: result,
+      type: 'Development'
+    })
+  }
+
+  return output || result
 }

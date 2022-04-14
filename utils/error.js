@@ -1,7 +1,5 @@
-const chalk = require("chalk")
-const builder = require('./builder/index')
+const log = require('./log')
 module.exports = (message, exit) => {
-  console.log( chalk.red.bold(message) )
-  aptugo.setFeedback(message, true)
+  log(message, { type: 'error' })
   throw new Error(message)
 }

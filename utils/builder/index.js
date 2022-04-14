@@ -84,7 +84,9 @@ const twigExtensions = () => {
 }
 
 module.exports = {
-  build: async ({ app, type = 'Development', clean = false, skip = [], only = null }) => {
+  build: async (prefs) => {
+    const { app, type = 'Development', clean = false, skip = [], only = null } = prefs
+    
     if (!only) log(`Building ${app.settings.name} in ${type} mode`, { type: 'mainTitle' })
     if (typeof aptugo !== 'undefined') aptugo.setFeedback('Setting up build...')
     const parameters = module.exports.buildParameters({ app, type, clean, variables: {}, skip })

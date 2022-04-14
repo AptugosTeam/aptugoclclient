@@ -34,7 +34,7 @@ module.exports = async (args) => {
       }
     })
     args.app = appSelected.value
-  } else {
+  } else if (typeof args.app === String) {
     args.app = apps.filter(localapp => localapp.settings.name === args.app)[0]
   }
   
@@ -66,6 +66,7 @@ module.exports = async (args) => {
     args.skip = args.skip.split(',')
   }
   return build(args).then(res => {
+    console.log('after build')
     return res
   }).catch(e => {
     return {

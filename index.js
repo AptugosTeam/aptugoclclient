@@ -94,6 +94,17 @@ global.aptugocli = {
     getItem: (itemName) => {
       return 'lite'
     }
+  },
+  findPageInTree: (tree, unique_id) => {
+    if (tree) {
+      for (var i = 0; i < tree.length; i++) {
+        if (tree[i].unique_id === unique_id) {
+          return tree[i]
+        }
+        var found = aptugocli.findPageInTree(tree[i].children, unique_id)
+        if (found) return found
+      }
+    }
   }
 }
 
@@ -126,7 +137,6 @@ module.exports = async (arguments, extraarguments = {}) => {
     try {
       if (cmd !== 'config' && cmd !== 'utils') {
         const checkResult = check()
-        console.log( checkResult )
         if (checkResult !== 0) {
           if (fromcommandline) {
             console.error(chalk.blue.bold('Missing config'))
@@ -198,10 +208,12 @@ module.exports = async (arguments, extraarguments = {}) => {
         return output.then(res => {
           if (res.exitCode) {
             if (fromcommandline) throw(res)
-            return res
+            else return res
           } else {
             if (fromcommandline) {
               if (args.pipe) return console.log(JSON.stringify(res))
+              else if (res instanceof Array) console.log(res)
+              else if (res instanceof Object) console.log(res)
               else process.stdout.write(res)
             }
             return {
@@ -225,6 +237,6 @@ module.exports = async (arguments, extraarguments = {}) => {
   })
   .catch((error) => {
     if (typeof aptugo !== 'undefined') aptugo.setFeedback(error.message, true)
-    else console.log('ERROR:', error)
+    else console.trace('ERROR:', error)
   })
 }

@@ -8,9 +8,10 @@ const typeSubtitle = chalk.yellow
 const typeSubtitleB = chalk.blue
 const softwarning = chalk.keyword('gray')
 const warning = chalk.keyword('red')
+const error = chalk.keyword('red').bold
 
 const debugElement = null
-module.exports = (message, options) => {
+module.exports = (message, options = {}) => {
   let output = ''
   let func = 'log'
   let text = ''
@@ -21,6 +22,7 @@ module.exports = (message, options) => {
   else if (options.type === 'promptHeader') output += `${promptHeader(message)}`
   else if (options.type === 'softwarning') output += `${softwarning(message)}`
   else if (options.type === 'warning') output += `${warning(message)}`
+  else if (options.type === 'error') output += `${error(message)}`
   else if (options.type === 'title') output += `${typeTitle(message)}`
   else if (options.type === 'subtitle') output += `${typeSubtitle(message)}`
   else if (options.type === 'subtitle2') output += `${typeSubtitleB(message)}`

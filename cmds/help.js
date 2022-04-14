@@ -63,6 +63,8 @@ const menus = {
     aptugo structures [command]
 
     list ............... returns a list of the available structures
+    icon ............... returns the Base64 encoded icon for the structure
+    run ................ runs a structure
 
     aptugo structures list <options> ........ returns a list of all available structures
 
@@ -72,6 +74,13 @@ const menus = {
     aptugo structures icon <options> ........ returns the Base64 encoded icon for the structure
 
     --structure ........ the ID of the structure to retrieve the icon from
+
+    aptugo structures run <options> ......... runs a structure
+    example: aptugo structures run --structure "New Page" --app by6u6lwoD7bBP0xO --parentPage dZp7PwnX
+    
+    --structure ........ the ID of the structure to run
+    --app .............. the ID of the APP to run this structure into
+    --<any> ............ Structures require parameters and this is the way you set those
   `,
 
   renderer: `

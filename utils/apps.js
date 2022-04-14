@@ -23,7 +23,10 @@ module.exports = {
     appFolders.forEach(appFolder => {
       try {
         const appDefinition = JSON.parse( fs.readFileSync(path.join(appFolderDefinition, appFolder, 'basics.json'), { encoding: 'utf8'}, true) )
-        if (appDefinition._id === app._id) {
+        if (appDefinition._id === app._id || appDefinition._id === app) {
+          if (typeof app === 'string') {
+            app = { ...appDefinition }
+          }
           app.tables = JSON.parse( fs.readFileSync( path.join( appFolderDefinition, appFolder, 'tables.json' ), { encoding: 'utf8'}, true) )
           app.pages = JSON.parse( fs.readFileSync( path.join( appFolderDefinition, appFolder, 'pages.json' ), { encoding: 'utf8'}, true) )
           app.assets = JSON.parse( fs.readFileSync( path.join( appFolderDefinition, appFolder, 'assets.json' ), { encoding: 'utf8'}, true) )
