@@ -219,8 +219,8 @@ module.exports = {
       return tree.map(item => {
         aptugocli.plain[item.unique_id] = item
         if (item.type === 'page') {
-          aptugocli.plain[page.unique_id] = item
-          aptugocli.plainPages[page.unique_id] = item
+          // aptugocli.plain[page.unique_id] = item
+          // aptugocli.plainPages[page.unique_id] = item
           Object.keys(item).map(propertyName => {
             if (item[propertyName] && item[propertyName].substr && item[propertyName].substr(0,2) === '()') {
               let replacedValue = item[propertyName].replace('aptugo.store.getState().application.tables','params.plainTables')
