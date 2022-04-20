@@ -46,5 +46,8 @@ module.exports = {
     const pagePath = path.join(appFolder, 'Pages', `${unique_id}.json`)
     const pageDefinition = JSON.parse( fs.readFileSync( pagePath, { encoding: 'utf8'}, true) )
     return pageDefinition
+  },
+  updateElement: (element, args) => {
+    console.log(element, args)
   }
 }

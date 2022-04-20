@@ -83,7 +83,7 @@ module.exports = {
       const piFunction = new AsyncFunction('Application', 'State', 'Parameters', 'Store', 'aptugo', postinit)
       returned = await piFunction( state.app, state, parameters, {}, aptugocli )
     } else {
-      console.log(`Skiping post init for ${structure.name}`, false)
+      log(`Skiping post init for ${structure.name}`, false)
     }
     
     if (returned) {

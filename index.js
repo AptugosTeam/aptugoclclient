@@ -167,8 +167,16 @@ module.exports = async (arguments, extraarguments = {}) => {
           output = require('./cmds/help')(subcmd)
           break
     
+        case 'load':
+          output = require('./cmds/load')(subcmd)
+          break
+
         case 'new':
           output = require('./cmds/new')(subcmd)
+          break
+
+        case 'elements':
+          output = require('./cmds/elements')(subcmd)
           break
 
         case 'model':
@@ -207,7 +215,8 @@ module.exports = async (arguments, extraarguments = {}) => {
       }
       if (output instanceof Promise) {
         return output.then(res => {
-          if (res.exitCode) {
+          if (!res) {
+          } else if (res.exitCode) {
             if (fromcommandline) throw(res)
             else return res
           } else {

@@ -35,7 +35,7 @@ module.exports = async (args) => {
     })
     args.app = appSelected.value
   } else if (typeof args.app === 'string') {
-    args.app = apps.filter(localapp => localapp.settings.name === args.app)[0]
+    args.app = apps.filter(localapp => localapp.settings.name === args.app || localapp._id === args.app)[0]
   }
   
   if (!args.type) {
@@ -74,5 +74,4 @@ module.exports = async (args) => {
       data: e
     }
   })
-  // return build(args)
 }

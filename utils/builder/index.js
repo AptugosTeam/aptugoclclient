@@ -72,9 +72,6 @@ const twigExtensions = () => {
   })
 
   extendFilter('withoutVars', te.withoutVars)
-  
-
-  
 
   // extendFilter('parentPage', function(value) {
   //   const parentsTree = getCascadingTree(builderObj.plainPages, value.unique_id)
@@ -86,7 +83,7 @@ const twigExtensions = () => {
 module.exports = {
   build: async (prefs) => {
     const { app, type = 'Development', clean = false, skip = [], only = null } = prefs
-    
+    console.log(app)
     if (!only) log(`Building ${app.settings.name} in ${type} mode`, { type: 'mainTitle' })
     if (typeof aptugo !== 'undefined') aptugo.setFeedback('Setting up build...')
     const parameters = module.exports.buildParameters({ app, type, clean, variables: {}, skip })
