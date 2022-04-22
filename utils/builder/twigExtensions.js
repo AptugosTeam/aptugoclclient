@@ -120,7 +120,7 @@ module.exports = {
         })
       }
     } else { // APPLY
-      output = aptugocli.extraSettings[setting] ? typeof aptugocli.extraSettings[setting] === 'string' ? aptugocli.extraSettings[setting] : aptugocli.extraSettings[setting].join('\n') : ''
+      output = aptugocli.extraSettings[setting] ? (typeof aptugocli.extraSettings[setting] === 'string' || typeof aptugocli.extraSettings[setting] === 'number')  ? aptugocli.extraSettings[setting] : aptugocli.extraSettings[setting].join('\n') : ''
     }
     return output
   },

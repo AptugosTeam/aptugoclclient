@@ -267,7 +267,7 @@ module.exports = {
       var [varName, varValue] = thevar.split(':')
       try { buildData.variables[varName] = eval(varValue) } catch(e) { buildData.variables[varName] = varValue }
     })
-
+    
     if (!template) error('Error: Application does not have a template assigned (or it is missing)', true)
 
     aptugocli.activeParameters = {
@@ -293,7 +293,7 @@ module.exports = {
     return new Promise((resolve, reject) => {
       const start = new Date()
       const spinner = ora('Setting up build...').start()
-      aptugocli.extraSettings = parameters.variables || {}
+      aptugocli.extraSettings = { ...parameters.variables } || {}
       if (parameters.doClean) {
         fs.rmdirSync( path.join(parameters.fullbuildfolder, parameters.buildFolder), { recursive: true })
       }
