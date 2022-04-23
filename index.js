@@ -175,6 +175,10 @@ module.exports = async (arguments, extraarguments = {}) => {
           output = require('./cmds/new')(subcmd)
           break
 
+        case 'save':
+          output = require('./cmds/save')(subcmd)
+          break
+
         case 'elements':
           output = require('./cmds/elements')(subcmd)
           break

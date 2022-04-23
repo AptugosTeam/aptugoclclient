@@ -83,7 +83,6 @@ const twigExtensions = () => {
 module.exports = {
   build: async (prefs) => {
     const { app, type = 'Development', clean = false, skip = [], only = null } = prefs
-    console.log(app)
     if (!only) log(`Building ${app.settings.name} in ${type} mode`, { type: 'mainTitle' })
     if (typeof aptugo !== 'undefined') aptugo.setFeedback('Setting up build...')
     const parameters = module.exports.buildParameters({ app, type, clean, variables: {}, skip })
@@ -520,6 +519,13 @@ module.exports = {
       const spinner = ora('Running post-build scripts...\n').start()
       spinner.stream = process.stdout
 
+      let precommand = ''
+      Object.keys(parameters.variables).forEach(avar => {
+        if (avar.substring(0,4) === 'ENV.') {
+          precommand += `export ${avar.substring(4)}=${parameters.variables[avar]} &&`
+        }
+      })
+
       if (parameters.skip.indexOf('post') === -1) {
         let command = null
         const folders = getConfig('folders')
@@ -537,7 +543,7 @@ module.exports = {
 
         if (command) {
           const baseFilesFolder = path.join(parameters.fullbuildfolder, parameters.buildFolder)
-          const child = spawn(`cd ${baseFilesFolder} && ${command}`, {
+          const child = spawn(`${precommand} cd ${baseFilesFolder} && ${command}`, {
             shell: true
           })
 
@@ -548,7 +554,6 @@ module.exports = {
           })
 
           child.stdout.on('data', function (data) {
-
             log(data.toString(), { verbosity: 8 })
           })
 
