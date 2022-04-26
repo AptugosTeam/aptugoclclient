@@ -29,4 +29,20 @@ module.exports = {
     fs.writeFileSync(path.join(saveFolder, `${currentAsset.id}_${currentAsset.name}`), JSON.parse(fileDefinition))
     return path.join(saveFolder, `${currentAsset.id}_${currentAsset.name}`)
   },
+  upload: async (args) => {
+    const appFolders = get('folders').applications
+    const apps = await appsList()
+    const app = apps.filter(localapp => localapp.settings.name === args.app || localapp._id === args.app)[0]
+    const assets = JSON.parse( fs.readFileSync( path.join( appFolders, aptugocli.friendly(app.settings.name), 'assets.json' ), { encoding: 'utf8'}, true) )
+    let foundAsset = assets.filter(asset => asset.id === args.id)
+    let currentAsset = foundAsset.length ? foundAsset[0] : {
+      name: args.filename,
+      id: args.id,
+      type: 'image'
+    }
+    const saveFolder = path.join(appFolders, aptugocli.friendly(app.settings.name), 'Drops')
+    aptugocli.createIfDoesntExists(saveFolder)
+    
+    return 'Upload Location:' + path.join(saveFolder, `${currentAsset.id}_${currentAsset.name}`)
+  }
 }

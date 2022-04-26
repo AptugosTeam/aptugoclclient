@@ -2,6 +2,7 @@ const readline = require('readline')
 const {
   fileSource: source,
   setfile: file,
+  upload
 } = require('../utils/assets')
 
 const filesource = async (args) => {
@@ -32,6 +33,9 @@ module.exports = async (args, extraarguments) => {
       break
     case 'setfile':
       output = setfile(args, extraarguments)
+      break
+    case 'upload':
+      output = upload(args)
       break
   }
   return output
