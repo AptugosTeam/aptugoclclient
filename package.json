@@ -1,6 +1,6 @@
 {
   "name": "aptugoclient",
-  "version": "1.3.12",
+  "version": "1.4.1",
   "description": "Command line client for Aptugo",
   "main": "index.js",
   "engines": {
@@ -36,8 +36,11 @@
     "istextorbinary": "^6.0.0",
     "js-yaml": "^4.0.0",
     "minimist": "^1.2.0",
+    "node-pty": "^0.10.1",
+    "npm-run-path": "^5.1.0",
     "ora": "^5.4.0",
     "ora-promise": "^1.0.0",
+    "path-key": "^4.0.0",
     "prettier": "^2.2.1",
     "prettier-plugin-organize-imports": "^1.1.1",
     "prompt": "^1.1.0",
