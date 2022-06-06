@@ -3,6 +3,7 @@ const { run: runApp, stop, isRunning } = require('../utils/controller')
 const { list: appsList } = require('../utils/apps')
 const cliSelect = require('cli-select')
 const log = require('../utils/log')
+const os = require('os')
 
 const run = async (args) => {
   log('Application Run', { type: 'mainTitle' })
@@ -42,6 +43,9 @@ module.exports = async (args) => {
   switch (args._[1]) {
     case 'status':
       return await isRunning()
+      break
+    case 'tmpdir':
+      return os.tmpdir()
       break
     case 'run':
       return await run(args)
