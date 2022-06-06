@@ -6,6 +6,7 @@ const path = require('path')
 const fs = require('fs')
 const os = require('os')
 
+let ptyproc
 module.exports = {
   run: async ({ app }) => {
     const state = await loadState()
@@ -39,7 +40,7 @@ module.exports = {
     var pty = require('node-pty');
     var shell = os.platform() === 'win32' ? 'command.exe' : 'bash';
 
-    var ptyProcess = pty.spawn(shell, [], {
+    ptyproc = pty.spawn(shell, [], {
       name: 'aptugo-process-controller',
       cols: 80,
       rows: 30,
@@ -47,19 +48,21 @@ module.exports = {
       env: process.env
     });
 
-    ptyProcess.onData((data) => {
+    ptyproc.onData((data) => {
       process.stdout.write(data)
     })
 
     await module.exports.killIfRunning()
-    ptyProcess.write(`${found} start\r`)
-    fs.writeFileSync( path.join( os.tmpdir(), 'aptugo-state.json' ), ptyProcess._pid + '')
+    ptyproc.write(`${found} start\r`)
+    fs.writeFileSync( path.join( os.tmpdir(), 'aptugo-state.json' ), ptyproc._pid + '')
   },
   stop: async () => {
     try {
       const pid = fs.readFileSync( path.join( os.tmpdir(), 'aptugo-state.json' ), { encoding: 'utf-8' })
       process.kill(pid,'SIGKILL')
+      if (ptyproc) ptyproc.kill()
       fs.rmSync( path.join( os.tmpdir(), 'aptugo-state.json' ) )
+      ptyproc.
     } catch(e) {
       if (e.code === 'ESRCH') { // No such process, so: delete the state
         fs.rmSync( path.join( os.tmpdir(), 'aptugo-state.json' ) )
