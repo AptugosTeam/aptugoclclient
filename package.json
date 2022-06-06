@@ -1,6 +1,6 @@
 {
   "name": "aptugoclient",
-  "version": "1.4.4",
+  "version": "1.4.5",
   "description": "Command line client for Aptugo",
   "main": "index.js",
   "engines": {
@@ -12,7 +12,8 @@
   },
   "scripts": {
     "pub": "npm version patch --force && npm publish",
-    "postinstall": "node ./post-install.js"
+    "postinstall": "node ./post-install.js",
+    "rebuild": "electron-rebuild -f -w node-pty"
   },
   "author": "Aptugo",
   "license": "LGPL-3.0-or-later",
@@ -50,6 +51,7 @@
     "yargs": "^17.3.1"
   },
   "devDependencies": {
-    "@trivago/prettier-plugin-sort-imports": "^2.0.4"
+    "@trivago/prettier-plugin-sort-imports": "^2.0.4",
+    "electron-rebuild": "^3.2.7"
   }
 }
