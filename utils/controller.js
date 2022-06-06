@@ -34,9 +34,10 @@ module.exports = {
 
     if (!found) return { exitCode: 1, error: 'Could not find PNPM (maybe you need to run npm i -g pnpm ?)'}
     console.log('about to start', found)
+    found = `"${found}"`
 
     var pty = require('node-pty');
-    var shell = os.platform() === 'win32' ? 'powershell.exe' : 'bash';
+    var shell = os.platform() === 'win32' ? 'command.exe' : 'bash';
 
     var ptyProcess = pty.spawn(shell, [], {
       name: 'aptugo-process-controller',
@@ -52,23 +53,23 @@ module.exports = {
 
     await module.exports.killIfRunning()
     ptyProcess.write(`${found} start\r`)
-    fs.writeFileSync('/tmp/aptugo-state.json', ptyProcess._pid + '')
+    fs.writeFileSync( path.join( os.tmpdir(), 'aptugo-state.json' ), ptyProcess._pid + '')
   },
   stop: async () => {
     try {
-      const pid = fs.readFileSync('/tmp/aptugo-state.json', { encoding: 'utf-8' })
+      const pid = fs.readFileSync( path.join( os.tmpdir(), 'aptugo-state.json' ), { encoding: 'utf-8' })
       process.kill(pid,'SIGKILL')
-      fs.rmSync('/tmp/aptugo-state.json')
+      fs.rmSync( path.join( os.tmpdir(), 'aptugo-state.json' ) )
     } catch(e) {
       if (e.code === 'ESRCH') { // No such process, so: delete the state
-        fs.rmSync('/tmp/aptugo-state.json')
+        fs.rmSync( path.join( os.tmpdir(), 'aptugo-state.json' ) )
       }
       console.error(e)
     }
   },
   isRunning: async () => {
     try {
-      const pid = fs.readFileSync('/tmp/aptugo-state.json', { encoding: 'utf-8' })
+      const pid = fs.readFileSync( path.join( os.tmpdir(), 'aptugo-state.json' ) , { encoding: 'utf-8' })
       return pid
     } catch(e) {}
     

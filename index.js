@@ -4,6 +4,8 @@ const checkLicense = require('./utils/checkLicense')
 const ora = require('ora')
 const { check } = require('./utils/config')
 const fs = require('fs')
+const os = require('os')
+const path = require('path')
 var splitargs = require('splitargs')
 const log = require('./utils/log')
 const prettier = require('prettier')
@@ -278,7 +280,8 @@ global.aptugocli = {
   }
 }
 
-var access = fs.createWriteStream('/tmp/aptugo.access.log')
+console.error(`Logs writen to: ${ path.join( os.tmpdir(), 'aptugo.access.log') }`)
+var access = fs.createWriteStream( path.join( os.tmpdir(), 'aptugo.access.log') )
 process.stdout.write = process.stderr.write = access.write.bind(access)
 
 module.exports = aptugocli.run
