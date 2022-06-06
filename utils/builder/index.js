@@ -83,34 +83,28 @@ const twigExtensions = () => {
 module.exports = {
   build: async (prefs) => {
     const { app, type = 'Development', clean = false, skip = [], only = null } = prefs
+
     if (!only) log(`Building ${app.settings.name} in ${type} mode`, { type: 'mainTitle' })
-    if (typeof aptugo !== 'undefined') aptugo.setFeedback('Setting up build...')
     const parameters = module.exports.buildParameters({ app, type, clean, variables: {}, skip })
 
     if (only) {
       switch (only) {
         case 'setup':
-          if (typeof aptugo !== 'undefined') aptugo.setFeedback('Build Setup...')
           return module.exports.firstStep_setupBuild(parameters).then(() => {
-            if (typeof aptugo !== 'undefined') aptugo.setFeedback('Build Setup finished.')
             return 'finished setup'
           }).catch(e => {
             console.log('caught Error on SetupBuild', e)
           })
           break
         case 'check':
-          if (typeof aptugo !== 'undefined') aptugo.setFeedback('Checking your Application...')
           return module.exports.secondStep_checkApplication(parameters).then((response) => {
-            if (typeof aptugo !== 'undefined') aptugo.setFeedback('Finished Checking your Application.')
             return 'finished check'
           }).catch(e => {
             if (typeof aptugo !== 'undefined') aptugo.setFeedback('Ran into an issue checking your application.', true)
             return e
           }) 
         case 'copy':
-          if (typeof aptugo !== 'undefined') aptugo.setFeedback('Copy Static Files...')
           return module.exports.thirdStep_copyStaticFiles(parameters).then((res) => {
-            if (typeof aptugo !== 'undefined') aptugo.setFeedback('Copy Static Files finished.')
             return 'finished copy'
           }).catch(e => {
             console.log('caught eerrrorr', e)
@@ -119,9 +113,7 @@ module.exports = {
           break
         case 'pages':
           if (parameters.stoped) return
-          if (typeof aptugo !== 'undefined') aptugo.setFeedback('Generate Pages and Elements...')
           return module.exports.fourthStep_generatePages(parameters).then(() => {
-            if (typeof aptugo !== 'undefined') aptugo.setFeedback('Generate Pages and Elements finished.')
             return 'finished pages'
           }).catch(e => {
             conosle.log('caught somethign here')
@@ -130,37 +122,27 @@ module.exports = {
           break
         case 'extraFiles':
           if (parameters.stoped) return
-          if (typeof aptugo !== 'undefined') aptugo.setFeedback('Copy Files required by Elements...')
           return module.exports.fifthStep_extraFiles(parameters).then(() => {
-            if (typeof aptugo !== 'undefined') aptugo.setFeedback('Copy Files Required finished.')
             return 'finished extrafiles'
           })
         case 'extra':
           if (parameters.stoped) return
-          if (typeof aptugo !== 'undefined') aptugo.setFeedback('Generate Extra Settings...')
           return module.exports.fifthStep_extraSettings(parameters).then(() => {
-            if (typeof aptugo !== 'undefined') aptugo.setFeedback('Generate Extra Settings finished.')
             return 'finished extra'
           })
           break
         case 'post':
-          if (typeof aptugo !== 'undefined') aptugo.setFeedback('Post Build Scripts...')
           return module.exports.sixthStep_postBuild(parameters).then(() => {
-            if (typeof aptugo !== 'undefined') aptugo.setFeedback('Post Build Scripts finished.')
             return 'finished post'
           })
           break
         case 'buildscripts':
-          if (typeof aptugo !== 'undefined') aptugo.setFeedback('Build Scripts...')
           return module.exports.seventhStep_buildScripts(parameters).then(() => {
-            if (typeof aptugo !== 'undefined') aptugo.setFeedback('Build Scripts finished.')
             return 'finished buildscripts'
           })
           break
         case 'deploy':
-          if (typeof aptugo !== 'undefined') aptugo.setFeedback('Deployment Started...')
           return module.exports.eightStep_deploy(parameters).then(() => {
-            if (typeof aptugo !== 'undefined') aptugo.setFeedback('Deployment Finished!')
             return 'finished deployment'
           })
           break
@@ -248,7 +230,6 @@ module.exports = {
   },
 
   deserializeFunction(funcString) {
-    if (!aptugo) var aptugo = aptugocli
     return new Function('builder', `return ${funcString}`)
   },
 
@@ -292,6 +273,7 @@ module.exports = {
     return new Promise((resolve, reject) => {
       const start = new Date()
       const spinner = ora('Setting up build...').start()
+      if (typeof aptugo !== 'undefined') aptugo.setFeedback('Setting up build...')
       aptugocli.extraSettings = { ...parameters.variables } || {}
       if (parameters.doClean) {
         fs.rmdirSync( path.join(parameters.fullbuildfolder, parameters.buildFolder), { recursive: true })
@@ -319,12 +301,16 @@ module.exports = {
       aptugocli.assets = parameters.application.assets
       const end = new Date()
       spinner.succeed(`Build set-up: ${humanizeDuration(end - start)}`);
+      if (typeof aptugo !== 'undefined') aptugo.setFeedback(`Build set-up: ${humanizeDuration(end - start)}`)
       resolve()
     })
   },
 
   secondStep_checkApplication: (parameters) => {
     return new Promise((resolve, reject) => {
+      const start = new Date()
+      const spinner = ora('Checking your application...').start()
+      if (typeof aptugo !== 'undefined') aptugo.setFeedback('Checking your application...')
       try {
         // Check Tables
         const tables = parameters.application.tables
@@ -342,26 +328,19 @@ module.exports = {
             })
           })
         })
+        const end = new Date()
+        spinner.succeed(`Finished checking your application: ${humanizeDuration(end - start)}`);
+        if (typeof aptugo !== 'undefined') aptugo.setFeedback(`Finished checking your application: ${humanizeDuration(end - start)}`)
+        resolve()
       } catch(e) {
         const theError = { exitCode: 124, message: 'something fishy', element: e.element, type: e.type || 'element' }
         if (e.error === 'tablenamesame') theError.message = `${e.element.name} can not have the same name for Single Values`
         else if (e.error === 'missingrequired') theError.message = `${e.element.column_name} has unfilled required definitions`
         else if (e.error === 'nodefinition') theError.message = `Your template does not support fields of type: ${e.element.data_type}`
+        spinner.fail(theError.message)
+        if (typeof aptugo !== 'undefined') aptugo.setFeedback(theError.message)
         reject(theError)
       }
-
-      try {
-        // Check Pages
-        // console.log(parameters)
-        const pages = parameters.application.pages
-        pages.forEach(page => {
-          // console.log(page)
-        })
-      } catch(e) {
-        reject(e)
-      }
-
-      resolve()
     })
   },
 
@@ -369,6 +348,7 @@ module.exports = {
     return new Promise((resolve, reject) => {
       const start = new Date()
       const spinner = ora('Copying static files...\n').start()
+      if (typeof aptugo !== 'undefined') aptugo.setFeedback('Copying static files...')
       spinner.stream = process.stdout
 
       if (parameters.skip.indexOf('copy') === -1) {
@@ -382,6 +362,7 @@ module.exports = {
         
         const end = new Date()
         spinner.succeed(`Static files copied: ${humanizeDuration(end - start)}`);
+        if (typeof aptugo !== 'undefined') aptugo.setFeedback(`Static files copied: ${humanizeDuration(end - start)}`)
       } else {
         const end = new Date()
         spinner.info(`Static files skiped: ${humanizeDuration(end - start)}`)
@@ -395,6 +376,7 @@ module.exports = {
       try {
         const start = new Date()
         const spinner = ora('Generating pages...\n').start()
+        if (typeof aptugo !== 'undefined') aptugo.setFeedback('Generating pages...\n')
         spinner.stream = process.stdout
 
         if (parameters.skip.indexOf('pages') === -1) {
@@ -404,6 +386,7 @@ module.exports = {
           })
           const end = new Date()
           spinner.succeed(`Pages generated: ${humanizeDuration(end - start)}`);
+          if (typeof aptugo !== 'undefined') aptugo.setFeedback(`Pages generated: ${humanizeDuration(end - start)}`)
         } else {
           const end = new Date()
           spinner.info(`Pages generation skiped: ${humanizeDuration(end - start)}`)
@@ -419,11 +402,13 @@ module.exports = {
     return new Promise((resolve, reject) => {
       const start = new Date()
       const spinner = ora('Copying extra files from elements...\n').start()
+      if (typeof aptugo !== 'undefined') aptugo.setFeedback('Copying extra files from elements...\n')
       spinner.stream = process.stdout
       if (parameters.skip.indexOf('extraFiles') === -1) {
         copyExtraFiles({ ...parameters, files: aptugocli.filesRequiredByElements })
         const end = new Date()
         spinner.info(`Extra Files copied: ${humanizeDuration(end - start)}`)
+        if (typeof aptugo !== 'undefined') aptugo.setFeedback(`Extra Files copied: ${humanizeDuration(end - start)}`)
       } else {
         const end = new Date()
         spinner.info(`Extra Files from elements skiped: ${humanizeDuration(end - start)}`)
@@ -436,12 +421,14 @@ module.exports = {
     return new Promise((resolve, reject) => {
       const start = new Date()
       const spinner = ora('Re-Generating pages with extra settings...\n').start()
+      if (typeof aptugo !== 'undefined') aptugo.setFeedback('Re-Generating pages with extra settings...\n')
       spinner.stream = process.stdout
       if (parameters.skip.indexOf('copy') === -1) {
         aptugocli.skipSettings = false
         copyStaticFiles({ ...parameters, files: aptugocli.filesWithExtraSettings })
         const end = new Date()
         spinner.succeed(`Static files re-generated: ${humanizeDuration(end - start)}`);
+        if (typeof aptugo !== 'undefined') aptugo.setFeedback(`Static files re-generated: ${humanizeDuration(end - start)}`)
       } else {
         const end = new Date()
         spinner.info(`Static files skiped (2nd pass): ${humanizeDuration(end - start)}`)
@@ -454,6 +441,7 @@ module.exports = {
     return new Promise((resolve, reject) => {
       const start = new Date()
       const spinner = ora('Running post-build commands...\n').start()
+      if (typeof aptugo !== 'undefined') aptugo.setFeedback('Running post-build commands...\n')
       spinner.stream = process.stdout
 
       if (parameters.skip.indexOf('post') === -1) {
@@ -484,12 +472,14 @@ module.exports = {
             } else {
               const end = new Date()
               spinner.succeed(`Post build comands finished: ${humanizeDuration(end - start)}`);
+              if (typeof aptugo !== 'undefined') aptugo.setFeedback(`Post build comands finished: ${humanizeDuration(end - start)}`)
               resolve()     
             }
           })
         } else {
           const end = new Date()
           spinner.succeed(`No post build commands to run: ${humanizeDuration(end - start)}`);
+          if (typeof aptugo !== 'undefined') aptugo.setFeedback(`No post build commands to run: ${humanizeDuration(end - start)}`)
           resolve()
         }
       } else {
@@ -502,6 +492,9 @@ module.exports = {
 
   seventhStep_buildScripts: (parameters) => {
     return new Promise((resolve, reject) => {
+      const start = new Date()
+      const spinner = ora('Running post-build scripts...\n').start()
+      if (typeof aptugo !== 'undefined') aptugo.setFeedback('Running post-build scripts...\n')
       var isWin = process.platform === "win32"
       // FIX PATH
       let returnValue = {}
@@ -514,11 +507,6 @@ module.exports = {
       } catch(e) {
       }
       if (returnValue.PATH) process.env.PATH = returnValue.PATH
-
-      const start = new Date()
-      const spinner = ora('Running post-build scripts...\n').start()
-      spinner.stream = process.stdout
-
       let precommand = ''
       Object.keys(parameters.variables).forEach(avar => {
         if (avar.substring(0,4) === 'ENV.') {
@@ -564,6 +552,7 @@ module.exports = {
             } else {
               const end = new Date()
               spinner.succeed(`Post build scripts finished: ${humanizeDuration(end - start)}`);
+              if (typeof aptugo !== 'undefined') aptugo.setFeedback(`Post build scripts finished: ${humanizeDuration(end - start)}`)
               resolve()     
             }
           })
@@ -581,87 +570,97 @@ module.exports = {
   },
 
   eightStep_deploy: (parameters) => {
-    // zip front-end
-    let zipFilesFolder = path.join(parameters.fullbuildfolder, parameters.buildFolder, 'build')
-    let saveTo = path.join(os.tmpdir(), 'aptugo', `aptugoapp-build-${random()}.zip`)
-    var zip = new AdmZip()
+    return new Promise((resolve, reject) => {
+      const start = new Date()
+      const spinner = ora('Starting Deployment...\n').start()
+      if (typeof aptugo !== 'undefined') aptugo.setFeedback('Starting Deployment...\n')
 
-    let dirFiles = fs.readdirSync(zipFilesFolder)
-    dirFiles.forEach((file) => {
-      if(fs.lstatSync(path.join(zipFilesFolder, file)).isDirectory()) {
-        console.log('...adding directory', file)
-        zip.addLocalFolder(path.join(zipFilesFolder, file), file)
-      } else {
-        console.log('...adding file', file)
-        zip.addLocalFile(path.join(zipFilesFolder, file))
-      }
-     })
+      // zip front-end
+      let zipFilesFolder = path.join(parameters.fullbuildfolder, parameters.buildFolder, 'build')
+      let saveTo = path.join(os.tmpdir(), 'aptugo', `aptugoapp-build-${random()}.zip`)
+      var zip = new AdmZip()
 
-    zip.writeZip(saveTo)
-    
-    
-    // post
-    const url = parameters.settings.url.substring(8).toLowerCase()
-    const buffer = zip.toBuffer()
-    const data = new FormData();
-    const blob = new Blob([buffer],{type : 'multipart/form-data'});
-    data.append('data', blob);
-    const options = {
-      url: 'https://appuploader.aptugo.app:8500?appName=' + url,
-      method: 'POST',
-      headers: { 'content-type': 'multipart/form-data' },
-      data
-    };
-    
-    axios(options)
-      .then(response => {
-        console.warn('uploaded', response)
-      })
-      .catch(error => {
-        console.warn('erorr uploading', error)
-    
-      })
-    
-    // zip backend
-    const zipFilesFolderbe = path.join(parameters.fullbuildfolder, parameters.buildFolder, 'back-end')
-    saveTo = path.join(os.tmpdir(), 'aptugo', `aptugoapp-build-backend-${random()}.zip`)
-    var zipbe = new AdmZip()
-
-    dirFiles = fs.readdirSync(zipFilesFolderbe)
-    dirFiles.forEach((file) => {
-      if (file !== 'node_modules') {
-        if(fs.lstatSync(path.join(zipFilesFolderbe, file)).isDirectory()) {
+      let dirFiles = fs.readdirSync(zipFilesFolder)
+      dirFiles.forEach((file) => {
+        if(fs.lstatSync(path.join(zipFilesFolder, file)).isDirectory()) {
           console.log('...adding directory', file)
-          zipbe.addLocalFolder(path.join(zipFilesFolderbe, file), file)
+          zip.addLocalFolder(path.join(zipFilesFolder, file), file)
         } else {
           console.log('...adding file', file)
-          zipbe.addLocalFile(path.join(zipFilesFolderbe, file))
+          zip.addLocalFile(path.join(zipFilesFolder, file))
         }
-      }
-     })
+      })
 
-    zipbe.writeZip(saveTo)
-    
-    // post back-end
-    const bebuffer = zipbe.toBuffer()
-    const bedata = new FormData();
-    const beblob = new Blob([bebuffer],{type : 'multipart/form-data'});
-    bedata.append('data', beblob);
-    const beoptions = {
-      url: 'https://appuploader.aptugo.app:8500?type=be&appName=' + parameters.settings.apiURL.substring(8),
-      method: 'POST',
-      headers: { 'content-type': 'multipart/form-data' },
-      data: bedata
-    }
-    
-    axios(beoptions)
-      .then(response => {
-        console.warn('uploaded', response)
+      zip.writeZip(saveTo)
+      
+      
+      // post
+      const url = parameters.settings.url.substring(8).toLowerCase()
+      const buffer = zip.toBuffer()
+      const data = new FormData();
+      const blob = new Blob([buffer],{type : 'multipart/form-data'});
+      data.append('data', blob);
+      const options = {
+        url: 'https://appuploader.aptugo.app:8500?appName=' + url,
+        method: 'POST',
+        headers: { 'content-type': 'multipart/form-data' },
+        data
+      };
+      
+      axios(options)
+        .then(response => {
+          console.warn('uploaded', response)
+        })
+        .catch(error => {
+          console.warn('erorr uploading', error)
+      
+        })
+      
+      // zip backend
+      const zipFilesFolderbe = path.join(parameters.fullbuildfolder, parameters.buildFolder, 'back-end')
+      saveTo = path.join(os.tmpdir(), 'aptugo', `aptugoapp-build-backend-${random()}.zip`)
+      var zipbe = new AdmZip()
+
+      dirFiles = fs.readdirSync(zipFilesFolderbe)
+      dirFiles.forEach((file) => {
+        if (file !== 'node_modules') {
+          if(fs.lstatSync(path.join(zipFilesFolderbe, file)).isDirectory()) {
+            console.log('...adding directory', file)
+            zipbe.addLocalFolder(path.join(zipFilesFolderbe, file), file)
+          } else {
+            console.log('...adding file', file)
+            zipbe.addLocalFile(path.join(zipFilesFolderbe, file))
+          }
+        }
       })
-      .catch(error => {
-        console.warn('erorr uploading', error)
-    
-      })
+
+      zipbe.writeZip(saveTo)
+      
+      // post back-end
+      const bebuffer = zipbe.toBuffer()
+      const bedata = new FormData();
+      const beblob = new Blob([bebuffer],{type : 'multipart/form-data'});
+      bedata.append('data', beblob);
+      const beoptions = {
+        url: 'https://appuploader.aptugo.app:8500?type=be&appName=' + parameters.settings.apiURL.substring(8),
+        method: 'POST',
+        headers: { 'content-type': 'multipart/form-data' },
+        data: bedata
+      }
+      
+      axios(beoptions)
+        .then(response => {
+          console.warn('uploaded', response)
+        })
+        .catch(error => {
+          console.warn('erorr uploading', error)
+      
+        })
+      const end = new Date()
+      spinner.succeed(`Deployment queued (might take a few minutes): ${humanizeDuration(end - start)}`);
+      if (typeof aptugo !== 'undefined') aptugo.setFeedback(`Deployment queued (might take a few minutes): ${humanizeDuration(end - start)}`)
+      resolve()     
+    })
   },
 
   lastStep_success: (parameters) => {

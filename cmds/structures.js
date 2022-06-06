@@ -3,6 +3,7 @@ const {
   icon: structIcon,
   run: structRun
 } = require('../utils/structures')
+
 const { state: loadState } = require('../utils/state')
 const log = require('../utils/log')
 const { list: appsList, load: appLoad } = require('../utils/apps')
@@ -33,38 +34,47 @@ const icon = async(args) => {
   return res
 }
 
-const run = async(args) => {
+const run = async(args, extra) => {
   const state = await loadState()
 
-  if (!args.app) {
-    log('\nSelect the application to create model into:', { type: 'promptHeader' })
-    const apps = await appsList()
-    appSelected = await cliSelect({
-      values: apps,
-      indentation: 2,
-      cleanup: true,
-      selected: '▹',
-      unselected: '',
-      valueRenderer: (value, selected) => {
-        if (selected) {
-          return chalk.underline(value.settings.name)
-        } else {
-          return `${value.settings.name}`
+  if (!args.skipapp) {
+    if (!args.app) {
+      log('\nSelect the application to create model into:', { type: 'promptHeader' })
+      const apps = await appsList()
+      appSelected = await cliSelect({
+        values: apps,
+        indentation: 2,
+        cleanup: true,
+        selected: '▹',
+        unselected: '',
+        valueRenderer: (value, selected) => {
+          if (selected) {
+            return chalk.underline(value.settings.name)
+          } else {
+            return `${value.settings.name}`
+          }
         }
-      }
-    })
-    args.app = appSelected.value
-    state.app = appLoad(appSelected.value)
-  } else {
-    state.app = appLoad(args.app)
+      })
+      args.app = appSelected.value
+      state.app = appLoad(appSelected.value)
+    } else {
+      if (state.app && state.app._id !== args.app) state.app = appLoad(args.app)
+    }
   }
-
+  
+  Object.keys(args).forEach(key => {
+    if (args[key] === 'willpaste') {
+      args[key] = extra.file
+    }
+  })
   const result = await structRun(args.structure, { state: state, ...args } )
-  save(state.app)
-  return result || state.app
+  state.app = result
+  console.error('client: skipsaving', args)
+  if (!args.skipsave) save(result || state.app)
+  return await result
 }
 
-module.exports = async (args) => {
+module.exports = async (args, extra) => {
   switch (args._[1]) {
     case 'list':
       return await list(args)
@@ -73,7 +83,7 @@ module.exports = async (args) => {
       return await icon(args)
       break
     case 'run':
-      return await run(args)
+      return await run(args, extra)
       break
   }
 }

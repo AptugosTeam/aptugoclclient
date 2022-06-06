@@ -22,7 +22,6 @@ module.exports = async (args) => {
     })
     appname = appname.name
   }
-
   const output = load(appname)
   return output
 }

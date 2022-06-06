@@ -17,7 +17,6 @@ module.exports = {
     return toReturn
   },
   load: (app) => {
-    const toReturn = app
     const appFolderDefinition = get('folders').applications
     const appFolders = fs.readdirSync(appFolderDefinition)
     appFolders.forEach(appFolder => {
@@ -27,6 +26,7 @@ module.exports = {
           if (typeof app === 'string') {
             app = { ...appDefinition }
           }
+          app.folder = appFolder
           app.tables = JSON.parse( fs.readFileSync( path.join( appFolderDefinition, appFolder, 'tables.json' ), { encoding: 'utf8'}, true) )
           app.pages = JSON.parse( fs.readFileSync( path.join( appFolderDefinition, appFolder, 'pages.json' ), { encoding: 'utf8'}, true) )
           app.assets = JSON.parse( fs.readFileSync( path.join( appFolderDefinition, appFolder, 'assets.json' ), { encoding: 'utf8'}, true) )

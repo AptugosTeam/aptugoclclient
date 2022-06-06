@@ -12,10 +12,15 @@ module.exports = {
     const assetPath = path.join(appFolders, appFolder, 'Drops', filePath)
     return assetPath
   },
+  fileRead: (appFolder, filePath) => {
+    const appFolders = get('folders').applications
+    const assetPath = path.join(appFolders, appFolder, 'Drops', filePath)
+    return fs.readFileSync(assetPath, { encoding: 'utf-8'})
+  },
   setfile: async (args, fileDefinition) => {
     const appFolders = get('folders').applications
     const apps = await appsList()
-    const app = apps.filter(localapp => localapp.settings.name === args.app)[0]
+    const app = apps.filter(localapp => (localapp.settings.name === args.app) || (localapp._id === args.app))[0]
     const assets = JSON.parse( fs.readFileSync( path.join( appFolders, aptugocli.friendly(app.settings.name), 'assets.json' ), { encoding: 'utf8'}, true) )
     let foundAsset = assets.filter(asset => asset.id === args.id)
     let currentAsset = foundAsset.length ? foundAsset[0] : {
@@ -26,7 +31,9 @@ module.exports = {
     
     const saveFolder = path.join(appFolders, aptugocli.friendly(app.settings.name), 'Drops')
     aptugocli.createIfDoesntExists(saveFolder)
-    fs.writeFileSync(path.join(saveFolder, `${currentAsset.id}_${currentAsset.name}`), JSON.parse(fileDefinition))
+    if (args.binary) fs.writeFileSync(path.join(saveFolder, `${currentAsset.id}_${currentAsset.name}`), fileDefinition)
+    else fs.writeFileSync(path.join(saveFolder, `${currentAsset.id}_${currentAsset.name}`), JSON.parse(fileDefinition))
+    console.log('saving asset', path.join(saveFolder, `${currentAsset.id}_${currentAsset.name}`) )
     return path.join(saveFolder, `${currentAsset.id}_${currentAsset.name}`)
   },
   upload: async (args) => {

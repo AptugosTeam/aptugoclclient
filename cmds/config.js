@@ -44,7 +44,7 @@ module.exports = async (args) => {
       break
     case 'list':
       const allOptions = get()
-      console.log(`All configured options:\n`, JSON.parse(JSON.stringify(allOptions)) )
+      return allOptions
       break
     case 'clear':
       clear()

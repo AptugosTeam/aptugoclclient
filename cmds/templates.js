@@ -6,6 +6,7 @@ const {
   setfield: field,
   fileSource: source,
   setfile: file,
+  get,
   remove,
   create,
   version
@@ -15,7 +16,7 @@ const { stdin } = require('process')
 
 const list = async (args) => {
   const templates = await templatesList(true)
-  if (args.raw) return JSON.stringify(templates)
+  if (args.raw) return templates
 
   let simpleList = []
   var table = new Table({
@@ -98,6 +99,9 @@ module.exports = async (args, extraarguments) => {
       break
     case 'setfile':
       output = setfile(args, extraarguments)
+      break
+    case 'get':
+      output = get(args.template)
       break
     case 'fileSource':
       output = await filesource(args)

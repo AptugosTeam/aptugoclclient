@@ -11,6 +11,7 @@ const readline = require('readline')
 const updateApp = async(args) => {
   var r1 = readline.createInterface({ input: process.stdin, output: process.stdout })
   r1.question('Paste definition here\n', async (def) => {
+    console.log('def', def)
     const newdef = await save( JSON.parse(def) )
     r1.close()
     process.stdin.destroy()
@@ -19,7 +20,7 @@ const updateApp = async(args) => {
 }
 
 
-module.exports = async (args) => {
+module.exports = async (args, extra) => {
   const fromcommandline = !!require.main
   log('Saving an existing Aptugo application', { type: 'mainTitle' })
 
@@ -35,6 +36,10 @@ module.exports = async (args) => {
     appnameorid = appname.name
   }
 
-  await updateApp(args)
+  if (extra.file) {
+    await save( extra.file )
+  } else {
+    await updateApp(args)
+  }
   return 'ok'
 }

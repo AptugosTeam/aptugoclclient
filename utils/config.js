@@ -5,7 +5,7 @@ const { execSync, spawnSync } = require('child_process')
 module.exports = {
   get: (varName = undefined) => {
     const config = new Conf({ projectName: 'Aptugo' })
-    if (!varName) return config.store
+    if (!varName) return config.store || {}
     return config.get(varName)
   },
   set: (varName, value) => {

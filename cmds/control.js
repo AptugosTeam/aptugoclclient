@@ -1,5 +1,5 @@
 const chalk = require("chalk")
-const { run: runApp } = require('../utils/controller')
+const { run: runApp, stop, isRunning } = require('../utils/controller')
 const { list: appsList } = require('../utils/apps')
 const cliSelect = require('cli-select')
 const log = require('../utils/log')
@@ -28,18 +28,26 @@ const run = async (args) => {
     })
     args.app = appSelected.value
   } else {
-    args.app = apps.filter(localapp => localapp.settings.name === args.app)[0]
+    args.app = apps.filter(localapp => localapp.settings.name === args.app || localapp._id === args.app)[0]
   }
   
   return runApp(args).then(res => {
     return res
+  }).catch(e => {
+    return e
   })
 }
 
 module.exports = async (args) => {
   switch (args._[1]) {
+    case 'status':
+      return await isRunning()
+      break
     case 'run':
       return await run(args)
+      break
+    case 'stop':
+      return await stop()
       break
   }
 }

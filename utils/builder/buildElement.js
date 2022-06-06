@@ -51,6 +51,7 @@ module.exports = (element, parameters) => {
     return elementPath
   },
   deserializeFunction = (funcString, parameters) => {
+    var aptugo = aptugocli
     return new Function('builder', `return ${funcString}`)
   },
   parseToString = (input, parameters) => {

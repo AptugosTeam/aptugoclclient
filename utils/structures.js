@@ -2,7 +2,7 @@ const fs = require('fs')
 const path = require('path')
 const error = require('./error')
 const { get } = require('./config')
-const { state: loadState } = require('../utils/state')
+const { state: loadState, setState: updateState } = require('../utils/state')
 const { fix: fixPages } = require('./pages')
 const { fix: fixTables } = require('./tables')
 const log = require('../utils/log')
@@ -16,7 +16,7 @@ module.exports = {
     structFolders.forEach(structFolder => {
       try {
         const structDefinition = JSON.parse( fs.readFileSync(path.join(folders.structures,structFolder,'structure.json'), { encoding: 'utf8'}, true) )
-        toReturn.push({ ...structDefinition, fullFolder: path.join(folders.structures,structFolder) })
+        toReturn.push({ ...structDefinition, structFolder: structFolder, fullFolder: path.join(folders.structures,structFolder) })
       } catch(e) {}
     })
     return toReturn
@@ -35,9 +35,9 @@ module.exports = {
 
   run: async (structure, parameters) => {
     if (!module.exports.loadedState) module.exports.loadedState = parameters.state || await loadState()
-    const state = module.exports.loadedState
+    const state = parameters.state || module.exports.loadedState
 
-    if (typeof structure === 'string') {
+    if (typeof structure === 'string' || typeof structure === 'number') {
       structure = module.exports.findStructure(structure)
     }
     log(`Running Structure: ${structure.name}`, { type: 'mainTitleSub' })
@@ -57,31 +57,29 @@ module.exports = {
     const init = fs.readFileSync(path.join(folders.structures,currentStructureFolder,'init.js'), { encoding: 'utf8'}, true)
     const initFunction = new AsyncFunction('Application', 'State', 'Parameters', 'Store', 'aptugo', init)
 
-    returned = await initFunction( state.app, state, parameters, {}, aptugocli )
-
+    returned = await initFunction( state.app, state, parameters, get(), aptugocli )
     if (returned) {
-      if (returned.error) {
-        error(returned.error, true)
-      }
+      if (returned.error) { error(returned.error, true) }
       if (returned.pages) returned.pages = fixPages(returned.pages)
       if (returned.tables) returned.tables = fixTables(returned.tables)
-      state.app = returned 
+      state.app = returned
+      updateState({ ...state, app: returned })
     }
     
     const code = fs.readFileSync(path.join(folders.structures,currentStructureFolder,'code.js'), { encoding: 'utf8'}, true)
     const codeFunction = new AsyncFunction('Application', 'State', 'Parameters', 'Store', 'aptugo', code)
-    returned = await codeFunction( state.app, state, parameters, {}, aptugocli )
-
+    returned = await codeFunction( state.app, state, parameters, get(), aptugocli )
     if (returned) { 
       if (returned.pages) returned.pages = fixPages(returned.pages)
       if (returned.tables) returned.tables = fixTables(returned.tables)
-      state.app = returned 
+      state.app = returned
+      updateState({ ...state, app: returned })
     }
     
     const postinit = fs.readFileSync(path.join(folders.structures,currentStructureFolder,'postinit.js'), { encoding: 'utf8'}, true)
     if (postinit) {
       const piFunction = new AsyncFunction('Application', 'State', 'Parameters', 'Store', 'aptugo', postinit)
-      returned = await piFunction( state.app, state, parameters, {}, aptugocli )
+      returned = await piFunction( state.app, state, parameters, get(), aptugocli )
     } else {
       log(`Skiping post init for ${structure.name}`, false)
     }
@@ -89,7 +87,8 @@ module.exports = {
     if (returned) {
       if (returned.pages) returned.pages = fixPages(returned.pages)
       if (returned.tables) returned.tables = fixTables(returned.tables)
-      state.app = returned 
+      state.app = returned
+      updateState({ ...state, app: returned })
     }
     return returned
   },
