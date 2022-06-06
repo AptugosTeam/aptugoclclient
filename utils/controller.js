@@ -18,7 +18,7 @@ module.exports = {
     const finalFolder = path.join(fullbuildfolder, buildFolder)
 
     // Find PNPM
-    const paths = (process.env.PATH || '').split(path.delimiter)
+    const paths = (process.env.PATH || '').split(path.delimiter)
     paths.sort( function (a,b) { return a.length > b.length ? 1 : -1 })
 
     let found = false
@@ -57,6 +57,7 @@ module.exports = {
     fs.writeFileSync( path.join( os.tmpdir(), 'aptugo-state.json' ), ptyproc._pid + '')
   },
   stop: async () => {
+    console.log('pty', ptyproc)
     try {
       const pid = fs.readFileSync( path.join( os.tmpdir(), 'aptugo-state.json' ), { encoding: 'utf-8' })
       process.kill(pid,'SIGKILL')
