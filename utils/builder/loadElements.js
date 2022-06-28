@@ -1,17 +1,14 @@
-const fs = require('fs')
-const path = require('path')
-const { fsLoadAndParseFile } = require('../templates')
+import templates from '../templates.js'
 
-module.exports = (elements) => {
-  doloadElements = (elements, preset = '') => {
+export default (elements) => {
+  const doloadElements = (elements, preset = '') => {
     const output = []
     elements.forEach(element => {
-      if (!aptugocli.plain) aptugocli.plain = {}
       aptugocli.plain[element.unique_id] = element
       if (element.type === 'folder') {
         output.push( ...doloadElements(element.children, `${preset}${element.path}`))
       } else {
-        const [settings,fs] = fsLoadAndParseFile({ unique_id: element.unique_id })
+        const [settings,fs] = templates.fsLoadAndParseFile({ unique_id: element.unique_id })
         output.push({
           ...element,
           ...settings,
@@ -30,10 +27,10 @@ module.exports = (elements) => {
         }
       }
     })
-
     return output
   }
-  
+
+  if (!aptugocli.plain) aptugocli.plain = {}
   const le = doloadElements(elements)
   return le
 }

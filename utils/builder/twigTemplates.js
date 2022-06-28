@@ -1,9 +1,11 @@
-const { fsLoadAndParseFile } = require('../templates')
-const { extendFilter, extendFunction, twig: _twig, cache } = require('twig/twig.js')
-const error = require('../error')
+import templates from '../templates.js'
+const fsLoadAndParseFile = templates.fsLoadAndParseFile
+import twigPkg from 'twig/twig.js'
+const { extendFilter, extendFunction, twig: _twig, cache } = twigPkg
+import error from '../error.js'
 
-module.exports = (templates) => {
-  saveTwigTemplates = (templates, preset = '') => {
+export default (templates) => {
+  const saveTwigTemplates = (templates, preset = '') => {
     templates.forEach(template => {
       if (template.type === 'folder') {
         saveTwigTemplates(template.children, `${preset}${template.path}`)

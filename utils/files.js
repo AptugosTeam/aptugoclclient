@@ -1,7 +1,7 @@
-const fs = require('fs')
-const path = require('path')
-const yaml = require('js-yaml')
-const { isBinary } = require('istextorbinary')
+import fs from 'fs'
+import path from 'path'
+import yaml from 'js-yaml'
+import { isBinary } from 'istextorbinary'
 
 const fsParseFileForStorage = (fileDetails) => {
   const {
@@ -19,7 +19,7 @@ const fsParseFileForStorage = (fileDetails) => {
   return output
 }
 
-const getTree = (folder, accumulatedPath = '', fix = false) => {
+export const getTree = (folder, accumulatedPath = '', fix = false) => {
   const ignoreFiles = ['template.json','.DS_Store','_.yaml','templatescripts']
   const output = []
   const filesInFolder = fs.readdirSync(folder)
@@ -41,7 +41,7 @@ const getTree = (folder, accumulatedPath = '', fix = false) => {
         const binary = isBinary(path.join(folder, file))
         if (!binary) {
           const fileSource = fs.readFileSync( path.join(folder, file), 'utf8')
-          const [prefs, source] = module.exports.parseFile(fileSource)
+          const [prefs, source] = parseFile(fileSource)
           toPush = { ...toPush, ...prefs }
           if (fix) {
             if (!prefs.unique_id) { // Add and save unique_id if not exists
@@ -59,43 +59,41 @@ const getTree = (folder, accumulatedPath = '', fix = false) => {
   return output
 }
 
-module.exports = {
-  write: ({ saveFolder, filename, content, clean = false }) => {
-    const cleanForSaving = (input, folder) => {
-      let output = []
-      input.forEach(actualObject => {
-        const { unique_id, ...rest } = actualObject
-        const { children, ...actualObjectWithoutChildren } = actualObject
-        fs.writeFileSync( path.join( saveFolder, folder, `${unique_id}.json`), JSON.stringify(actualObjectWithoutChildren, null, 2), { flag: 'w' } )
+export const write = ({ saveFolder, filename, content, clean = false }) => {
+  const cleanForSaving = (input, folder) => {
+    let output = []
+    input.forEach(actualObject => {
+      const { unique_id, ...rest } = actualObject
+      const { children, ...actualObjectWithoutChildren } = actualObject
+      fs.writeFileSync( path.join( saveFolder, folder, `${unique_id}.json`), JSON.stringify(actualObjectWithoutChildren, null, 2), { flag: 'w' } )
 
-        const localOutput = { unique_id }
-        if (actualObject.children && actualObject.children.length > 0) localOutput.children = cleanForSaving(actualObject.children, folder)
-        output.push(localOutput)
-      })
-      return output  
-    }
-
-    if (clean) content = cleanForSaving(content, clean)
-
-    fs.writeFileSync(
-      path.join(saveFolder, filename),
-      JSON.stringify(content, null, 2),
-      { flag: 'w' }
-    )
-  },
-  getTree: getTree,
-  parseFile: (fileSource) => {
-    const regex = /^\/\*[\r]*\n(.*)[\r]*\n\*\/(.*)/is
-    let m
-    if ((m = regex.exec(fileSource)) !== null) {
-      var yamlStuff = ''
-      try {
-        yamlStuff = yaml.load(m[1])
-      } catch(e) {
-        console.error(fileSource, e)
-      }
-      return [ yamlStuff , m[2]]
-    }
-    return [{}, fileSource]
+      const localOutput = { unique_id }
+      if (actualObject.children && actualObject.children.length > 0) localOutput.children = cleanForSaving(actualObject.children, folder)
+      output.push(localOutput)
+    })
+    return output
   }
-} 
+
+  if (clean) content = cleanForSaving(content, clean)
+
+  fs.writeFileSync(
+    path.join(saveFolder, filename),
+    JSON.stringify(content, null, 2),
+    { flag: 'w' }
+  )
+}
+
+export const parseFile = (fileSource) => {
+  const regex = /^\/\*[\r]*\n(.*)[\r]*\n\*\/(.*)/is
+  let m
+  if ((m = regex.exec(fileSource)) !== null) {
+    var yamlStuff = ''
+    try {
+      yamlStuff = yaml.load(m[1])
+    } catch(e) {
+      console.error(fileSource, e)
+    }
+    return [ yamlStuff , m[2]]
+  }
+  return [{}, fileSource]
+}

@@ -1,16 +1,16 @@
-const { 
+const {
   list: structList,
   icon: structIcon,
   run: structRun
-} = require('../utils/structures')
+} = import('../utils/structures')
 
-const { state: loadState } = require('../utils/state')
-const log = require('../utils/log')
-const { list: appsList, load: appLoad } = require('../utils/apps')
-const Table = require('cli-table')
-const cliSelect = require('cli-select')
-const chalk = require("chalk")
-const { save } = require('../utils/apps')
+import { state: loadState } from '../utils/state'
+import log from '../utils/log'
+import { list: appsList, load: appLoad } from '../utils/apps'
+import Table from 'cli-table'
+import cliSelect from 'cli-select'
+const chalk = import("chalk")
+import { save } from '../utils/apps'
 
 const list = async (args) => {
   const structs = await structList()
@@ -20,7 +20,7 @@ const list = async (args) => {
   var table = new Table({
     head: ['Type', 'Name', 'Description']
   })
-  
+
   structs.forEach(struct => {
     table.push([struct.type, struct.name, struct.desc || 'no description'])
     simpleList.push(struct.name)
@@ -61,7 +61,7 @@ const run = async(args, extra) => {
       if (state.app && state.app._id !== args.app) state.app = appLoad(args.app)
     }
   }
-  
+
   Object.keys(args).forEach(key => {
     if (args[key] === 'willpaste') {
       args[key] = extra.file
@@ -74,7 +74,7 @@ const run = async(args, extra) => {
   return await result
 }
 
-module.exports = async (args, extra) => {
+export async (args, extra) => {
   switch (args._[1]) {
     case 'list':
       return await list(args)

@@ -1,5 +1,6 @@
-const rdl = require('readline')
-const chalk = require("chalk")
+import rdl from 'readline'
+import chalk from 'chalk'
+
 const mainTitle = chalk.hex('#FF603D').bold
 const mainTitleSub = chalk.hex('#FF603D')
 const promptHeader = chalk.keyword('orange')
@@ -11,7 +12,7 @@ const warning = chalk.keyword('red')
 const error = chalk.keyword('red').bold
 
 const debugElement = null
-module.exports = (message, options = {}) => {
+export default (message, options = {}) => {
   let output = ''
   let func = 'log'
   let text = ''
@@ -28,16 +29,17 @@ module.exports = (message, options = {}) => {
   else if (options.type === 'subtitle2') output += `${typeSubtitleB(message)}`
   else output += `${message}`
 
-  
+
+  const colors = ['[0m','#162a66','#274291','#3c559e','#4e6196','#5d6e9c','#5d9c75','#4c8762','#37704c','#245c38','#16542c']
   if (options.verbosity <= aptugocli.loglevel || (debugElement && options.id === debugElement)) {
-    if (options.verbosity === 1) {
-      func = 'info'
-      text = output
-    } else {
+    // if (options.verbosity === 1) {
+    //   func = 'info'
+    //   text = output
+    // } else {
       func = 'log'
-      text = `${output} (${options.verbosity})`
-    }
+      text = `${chalk.hex(colors[options.verbosity])(output)} - ${aptugocli.loglevel}`
+    // }
     // if (typeof aptugo !== 'undefined') aptugo.setFeedback(`${output} (${options.verbosity})`)
     console[func](text)
-  }  
+  }
 }

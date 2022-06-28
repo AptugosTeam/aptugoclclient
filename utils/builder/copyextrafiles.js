@@ -1,19 +1,20 @@
-const fs = require('fs')
-const path = require('path')
-const { fsLoadAndParseFile } = require('../templates')
-const log = require('../log')
-const twigRender = require('./twigRender')
-const { isBinary } = require('istextorbinary')
-const { get } = require('../config')
+import fs from 'fs'
+import path from 'path'
+import templates from '../templates.js'
+const fsLoadAndParseFile = templates.fsLoadAndParseFile
+import log from '../log.js'
+import twigRender from './twigRender.js'
+import { isBinary } from 'istextorbinary'
+import config from '../config.js'
 
-module.exports = (parameters) => {
+export default (parameters) => {
   doCopyExtraFiles = (parameters) => {
     parameters.files.forEach(prefile => {
       let sourceFileName = prefile.source
       let destinationFileName = prefile.destination
-      let sourcePath = path.join( get('folders').templates, aptugocli.activeParameters.template._id, sourceFileName )
+      let sourcePath = path.join( config.get('folders').templates, aptugocli.activeParameters.template._id, sourceFileName )
       let destinationPath = path.join( parameters.fullbuildfolder, parameters.buildFolder, destinationFileName )
-      
+
       aptugocli.createIfDoesntExists(destinationPath.substring(0,destinationPath.lastIndexOf('/')))
       if ( isBinary(sourcePath) ) {
         log(`Copying extra binary file: ${sourceFileName}`, { type: 'advance', level: parameters.level, verbosity: 6 })

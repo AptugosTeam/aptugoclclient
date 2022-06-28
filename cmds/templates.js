@@ -1,5 +1,5 @@
-const fs = require('fs')
-const readline = require('readline')
+import fs from 'fs'
+import readline from 'readline'
 const {
   list: templatesList,
   setoption: option,
@@ -9,10 +9,11 @@ const {
   get,
   remove,
   create,
-  version
-} = require('../utils/templates')
-const Table = require('cli-table')
-const { stdin } = require('process')
+  version,
+  download
+} = import('../utils/templates')
+import Table from 'cli-table'
+import { stdin } from 'process'
 
 const list = async (args) => {
   const templates = await templatesList(true)
@@ -22,7 +23,7 @@ const list = async (args) => {
   var table = new Table({
     head: ['Name', 'Description']
   })
-  
+
   templates.forEach(tpl => {
     table.push([tpl.name, tpl.desc || 'no description'])
     simpleList.push(tpl.name)
@@ -57,7 +58,7 @@ const setfield = async (args) => {
 }
 
 const setfile = async (args, extraarguments = null) => {
-  const fromcommandline = !!require.main
+  const fromcommandline = !!import.main
   let newdef
   if (fromcommandline) {
     var r1 = readline.createInterface({ input: process.stdin, output: process.stdout })
@@ -76,8 +77,8 @@ const filesource = async (args) => {
   return source(args.template, args.file)
 }
 
-let output 
-module.exports = async (args, extraarguments) => {
+let output
+export async (args, extraarguments) => {
   switch (args._[1]) {
     case 'list':
       output = await list(args)
@@ -106,6 +107,8 @@ module.exports = async (args, extraarguments) => {
     case 'fileSource':
       output = await filesource(args)
       break
+    case 'download':
+      output = await download(args)
   }
   return output
 }

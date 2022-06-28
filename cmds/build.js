@@ -1,24 +1,24 @@
-const chalk = require("chalk")
-const ora = require('ora')
-const { build } = require('../utils/builder/')
-const { list: appsList } = require('../utils/apps')
-const cliSelect = require('cli-select')
-const log = require('../utils/log')
+import chalk from 'chalk'
+import builder from '../utils/builder/index.js'
+import theapps from '../utils/apps.js'
+import { state as loadState } from '../utils/state.js'
+import cliSelect from 'cli-select'
+import log from '../utils/log.js'
 
-module.exports = async (args) => {
+export default async (args) => {
+  const state = await loadState()
   if (args.only) {
     log(`Application Build: ${args.only}`, { type: 'mainTitle' })
   } else {
     log('Application Build', { type: 'mainTitle' })
   }
-  
+
   let appSelected
   let typeSelected
-  const apps = await appsList()
 
   if (!args.app) {
     log('\nSelect the application to build:', { type: 'promptHeader' })
-    
+    const apps = await theapps.list()
     appSelected = await cliSelect({
       values: apps,
       indentation: 2,
@@ -35,9 +35,14 @@ module.exports = async (args) => {
     })
     args.app = appSelected.value
   } else if (typeof args.app === 'string') {
-    args.app = apps.filter(localapp => localapp.settings.name === args.app || localapp._id === args.app)[0]
+    if (args.app === state.app._id) {
+      args.app = state.app
+    } else {
+      const apps = await theapps.list()
+      args.app = apps.filter(localapp => localapp.settings.name === args.app || localapp._id === args.app)[0]
+    }
   }
-  
+
   if (!args.type) {
     log('\nSelect the build method:', { type: 'promptHeader' })
     typeSelected = await cliSelect({
@@ -54,7 +59,6 @@ module.exports = async (args) => {
         }
       }
     })
-
     args.type = typeSelected.value
   }
 
@@ -66,12 +70,10 @@ module.exports = async (args) => {
     args.skip = args.skip.split(',')
   }
 
-  return build(args).then(res => {
+  return builder.build(args).then(res => {
     return res
   }).catch(e => {
-    return {
-      exitCode: 1,
-      data: e
-    }
+    const theError = e.exitCode ? e : { exitCode: 1, message: 'Mariscal Error', error: e }
+    return theError
   })
 }

@@ -1,8 +1,10 @@
-const Conf = require('conf')
-const os = require('os')
-const { execSync, spawnSync } = require('child_process')
+import Conf from 'conf'
+import os from 'os'
+import fs from 'fs'
+import path from 'path'
+import { execSync, spawnSync } from 'child_process'
 
-module.exports = {
+export default {
   get: (varName = undefined) => {
     const config = new Conf({ projectName: 'Aptugo' })
     if (!varName) return config.store || {}
@@ -14,7 +16,14 @@ module.exports = {
     config.set(varName, value)
     if (varName.substr(0,7) === 'folders') {
       if (typeof value === 'string') {
-        aptugocli.createIfDoesntExists(value)
+        if (value === 'auto') {
+          const homedir = os.homedir()
+          const lastFolder = varName.substring(8)
+          fs.mkdirSync( path.join(homedir,'Aptugo',lastFolder), { recursive: true, mode: 0o777 })
+          config.set(varName, path.join(homedir,'Aptugo',lastFolder))
+        } else {
+          aptugocli.createIfDoesntExists(value)
+        }
       } else {
         Object.keys(value).map(objKey => {
           aptugocli.createIfDoesntExists(value[objKey])
@@ -29,7 +38,7 @@ module.exports = {
   },
   check: () => {
     const config = new Conf({ projectName: 'Aptugo' })
-    const requiredConfigFolders = ['applications', 'templates', 'structures', 'build']
+    const importdConfigFolders = ['applications', 'templates', 'structures', 'build']
     const configuredFolders = config.get('folders')
     if (!configuredFolders) {
       return 1
@@ -95,4 +104,4 @@ module.exports = {
       })
     })
   }
-} 
+}

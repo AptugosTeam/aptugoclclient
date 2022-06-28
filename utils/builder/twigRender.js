@@ -1,7 +1,8 @@
-const { extendFilter, extendFunction, twig: _twig, cache } = require('twig/twig.js')
-const error = require('../error')
+import twigPkg from 'twig/twig.js'
+const { extendFilter, extendFunction, twig: _twig, cache } = twigPkg
+import error from '../error.js'
 
-module.exports = (twigParameters, parameters, element) => {
+export default (twigParameters, parameters, element) => {
   let toReturn = ''
   const template = _twig(twigParameters)
   try {

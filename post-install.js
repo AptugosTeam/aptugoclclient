@@ -1,7 +1,7 @@
 // post-install.js
-const path = require('path')
-const os = require('os')
-const fs = require('fs')
+import path from 'path'
+import os from 'os'
+import fs from 'fs'
 
 const paths = (process.env.PATH || '').split(path.delimiter)
 paths.sort( function (a,b) { return a.length > b.length ? 1 : -1 })

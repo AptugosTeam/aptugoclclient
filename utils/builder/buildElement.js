@@ -1,8 +1,9 @@
-const log = require('../log')
-const error = require('../error')
-const getCascadingTree = require('./getCascadingTree')
-const { load: loadPage } = require('../pages')
-const twigRender = require('./twigRender')
+import log from '../log.js'
+import error from '../error.js'
+import getCascadingTree from './getCascadingTree.js'
+import pages from '../pages.js'
+const loadPage = pages.load
+import twigRender from './twigRender.js'
 
 function getInheritedChilds(element) {
   const parentsTree = getCascadingTree(element.unique_id)
@@ -19,7 +20,7 @@ function getInheritedChilds(element) {
 
   elementsTreeTilPage.reverse()
   let toReturn = []
-  
+
   for (var I = index + 1; I < parentsTree.length; I++) {
     const theParent = aptugocli.plain[parentsTree[I]]
     for (var O = 0; O < elementsTreeTilPage.length; O++) {
@@ -34,8 +35,8 @@ function getInheritedChilds(element) {
   return toReturn
 }
 
-module.exports = (element, parameters) => {
-  buildField = (parameters) => {
+export default (element, parameters) => {
+  const buildField = (parameters) => {
     if (parameters.stoped) return
     let elementPath
     if (parameters.element.values.Field) {
@@ -86,92 +87,101 @@ module.exports = (element, parameters) => {
     return newValues
   },
   buildElement = (element, parameters) => {
+    if (!element.value && element.unique_id) {
+      element = pages.load(element.unique_id, parameters.appFolder)
+      if (element.type === 'page') return
+    }
+
     if (parameters.stoped) return
     if (parameters.render) return renderElement(element, parameters)
     else {
       log(`Building element: ${element.name} (${element.value} - ${parameters.page.name} - ${element.unique_id})`, { type: 'advance', level: parameters.level, verbosity: 8, id: element.unique_id })
-      let elementPath
-      let toReturn = ''
-      let subElementsContent = ''
-      aptugocli.skipDelaySaving = false
+      try {
+        let elementPath
+        let toReturn = ''
+        let subElementsContent = ''
+        aptugocli.skipDelaySaving = false
 
-      if (element.value === 'field') {
-        if (element.values.fieldVariable) {
-          buildElement({ ...element, value: `FieldsVarshow` }, parameters)
-        } else if (element.values.Field) {
-          const fieldToRender = aptugocli.plainFields[element.values.Field]
-          parameters.field = fieldToRender
-          buildElement({ ...element, value: `Fields${fieldToRender.data_type}${element.values.Type}` }, parameters)
+        if (element.value === 'field') {
+          if (element.values.fieldVariable) {
+            buildElement({ ...element, value: `FieldsVarshow` }, parameters)
+          } else if (element.values.Field) {
+            const fieldToRender = aptugocli.plainFields[element.values.Field]
+            parameters.field = fieldToRender
+            buildElement({ ...element, value: `Fields${fieldToRender.data_type}${element.values.Type}` }, parameters)
+          }
         }
-      }
-  
-      // Render childs first and saves into content
-      element.children && element.children.forEach((child) => {
-        const childDefiniton = loadPage(child.unique_id, parameters.appFolder)
-        subElementsContent += buildElement({ ...childDefiniton, ...child }, { ...parameters, level: parameters.level + 1 })
-      })
-      parameters.content = subElementsContent
-      
-      const inherits = getInheritedChilds(element)
-      inherits.forEach(inherit => {
-        if ( shouldaddinherit(element, inherit) ) buildElement(inherit, { ...parameters, level: parameters.level + 1 } )
-      })
-  
-      // Loads full element definition
-      const elementDefiniton = loadPage(element.unique_id, parameters.appFolder)
-      parameters.element = { ...element }
-      if (parameters.element.values) parameters.element.values = parseElementValues(parameters.element.values, parameters)
-      aptugocli.currentRenderingElement = parameters.element
-      
-      // handle FIELDS special case
-      const broughtElement = aptugocli.loadedElements.find(item => item.path === `${parameters.element.value}.tpl`)
-      elementPath = broughtElement.realPath || `${element.value}.tpl`
-      
-      // Brings delayed content matching this element
-      parameters.delayed = []
-      if (parameters.page.delays) {
-        if (broughtElement.usesDelays) { // Non-linear use of delays
-          const res = broughtElement.usesDelays.filter(item => parameters.page.delays[item])
-          res.forEach(section => {
-            parameters.delayed.push({ [section]: parameters.page.delays[section] })
+
+        // Render childs first and saves into content
+        element.children && element.children.forEach((child) => {
+          subElementsContent += buildElement( child, { ...parameters, level: parameters.level + 1 })
+        })
+        parameters.content = subElementsContent
+
+        const inherits = getInheritedChilds(element)
+        inherits.forEach(inherit => {
+          if ( shouldaddinherit(element, inherit) ) buildElement(inherit, { ...parameters, level: parameters.level + 1 } )
+        })
+
+        // Loads full element definition
+        const elementDefiniton = loadPage(element.unique_id, parameters.appFolder)
+        parameters.element = { ...element }
+        if (parameters.element.values) parameters.element.values = parseElementValues(parameters.element.values, parameters)
+        aptugocli.currentRenderingElement = parameters.element
+
+        // handle FIELDS special case
+        const broughtElement = aptugocli.loadedElements.find(item => item.path === `${parameters.element.value}.tpl`)
+        elementPath = broughtElement.realPath || `${element.value}.tpl`
+
+        // Brings delayed content matching this element
+        parameters.delayed = []
+        if (parameters.page.delays) {
+          if (broughtElement.usesDelays) { // Non-linear use of delays
+            const res = broughtElement.usesDelays.filter(item => parameters.page.delays[item])
+            res.forEach(section => {
+              parameters.delayed.push({ [section]: parameters.page.delays[section] })
+            })
+          }
+          if (parameters.page.delays[parameters.element.value]) {
+            parameters.delayed = parameters.delayed.concat(parameters.page.delays[parameters.element.value])
+          }
+          parameters.delayed = parameters.delayed.concat(inherits.map(inherit => inherit.delays))
+        }
+
+        // Check for Element Extra Files
+        if (broughtElement.extraFiles) {
+          const extraFilesLoaded = broughtElement.extraFiles.map(ef => {
+            return { ...ef, ...parameters }
+          })
+          aptugocli.filesimportdByElements.push(...extraFilesLoaded)
+        }
+
+        // Check for Element Extra Settings
+        if (broughtElement.settings) {
+          broughtElement.settings.forEach(setting => {
+            if (!aptugocli.extraSettings[setting.name]) aptugocli.extraSettings[setting.name] = []
+            const innRender = twigRender({ data: setting.value, rethrow: true }, parameters, parameters.element)
+            if (aptugocli.extraSettings[setting.name].indexOf(innRender) === -1) aptugocli.extraSettings[setting.name].push(innRender)
           })
         }
-        if (parameters.page.delays[parameters.element.value]) {
-          parameters.delayed = parameters.delayed.concat(parameters.page.delays[parameters.element.value])
+
+        try {
+          toReturn += twigRender({ ref: elementPath, debug: false, trace: false, rethrow: true }, parameters, parameters.element)
+          broughtElement.rendered = toReturn
+          aptugocli.plain[parameters.element.unique_id].rendered = toReturn
+          log(`√ Element built: ${element.name} (${element.value} - ${parameters.page.name} - ${elementPath})`, { type: 'advance', level: parameters.level, verbosity: 10 })
+        } catch(e) {
+          console.error(e)
+          error(`Problems building ${element.value}`, true)
         }
-        parameters.delayed = parameters.delayed.concat(inherits.map(inherit => inherit.delays))
-      } 
 
-      // Check for Element Extra Files
-      if (broughtElement.extraFiles) {
-        const extraFilesLoaded = broughtElement.extraFiles.map(ef => {
-          return { ...ef, ...parameters }
-        })
-        aptugocli.filesRequiredByElements.push(...extraFilesLoaded)
-      }
-
-      // Check for Element Extra Settings
-      if (broughtElement.settings) {
-        broughtElement.settings.forEach(setting => {
-          if (!aptugocli.extraSettings[setting.name]) aptugocli.extraSettings[setting.name] = []
-          const innRender = twigRender({ data: setting.value, rethrow: true }, parameters, parameters.element)
-          if (aptugocli.extraSettings[setting.name].indexOf(innRender) === -1) aptugocli.extraSettings[setting.name].push(innRender)
-        })
-      }
-    
-      try {
-        toReturn += twigRender({ ref: elementPath, debug: false, trace: false, rethrow: true }, parameters, parameters.element)
-        broughtElement.rendered = toReturn
-        aptugocli.plain[parameters.element.unique_id].rendered = toReturn
-        log(`√ Element built: ${element.name} (${element.value} - ${parameters.page.name} - ${elementPath})`, { type: 'advance', level: parameters.level, verbosity: 10 })
+        return toReturn
       } catch(e) {
-        console.error(e)
-        error(`Problems building ${element.value}`, true)
+        const theError = e.exitCode ? e : { exitCode: 124, message: 'Elemental... Whatson', element: element, type: 'element', error: e }
+        throw(theError)
       }
-
-      return toReturn
     }
-    
+
   },
   // If child with the same edited name is present as an element child, ignore the inherit
   shouldaddinherit = (element, inherit) => {
@@ -198,11 +208,11 @@ module.exports = (element, parameters) => {
       subElementsContent += renderElement({ ...childDefiniton, ...child }, {...parameters, level: parameters.level + 1})
     })
     parameters.content = subElementsContent
-    
+
     const inherits = getInheritedChilds(element)
     let inheritedContent = ''
 
-    
+
 
     if (inherits.length) {
       inherits.forEach(inherit => {
@@ -230,7 +240,7 @@ module.exports = (element, parameters) => {
     parameters.element = aptugocli.currentRenderingElement
     const broughtElement = aptugocli.loadedElements.find(item => item.path === `${aptugocli.currentRenderingElement.value}.tpl`)
     let elementPath = broughtElement.realPath || `${element.value}.tpl`
-    
+
     // console.log( aptugocli.currentRenderingElement.value  )
     if (aptugocli.currentRenderingElement.value === 'field') {
       if (aptugocli.currentRenderingElement.values.fieldVariable) {
@@ -244,7 +254,7 @@ module.exports = (element, parameters) => {
         elementPath = `Fields${fieldToRender.data_type}${element.values.Type}.tpl`
       }
     }
-    
+
     try {
       if (inheritedContent !== '') {
         parameters.content = inheritedContent + parameters.content
@@ -257,7 +267,7 @@ module.exports = (element, parameters) => {
 
     return toReturn
   }
-  
+
   const be = buildElement(element, parameters)
   return be
 }

@@ -1,7 +1,5 @@
-const fs = require('fs')
-const path = require('path')
-const { list: listApps } = require('./apps')
-const { list: listTemplates } = require('./templates')
+import apps from './apps.js'
+import templates from './templates.js'
 
 const emptyState = {
   apps: [],
@@ -16,15 +14,17 @@ const emptyState = {
 
 let savedState = {}
 
-module.exports = {
-  setState: (setting) => {
-    savedState = setting
-  },
-  state: async () => {
-    const toReturn = { ...emptyState, ...savedState }
+export const getPath = () => {
+  return process.env.PATH
+}
 
-    toReturn.apps = await listApps()
-    toReturn.templates = await listTemplates()
-    return toReturn
-  }
-} 
+export const setState = (setting) => {
+  savedState = { ...savedState, ...setting }
+}
+
+export const state = async () => {
+  const toReturn = { ...emptyState, ...savedState }
+  if (toReturn.apps) toReturn.apps = await apps.list()
+  if (toReturn.templates) toReturn.templates = await templates.list()
+  return toReturn
+}

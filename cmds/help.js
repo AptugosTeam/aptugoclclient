@@ -41,7 +41,7 @@ const menus = {
 
     list ............... returns a list of the available templates
     version ............ displays the current version of your templates
-    
+
     aptugo templates list <options> ........ returns a list of all available templates
 
     --extended ......... results get table formated
@@ -57,6 +57,15 @@ const menus = {
 
     --template ......... the ID of the template to set the field for
     --name ............. the name of the field
+
+    Other options
+
+    --download ......... Downloads standard templates from Aptugo's repository
+    --create ........... Creates a new template system
+    --delete ........... Deletes an existing template system
+    --get .............. Retrieves a template system
+    --setfile .......... Updates a file belonging to the template system
+    --filesource ....... Retrieves the source for a specific file
   `,
 
   structures: `
@@ -77,10 +86,10 @@ const menus = {
 
     aptugo structures run <options> ......... runs a structure
     example: aptugo structures run --structure "New Page" --app by6u6lwoD7bBP0xO --parentPage dZp7PwnX
-    
+
     --structure ........ the ID of the structure to run
     --app .............. the ID of the APP to run this structure into
-    --<any> ............ Structures require parameters and this is the way you set those
+    --<any> ............ Structures import parameters and this is the way you set those
   `,
 
   renderer: `
@@ -88,10 +97,10 @@ const menus = {
   `
 }
 
-module.exports = (args) => {
+export default (args) => {
   const subCmd = args._[0] === 'help'
     ? args._[1]
     : args._[0]
 
-  console.log(menus[subCmd] || menus.main)
+  return menus[subCmd] || menus.main
 }

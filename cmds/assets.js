@@ -1,11 +1,11 @@
-const readline = require('readline')
-const { load: appload } = require('../utils/apps')
+import readline from 'readline'
+import { load: appload } from '../utils/apps'
 const {
   fileSource: source,
   fileRead: read,
   setfile: file,
   upload
-} = require('../utils/assets')
+} = import('../utils/assets')
 
 const filepath = async (args) => {
   const app = await appload(args.app)
@@ -21,11 +21,11 @@ const fileRead = async (args) => {
 }
 
 const setfile = async (args, extraarguments = null) => {
-  const fromcommandline = !!require.main
+  const fromcommandline = !!import.main
   let newdef
 
   if (extraarguments && extraarguments.file) {
-    newdef = file(args, extraarguments.file)
+    newdef = await file(args, extraarguments.file)
   } else {
     var r1 = readline.createInterface({ input: process.stdin, output: process.stdout })
     r1.question('Paste definition here\n', function (def) {
@@ -34,12 +34,12 @@ const setfile = async (args, extraarguments = null) => {
       process.stdin.destroy()
     })
   }
-  console.error('newdef', newdef)
+  console.log('newdef', newdef)
   return newdef
 }
 
 let output
-module.exports = async (args, extraarguments) => {
+export async (args, extraarguments) => {
   switch (args._[1]) {
     case 'path':
       output = await filepath(args)

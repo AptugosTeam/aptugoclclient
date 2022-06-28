@@ -1,15 +1,15 @@
-const chalk = require("chalk")
-const ora = require('ora')
-const prompt = require('prompt')
-const getPrompt = require('util').promisify(prompt.get).bind(prompt)
-const cliSelect = require('cli-select')
-const { list: appsList, load: appLoad } = require('../utils/apps')
-const { run: structRun } = require('../utils/structures')
-const { save } = require('../utils/apps')
-const log = require('../utils/log')
-const { state: loadState } = require('../utils/state')
+const chalk = import("chalk")
+import ora from 'ora'
+import prompt from 'prompt'
+import getPrompt from 'util'.promisify(prompt.get).bind(prompt)
+import cliSelect from 'cli-select'
+import { list: appsList, load: appLoad } from '../utils/apps'
+import { run: structRun } from '../utils/structures'
+import { save } from '../utils/apps'
+import log from '../utils/log'
+import { state: loadState } from '../utils/state'
 
-module.exports = async (args) => {
+export async (args) => {
   const state = await loadState()
   console.log( chalk.keyword('orange')('Creating a new Aptugo model') )
 

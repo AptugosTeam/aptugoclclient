@@ -1,19 +1,25 @@
-const chalk = require("chalk")
-const minimist = require('minimist')
-const checkLicense = require('./utils/checkLicense')
-const ora = require('ora')
-const { check } = require('./utils/config')
-const fs = require('fs')
-const os = require('os')
-const path = require('path')
-var splitargs = require('splitargs')
-const log = require('./utils/log')
-const prettier = require('prettier')
-const parserTypeScript = require('prettier/parser-typescript')
-const parserBabel = require('prettier/parser-babel')
-const parserScss = require('prettier/parser-postcss')
-const organizeImports = require('prettier-plugin-organize-imports')
-const { isBinary } = require('istextorbinary')
+import minimist from "minimist"
+import checkLicense from './utils/checkLicense.js'
+import config from './utils/config.js'
+import log from './utils/log.js'
+
+import { default as configCmds } from './cmds/config.js'
+import state from './cmds/state.js'
+import help from './cmds/help.js'
+import { default as newApp } from './cmds/new.js'
+import build from './cmds/build.js'
+import version from './cmds/version.js'
+
+import fs from 'fs'
+import os from 'os'
+import path from 'path'
+var splitargs = import('splitargs')
+import prettier from 'prettier'
+import parserTypeScript from 'prettier/parser-typescript.js'
+import parserBabel from 'prettier/parser-babel.js'
+import parserScss from 'prettier/parser-postcss.js'
+import organizeImports from 'prettier-plugin-organize-imports'
+import { isBinary } from 'istextorbinary'
 
 global.aptugocli = {
   loglevel: 0,
@@ -62,7 +68,7 @@ global.aptugocli = {
           return input
       }
     }
-    
+
     // return input
     let toReturn = input
     try {
@@ -92,7 +98,7 @@ global.aptugocli = {
       console.error('reading text file at ', path)
       return fs.readFileSync(path, { encoding: 'utf-8'})
     }
-    
+
   },
   writeFile: (filename, contents, pretify = true) => {
     if (pretify) {
@@ -122,114 +128,105 @@ global.aptugocli = {
       }
     }
   },
-  run: async (arguments, extraarguments = {}) => {
-    const fromcommandline = !arguments
+  run: async (thearguments, extraarguments = {}) => {
     let args = { _:[] }
-    if (typeof(arguments) === 'string') {
-      args = minimist(splitargs(arguments))
-    } else if (typeof(arguments) === 'object') {
-      args = { _:[], ...arguments }
-    } else {
-      args = minimist(process.argv.slice(2))
-    }
-  
+
+    if (typeof(thearguments) === 'string') args = minimist(splitargs(thearguments))
+    else if (typeof(thearguments) === 'object') args = { _:[], ...thearguments}
+    else args = minimist(process.argv.slice(2))
+
+    if (args.log === 'file') import('./saveLogs.js')
+
     let cmd = args._[0] || 'help'
     let subcmd = args
-  
-    if (args.version || args.v) {
-      cmd = 'version'
-    }
-  
-    if (args.help || args.h) {
-      cmd = 'help'
-    }
-  
+
+    if (args.version || args.v) cmd = 'version'
+    if (args.help || args.h) cmd = 'help'
+
     if (args.loglevel && args.loglevel !== aptugocli.loglevel) {
       console.debug(`Setting loglevel to ${args.loglevel}`)
       aptugocli.loglevel = args.loglevel
     }
-    
+
     return await checkLicense().then((result) => {
       try {
+        let output = ''
+
         if (cmd !== 'config' && cmd !== 'utils') {
-          const checkResult = check()
+          const checkResult = config.check()
           if (checkResult !== 0) {
-            if (fromcommandline) {
-              console.error(chalk.blue.bold('Missing config'))
-              cmd = 'config'
-              subcmd = { _: ['config', 'ask', 'folders'] }
-            } else {
-              return 'You must config me'
+            output = {
+              exitCode: 10,
+              data: 'Missing Config'
             }
           }
         }
-        
-        let output = ''
+
         switch (cmd) {
           case 'state':
-            output = require('./cmds/state')(subcmd, extraarguments)
+            output = state(subcmd, extraarguments)
             break
-  
+
           case 'control':
-            output = require('./cmds/control')(subcmd)
+            output = import('./cmds/control')(subcmd)
             break
-  
+
           case 'config':
-            output = require('./cmds/config')(subcmd)
+            output = configCmds(subcmd)
             break
-      
+
           case 'version':
-            output = require('./cmds/version')(subcmd)
+            output = version(subcmd)
             break
-      
+
           case 'help':
-            output = require('./cmds/help')(subcmd)
+            output = help(subcmd)
             break
-      
+
           case 'list':
-            output = require('./cmds/list')(subcmd)
-            break 
-  
+            output = import('./cmds/list')(subcmd)
+            break
+
           case 'load':
-            output = require('./cmds/load')(subcmd)
+            output = import('./cmds/load')(subcmd)
             break
-  
+
           case 'new':
-            output = require('./cmds/new')(subcmd)
+            output = newApp(subcmd)
             break
-  
+
           case 'save':
-            output = require('./cmds/save')(subcmd, extraarguments)
+            output = import('./cmds/save')(subcmd, extraarguments)
             break
-  
+
           case 'elements':
-            output = require('./cmds/elements')(subcmd)
+            output = import('./cmds/elements')(subcmd)
             break
-  
+
           case 'model':
-            output = require('./cmds/model')(subcmd)
+            output = import('./cmds/model')(subcmd)
             break
-      
+
           case 'remove':
-            output = require('./cmds/remove')(subcmd)
+            output = import('./cmds/remove')(subcmd)
             break
-  
+
           case 'build':
-            output = require('./cmds/build')(subcmd)
+            output = build(subcmd)
             break
-  
+
           case 'structures':
-            output = require('./cmds/structures')(subcmd, extraarguments)
+            output = import('./cmds/structures')(subcmd, extraarguments)
             break
-  
+
           case 'templates':
-            output = require('./cmds/templates')(subcmd, extraarguments)
+            output = import('./cmds/templates')(subcmd, extraarguments)
             break
           case 'assets':
-            output = require('./cmds/assets')(subcmd, extraarguments)
+            output = import('./cmds/assets')(subcmd, extraarguments)
             break
           case 'renderer':
-            output = require('./cmds/renderer')(subcmd)
+            output = import('./cmds/renderer')(subcmd)
             break
           case 'utils':
             if (subcmd._.slice(2).length) {
@@ -240,28 +237,31 @@ global.aptugocli = {
             output = `"${cmd}" is not a valid command`
             break
         }
+
         if (output instanceof Promise) {
           return output.then(res => {
             if (!res) {
-            } else if (res.exitCode) {
-              if (fromcommandline) throw(res)
-              else return res
-            } else {
-              if (fromcommandline) {
-                if (args.pipe) return console.log(JSON.stringify(res))
-                else if (res instanceof Array) console.log(res)
-                else if (res instanceof Object) console.log(res)
-                else process.stdout.write(res)
-              }
               return {
-                exitCode: 0,
-                data: res
+                exitCode: 255,
+                data: 'No output produced'
+              }
+            } else if (res.exitCode) {
+              console.log('there also')
+              return res
+            } else {
+              if (args.pipe) return console.log(JSON.stringify(res))
+              else {
+                return {
+                  exitCode: 0,
+                  data: res
+                }
               }
             }
+          }).catch(e => {
+            const theError = e.exitCode ? e : { exitCode: 1, message: 'General Error', error: e }
+            throw(theError)
           })
         } else {
-          console.log('standard output', fromcommandline)
-          if (fromcommandline) console.log(output)
           return {
             exitCode: 0,
             data: output
@@ -271,17 +271,16 @@ global.aptugocli = {
         console.error(e)
         error(`Failed to execute command`, true)
       }
-      
+
     })
     .catch((error) => {
-      if (typeof Aptugo !== 'undefined') Aptugo.setFeedback(error.message, true)
-      else console.trace('ERROR:', error)
+      throw(error)
     })
   }
 }
 
-console.error(`Logs writen to: ${ path.join( os.tmpdir(), 'aptugo.access.log') }`)
-var access = fs.createWriteStream( path.join( os.tmpdir(), 'aptugo.access.log') )
-process.stdout.write = process.stderr.write = access.write.bind(access)
+process.on('unhandledRejection', (reason, p) => {
+  console.trace('Unhandled Rejection at: Promise', p, 'reason:', reason);
+});
 
-module.exports = aptugocli.run
+export default aptugocli.run

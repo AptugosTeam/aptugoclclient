@@ -1,9 +1,9 @@
-const chalk = require("chalk")
-const { run: runApp, stop, isRunning } = require('../utils/controller')
-const { list: appsList } = require('../utils/apps')
-const cliSelect = require('cli-select')
-const log = require('../utils/log')
-const os = require('os')
+const chalk = import("chalk")
+import { run: runApp, stop, isRunning } from '../utils/controller'
+import { list: appsList } from '../utils/apps'
+import cliSelect from 'cli-select'
+import log from '../utils/log'
+import os from 'os'
 
 const run = async (args) => {
   log('Application Run', { type: 'mainTitle' })
@@ -12,7 +12,7 @@ const run = async (args) => {
 
   if (!args.app) {
     log('\nSelect the application to run:', { type: 'promptHeader' })
-    
+
     appSelected = await cliSelect({
       values: apps,
       indentation: 2,
@@ -31,7 +31,7 @@ const run = async (args) => {
   } else {
     args.app = apps.filter(localapp => localapp.settings.name === args.app || localapp._id === args.app)[0]
   }
-  
+
   return runApp(args).then(res => {
     return res
   }).catch(e => {
@@ -39,7 +39,7 @@ const run = async (args) => {
   })
 }
 
-module.exports = async (args) => {
+export async (args) => {
   switch (args._[1]) {
     case 'status':
       return await isRunning()

@@ -1,13 +1,13 @@
-const log = require('../utils/log')
-const { fork, exec } = require('child_process');
-const { state: loadState } = require('../utils/state')
-const { get: getConfig } = require('./config')
-const path = require('path')
-const fs = require('fs')
-const os = require('os')
+import log from '../utils/log'
+import { fork, exec } from 'child_process';
+import { state: loadState } from '../utils/state'
+import { get: getConfig } from './config'
+import path from 'path'
+import fs from 'fs'
+import os from 'os'
 
 let ptyproc
-module.exports = {
+export {
   run: async ({ app }) => {
     const state = await loadState()
 
@@ -28,17 +28,16 @@ module.exports = {
           if (fs.existsSync(path.join(thepath, 'pnpm'))) {
             found = path.join(thepath, 'pnpm')
           }
-          
+
         } catch(e) {}
       }
     })
 
     if (!found) return { exitCode: 1, error: 'Could not find PNPM (maybe you need to run npm i -g pnpm ?)'}
-    console.log('about to start', found)
     found = `"${found}"`
 
-    var pty = require('node-pty');
-    var shell = os.platform() === 'win32' ? 'command.exe' : 'bash';
+    var pty = import('node-pty');
+    var shell = os.platform() === 'win32' ? 'cmd.exe' : 'bash';
 
     ptyproc = pty.spawn(shell, [], {
       name: 'aptugo-process-controller',
@@ -55,20 +54,21 @@ module.exports = {
     await module.exports.killIfRunning()
     ptyproc.write(`${found} start\r`)
     fs.writeFileSync( path.join( os.tmpdir(), 'aptugo-state.json' ), ptyproc._pid + '')
+    return 'ok'
   },
   stop: async () => {
-    console.log('pty', ptyproc)
     try {
       const pid = fs.readFileSync( path.join( os.tmpdir(), 'aptugo-state.json' ), { encoding: 'utf-8' })
       process.kill(pid,'SIGKILL')
       if (ptyproc) ptyproc.kill()
       fs.rmSync( path.join( os.tmpdir(), 'aptugo-state.json' ) )
-      ptyproc.
+      return 'ok'
     } catch(e) {
       if (e.code === 'ESRCH') { // No such process, so: delete the state
         fs.rmSync( path.join( os.tmpdir(), 'aptugo-state.json' ) )
       }
       console.error(e)
+      return 'ok'
     }
   },
   isRunning: async () => {
@@ -76,11 +76,10 @@ module.exports = {
       const pid = fs.readFileSync( path.join( os.tmpdir(), 'aptugo-state.json' ) , { encoding: 'utf-8' })
       return pid
     } catch(e) {}
-    
+
     return 'no'
   },
   killIfRunning: async () => {
-    console.error('is running', await module.exports.isRunning())
     if (await module.exports.isRunning() !== 'no') {
       await module.exports.stop()
     }

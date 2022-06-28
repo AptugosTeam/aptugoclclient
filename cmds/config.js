@@ -1,6 +1,8 @@
-const { get, set, clear, verifySystem } = require('../utils/config')
-const prompt = require('prompt')
-const homedir = require('os').homedir()
+import config from '../utils/config.js'
+const { get, set, clear, verifySystem } = config
+import prompt from 'prompt'
+import os from 'os'
+const homedir = os.homedir()
 
 const configOptions = {
   'license': {
@@ -37,7 +39,7 @@ function onErr(err) {
   return 1
 }
 
-module.exports = async (args) => {
+export default async (args) => {
   switch (args._[1]) {
     case 'check':
       return await verifySystem()

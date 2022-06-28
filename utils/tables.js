@@ -1,8 +1,7 @@
-const fs = require('fs')
-const path = require('path')
-const { get } = require('./config')
+import fs from 'fs'
+import path from 'path'
 
-module.exports = {
+export default {
   fix: (tables) => {
     tables = tables.map(table => module.exports.fixTable(table))
     return tables

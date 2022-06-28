@@ -1,29 +1,37 @@
-const path = require('path')
-const os = require('os')
-const util = require('util')
-const fs = require('fs')
-const { get: getTemplate, searchForRenderingPlaceholder } = require('../templates')
-const { get: getConfig } = require('../config')
-const { load: loadApp, save } = require('../apps')
-const copyAssets = require('./copyassets')
-const loadElements = require('./loadElements')
-const te = require('./twigExtensions')
-const saveTwigTemplates = require('./twigTemplates')
-const { extendFilter, extendFunction, twig: _twig, cache } = require('twig/twig.js')
-const copyStaticFiles = require('./copystaticfiles')
-const copyExtraFiles = require('./copyextrafiles')
-const buildPage  = require('./buildpage')
-const log = require('../log')
-const ora = require('ora')
-const chalk = require('chalk')
-const humanizeDuration = require("humanize-duration")
-const {spawn, execSync} = require('child_process')
-const AdmZip = require("adm-zip")
-const error = require('../error')
+import path from 'path'
+import os from 'os'
+import util from 'util'
+import fs from 'fs'
+import { Blob } from 'buffer'
+
+import twigPkg from 'twig/twig.js'
+const { extendFilter, extendFunction, twig: _twig, cache } = twigPkg
+
+import apps from '../apps.js'
+import templates from '../templates.js'
+
+import config from '../config.js'
+import copyAssets from './copyassets.js'
+import loadElements from './loadElements.js'
+import te from './twigExtensions.js'
+import saveTwigTemplates from './twigTemplates.js'
+import copyStaticFiles from './copystaticfiles.js'
+import copyExtraFiles from './copyextrafiles.js'
+import buildPage  from './buildpage.js'
+import log from '../log.js'
+import ora from 'ora'
+import chalk from 'chalk'
+import humanizeDuration from 'humanize-duration'
+
+import {spawn, execSync} from 'child_process'
+const AdmZip = import("adm-zip")
+import FormData from 'form-data'
+import error from '../error.js'
 const errored = false
-const { randomFillSync } = require('crypto')
-const { default: axios } = require('axios')
-const fmdata = require('formdata-node')
+import { randomFillSync } from 'crypto'
+import axios from 'axios'
+import {FormData as fmdata} from "formdata-node"
+import fixPath from './paths/fixPath.js'
 
 const random = (() => {
   const buf = Buffer.alloc(16)
@@ -36,6 +44,7 @@ const twigExtensions = () => {
   extendFunction('insert_setting', te.insertSetting)
   extendFunction('save_delayed', te.saveDelayed)
   extendFunction('add_setting', te.addSetting)
+  extendFunction('envVar', te.envVar)
 
   extendFilter('elementData', te.elementData)
   extendFilter('fieldData', te.fieldData)
@@ -45,7 +54,7 @@ const twigExtensions = () => {
   extendFilter('assetData', te.assetData)
   extendFilter('castToArray', te.castToArray)
 
-  extendFilter('camelCase', function(value, params) {   
+  extendFilter('camelCase', function(value, params) {
     return value.replace(/(?:^\w|[A-Z]|\b\w|\s+)/g, function(match, index) {
       if (+match === 0) return ""; // or if (/\s+/.test(match)) for white spaces
       return index === 0 ? match.toLowerCase() : match.toUpperCase();
@@ -77,34 +86,39 @@ const twigExtensions = () => {
   //   const parentsTree = getCascadingTree(builderObj.plainPages, value.unique_id)
   //   return parentsTree
   // })
-  
+
 }
 
-module.exports = {
+const builder = {
   build: async (prefs) => {
     const { app, type = 'Development', clean = false, skip = [], only = null } = prefs
 
     if (!only) log(`Building ${app.settings.name} in ${type} mode`, { type: 'mainTitle' })
-    const parameters = module.exports.buildParameters({ app, type, clean, variables: {}, skip })
+    let parameters
+    try {
+      parameters = builder.buildParameters({ app, type, clean, variables: {}, skip })
+    } catch(e) {
+      throw(e)
+    }
 
     if (only) {
       switch (only) {
         case 'setup':
-          return module.exports.firstStep_setupBuild(parameters).then(() => {
+          return builder.firstStep_setupBuild(parameters).then(() => {
             return 'finished setup'
           }).catch(e => {
             console.log('caught Error on SetupBuild', e)
           })
           break
         case 'check':
-          return module.exports.secondStep_checkApplication(parameters).then((response) => {
+          return builder.secondStep_checkApplication(parameters).then((response) => {
             return 'finished check'
           }).catch(e => {
             if (typeof aptugo !== 'undefined') aptugo.setFeedback('Ran into an issue checking your application.', true)
             return e
-          }) 
+          })
         case 'copy':
-          return module.exports.thirdStep_copyStaticFiles(parameters).then((res) => {
+          return builder.thirdStep_copyStaticFiles(parameters).then((res) => {
             return 'finished copy'
           }).catch(e => {
             console.log('caught eerrrorr', e)
@@ -113,72 +127,80 @@ module.exports = {
           break
         case 'pages':
           if (parameters.stoped) return
-          return module.exports.fourthStep_generatePages(parameters).then(() => {
-            return 'finished pages'
+          return builder.firstStep_setupBuild(parameters).then(() => {
+            return builder.fourthStep_generatePages(parameters).then(() => {
+              return 'finished pages'
+            }).catch(e => {
+              throw(e)
+            })
           }).catch(e => {
-            conosle.log('caught somethign here')
-            throw(e)
+            console.log('caught Error on Pages Build', e)
           })
           break
         case 'extraFiles':
           if (parameters.stoped) return
-          return module.exports.fifthStep_extraFiles(parameters).then(() => {
+          return builder.fifthStep_extraFiles(parameters).then(() => {
             return 'finished extrafiles'
           })
         case 'extra':
           if (parameters.stoped) return
-          return module.exports.fifthStep_extraSettings(parameters).then(() => {
+          return builder.fifthStep_extraSettings(parameters).then(() => {
             return 'finished extra'
           })
           break
         case 'post':
-          return module.exports.sixthStep_postBuild(parameters).then(() => {
+          return builder.sixthStep_postBuild(parameters).then(() => {
             return 'finished post'
           })
           break
         case 'buildscripts':
-          return module.exports.seventhStep_buildScripts(parameters).then(() => {
+          return builder.seventhStep_buildScripts(parameters).then(() => {
             return 'finished buildscripts'
           })
           break
         case 'deploy':
-          return module.exports.eightStep_deploy(parameters).then(() => {
+          return builder.eightStep_deploy(parameters).then(() => {
             return 'finished deployment'
+          }).catch(e => {
+            console.log('step 8: Error', e)
+            throw(e)
           })
           break
       }
       return 'error' + only
     } else {
-      module.exports.firstStep_setupBuild(parameters).then(() => {
+      builder.firstStep_setupBuild(parameters).then(() => {
         if (typeof aptugo !== 'undefined') aptugo.setFeedback('Build Setup...')
-        module.exports.secondStep_checkApplication(parameters).then(() => {
+        builder.secondStep_checkApplication(parameters).then(() => {
           if (typeof aptugo !== 'undefined') aptugo.setFeedback('Check your Application...')
-          module.exports.thirdStep_copyStaticFiles(parameters).then(() => {
+          builder.thirdStep_copyStaticFiles(parameters).then(() => {
             if (typeof aptugo !== 'undefined') aptugo.setFeedback('Copy Static Files...')
-            module.exports.fourthStep_generatePages(parameters).then(() => {
+            builder.fourthStep_generatePages(parameters).then(() => {
               if (typeof aptugo !== 'undefined') aptugo.setFeedback('Generate Pages...')
-              module.exports.fifthStep_extraFiles(parameters).then(() => {
-                if (typeof aptugo !== 'undefined') aptugo.setFeedback('Copy Files Required by Elements...')
-                module.exports.fifthStep_extraSettings(parameters).then(() => {
+              builder.fifthStep_extraFiles(parameters).then(() => {
+                if (typeof aptugo !== 'undefined') aptugo.setFeedback('Copy Files importd by Elements...')
+                builder.fifthStep_extraSettings(parameters).then(() => {
                   if (typeof aptugo !== 'undefined') aptugo.setFeedback('Rebuild Pages with extra settings...')
-                  module.exports.sixthStep_postBuild(parameters).then(() => {
+                  builder.sixthStep_postBuild(parameters).then(() => {
                     if (typeof aptugo !== 'undefined') aptugo.setFeedback('Post build stuff...')
-                    module.exports.seventhStep_buildScripts(parameters).then(() => {
+                    builder.seventhStep_buildScripts(parameters).then(() => {
                       if (typeof aptugo !== 'undefined') aptugo.setFeedback('Post build scripts...')
-                      module.exports.lastStep_success(parameters).then(() => {
+                      builder.lastStep_success(parameters).then(() => {
                         if (typeof aptugo !== 'undefined') aptugo.setFeedback('done')
                         // finished
-                      }) 
+                      })
                     })
                   })
                 })
               })
+            }).catch(e => { // Failed generate pages
+              throw(e)
             })
           })
         })
       })
       return 'built full'
-    } 
+    }
   },
 
   stopBuilding: (parameters) => {
@@ -187,32 +209,36 @@ module.exports = {
   },
 
   parseApplication: (application) => {
-    application.tables.forEach(table => aptugocli.plain[table.unique_id] = table)
-    application.assets.forEach(asset => {
-      aptugocli.plain[asset.id] = asset
-      aptugocli.plainAssets[asset.id] = asset
-    })
-    
-    const navigateAndParseTree = (tree) => {
-      return tree.map(item => {
-        aptugocli.plain[item.unique_id] = item
-        if (item.type === 'page') {
-          // aptugocli.plain[page.unique_id] = item
-          // aptugocli.plainPages[page.unique_id] = item
-          Object.keys(item).map(propertyName => {
-            if (item[propertyName] && item[propertyName].substr && item[propertyName].substr(0,2) === '()') {
-              let replacedValue = item[propertyName].replace('aptugo.store.getState().application.tables','params.plainTables')
-              replacedValue = '(params)' + replacedValue.substr(2)
-              item[propertyName] = module.exports.parseToString(replacedValue) 
-            }
-          })
-        }
-        if (item.children && item.children.length) item.children = navigateAndParseTree(item.children)
-        return item
+    try {
+      application.tables.forEach(table => aptugocli.plain[table.unique_id] = table)
+      application.assets.forEach(asset => {
+        aptugocli.plain[asset.id] = asset
+        aptugocli.plainAssets[asset.id] = asset
       })
+
+      const navigateAndParseTree = (tree) => {
+        return tree.map(item => {
+          aptugocli.plain[item.unique_id] = item
+          if (item.type === 'page') {
+            // aptugocli.plain[page.unique_id] = item
+            // aptugocli.plainPages[page.unique_id] = item
+            Object.keys(item).map(propertyName => {
+              if (item[propertyName] && item[propertyName].substr && item[propertyName].substr(0,2) === '()') {
+                let replacedValue = item[propertyName].replace('aptugo.store.getState().application.tables','params.plainTables')
+                replacedValue = '(params)' + replacedValue.substr(2)
+                item[propertyName] = builder.parseToString(replacedValue)
+              }
+            })
+          }
+          if (item.children && item.children.length) item.children = navigateAndParseTree(item.children)
+          return item
+        })
+      }
+      application.pages = navigateAndParseTree(application.pages)
+      return application
+    } catch(e) {
+      throw(e)
     }
-    application.pages = navigateAndParseTree(application.pages)
-    return application
   },
 
   parseToString(input) {
@@ -221,10 +247,10 @@ module.exports = {
       const params = {
         plainTables: Object.values(aptugocli.plain)
       }
-      output = module.exports.deserializeFunction(input).call({})(params)
+      output = builder.deserializeFunction(input).call({})(params)
     } catch(e) {
-      console.error(e)
-      output = input
+      const theError = { exitCode: 125, message: 'Element parameters error', error: e, info: input}
+      throw(theError)
     }
     return output
   },
@@ -234,46 +260,51 @@ module.exports = {
   },
 
   buildParameters: (buildData) => {
-    const application = module.exports.parseApplication(loadApp(buildData.app))
-    // console.log(util.inspect(application, false, null, true /* enable colors */))
-    const settings = buildData.type === 'Development' ? application.settings.development : application.settings.production
-    const template = getTemplate(settings.template)
-    const buildFolder = settings.folder
-    const fullbuildfolder = getConfig('folders').build
-    const appFolder =  path.join( getConfig('folders').applications, aptugocli.friendly(application.settings.name) )
-    const filesFolder = path.join(appFolder, 'Drops')
+    try {
+      const application = builder.parseApplication(apps.load(buildData.app))
 
-    settings.variables && settings.variables.split('\n').forEach(thevar => {
-      var [varName, varValue] = thevar.split(':')
-      try { buildData.variables[varName] = eval(varValue) } catch(e) { buildData.variables[varName] = varValue }
-    })
-    
-    if (!template) error('Error: Application does not have a template assigned (or it is missing)', true)
+      // console.log(util.inspect(application, false, null, true /* enable colors */))
+      const settings = buildData.type === 'Development' ? application.settings.development : application.settings.production
+      const template = templates.get(settings.template)
+      const buildFolder = settings.folder
+      const fullbuildfolder = config.get('folders').build
+      const appFolder =  path.join( config.get('folders').applications, aptugocli.friendly(application.settings.name) )
+      const filesFolder = path.join(appFolder, 'Drops')
 
-    aptugocli.activeParameters = {
-      stoped: false,
-      skip: buildData.skip,
-      type: buildData.type,
-      application,
-      settings,
-      template,
-      buildFolder,
-      appFolder,
-      fullbuildfolder,
-      filesFolder,
-      method: settings.type,
-      doClean: buildData.clean,
-      variables: buildData.variables
+      settings.variables && settings.variables.split('\n').forEach(thevar => {
+        var [varName, varValue] = thevar.split(':')
+        try { buildData.variables[varName] = eval(varValue) } catch(e) { buildData.variables[varName] = varValue }
+      })
+
+      if (!template) error('Error: Application does not have a template assigned (or it is missing)', true)
+
+      aptugocli.activeParameters = {
+        stoped: false,
+        skip: buildData.skip,
+        type: buildData.type,
+        application,
+        settings,
+        template,
+        buildFolder,
+        appFolder,
+        fullbuildfolder,
+        filesFolder,
+        method: settings.type,
+        doClean: buildData.clean,
+        variables: buildData.variables
+      }
+
+      return aptugocli.activeParameters
+    } catch(e) {
+      console.log('another capsule')
+      throw(e)
     }
-
-    return aptugocli.activeParameters
   },
 
   firstStep_setupBuild: (parameters) => {
     return new Promise((resolve, reject) => {
       const start = new Date()
-      const spinner = ora('Setting up build...').start()
-      if (typeof aptugo !== 'undefined') aptugo.setFeedback('Setting up build...')
+      console.info('Setting up build...')
       aptugocli.extraSettings = { ...parameters.variables } || {}
       if (parameters.doClean) {
         fs.rmdirSync( path.join(parameters.fullbuildfolder, parameters.buildFolder), { recursive: true })
@@ -282,7 +313,7 @@ module.exports = {
 
       aptugocli.skipSettings = true
       aptugocli.filesWithExtraSettings = []
-      aptugocli.filesRequiredByElements = []
+      aptugocli.filesimportdByElements = []
       cache(false)
       twigExtensions()
       _twig({
@@ -300,8 +331,7 @@ module.exports = {
       }
       aptugocli.assets = parameters.application.assets
       const end = new Date()
-      spinner.succeed(`Build set-up: ${humanizeDuration(end - start)}`);
-      if (typeof aptugo !== 'undefined') aptugo.setFeedback(`Build set-up: ${humanizeDuration(end - start)}`)
+      console.info(`Build set-up: ${humanizeDuration(end - start)}`)
       resolve()
     })
   },
@@ -309,8 +339,7 @@ module.exports = {
   secondStep_checkApplication: (parameters) => {
     return new Promise((resolve, reject) => {
       const start = new Date()
-      const spinner = ora('Checking your application...').start()
-      if (typeof aptugo !== 'undefined') aptugo.setFeedback('Checking your application...')
+      console.info('Checking your application...')
       try {
         // Check Tables
         const tables = parameters.application.tables
@@ -318,27 +347,44 @@ module.exports = {
           if ( aptugocli.friendly(table.name) === aptugocli.friendly(table.singleName) ) {
             throw { element: table, error: 'tablenamesame', type: 'table' }
           }
-          
+
           table.fields.forEach(field => {
             const definition = parameters.template.fields.find(tplfield => tplfield.value === field.data_type)
             if (!definition) throw { element: field, error: 'nodefinition', type: 'field' }
-            
+
             definition.options && definition.options.extra && definition.options.extra.forEach(extraDefinition => {
-              if (extraDefinition.isrequired && !field[extraDefinition.value]) throw { element: field, error: 'missingrequired', type: 'field' }
+              if (extraDefinition.isimportd && !field[extraDefinition.value]) throw { element: field, error: 'missingimportd', type: 'field' }
             })
           })
         })
+
+        // Check Elements
+        const elements = Object.values(aptugocli.plain).filter(plainThing => plainThing.type === 'element')
+        console.log('aptugo cli exists?')
+        // console.log(aptugocli)
+        elements.forEach(element => {
+          const broughtElement = aptugocli.loadedElements.find(item => item.path === `${element.value}.tpl`)
+          if (broughtElement) {
+            broughtElement.options && broughtElement.options.forEach(option => {
+              if (option.importd && !element.values[option.name]) throw { element: element, error: 'missingimportd', type: 'element' }
+            })
+          } else {
+            throw { element: element, error: 'missingtemplate', type: 'element' }
+          }
+
+        })
         const end = new Date()
-        spinner.succeed(`Finished checking your application: ${humanizeDuration(end - start)}`);
-        if (typeof aptugo !== 'undefined') aptugo.setFeedback(`Finished checking your application: ${humanizeDuration(end - start)}`)
+        console.info(`Finished checking your application: ${humanizeDuration(end - start)}`)
         resolve()
       } catch(e) {
-        const theError = { exitCode: 124, message: 'something fishy', element: e.element, type: e.type || 'element' }
+        const theError = { exitCode: 124, message: 'Something fishy', element: e.element, type: e.type || 'element' }
         if (e.error === 'tablenamesame') theError.message = `${e.element.name} can not have the same name for Single Values`
-        else if (e.error === 'missingrequired') theError.message = `${e.element.column_name} has unfilled required definitions`
-        else if (e.error === 'nodefinition') theError.message = `Your template does not support fields of type: ${e.element.data_type}`
-        spinner.fail(theError.message)
-        if (typeof aptugo !== 'undefined') aptugo.setFeedback(theError.message)
+        else if (e.error === 'missingimportd') {
+          if (e.type === 'field') theError.message = `${e.element.column_name} has unfilled importd definitions`
+          else theError.message = `${e.element.name} has unfilled importd definitions`
+        } else if (e.error === 'nodefinition') theError.message = `Your template does not support fields of type: ${e.element.data_type}`
+        else if (e.error === 'missingtemplate') theError.message = `Your template does not support elements of type: ${e.element.value}`
+        console.warn(theError)
         reject(theError)
       }
     })
@@ -347,9 +393,7 @@ module.exports = {
   thirdStep_copyStaticFiles: (parameters) => {
     return new Promise((resolve, reject) => {
       const start = new Date()
-      const spinner = ora('Copying static files...\n').start()
-      if (typeof aptugo !== 'undefined') aptugo.setFeedback('Copying static files...')
-      spinner.stream = process.stdout
+      console.info('Copying static files...')
 
       if (parameters.skip.indexOf('copy') === -1) {
         try {
@@ -359,13 +403,12 @@ module.exports = {
           console.log('------ caughtya!!!', e)
           reject()
         }
-        
+
         const end = new Date()
-        spinner.succeed(`Static files copied: ${humanizeDuration(end - start)}`);
-        if (typeof aptugo !== 'undefined') aptugo.setFeedback(`Static files copied: ${humanizeDuration(end - start)}`)
+        console.info(`Static files copied: ${humanizeDuration(end - start)}`)
       } else {
         const end = new Date()
-        spinner.info(`Static files skiped: ${humanizeDuration(end - start)}`)
+        console.info(`Static files skiped: ${humanizeDuration(end - start)}`)
       }
       resolve()
     })
@@ -373,28 +416,24 @@ module.exports = {
 
   fourthStep_generatePages: (parameters) => {
     return new Promise((resolve, reject) => {
-      try {
+      if (parameters.skip.indexOf('pages') !== -1) {
+        console.info(`Pages generation skiped`)
+      } else {
         const start = new Date()
-        const spinner = ora('Generating pages...\n').start()
-        if (typeof aptugo !== 'undefined') aptugo.setFeedback('Generating pages...\n')
-        spinner.stream = process.stdout
-
-        if (parameters.skip.indexOf('pages') === -1) {
-          aptugocli.generationFolder = parameters.template.renderingFolder ? path.join(parameters.buildFolder, parameters.template.renderingFolder ) : searchForRenderingPlaceholder(parameters.template.files, parameters.buildFolder)
-          parameters.application.pages.forEach(page => {
+        console.info('Generating pages...')
+        aptugocli.generationFolder = parameters.template.renderingFolder ? path.join(parameters.buildFolder, parameters.template.renderingFolder ) : templates.searchForRenderingPlaceholder(parameters.template.files, parameters.buildFolder)
+        parameters.application.pages.forEach(page => {
+          try {
             buildPage(page, parameters)
-          })
-          const end = new Date()
-          spinner.succeed(`Pages generated: ${humanizeDuration(end - start)}`);
-          if (typeof aptugo !== 'undefined') aptugo.setFeedback(`Pages generated: ${humanizeDuration(end - start)}`)
-        } else {
-          const end = new Date()
-          spinner.info(`Pages generation skiped: ${humanizeDuration(end - start)}`)
-        }
-        resolve()
-      } catch(e) {
-        console.log('wellll, how the turntables', e)
+          } catch(e) {
+            const theError = e.exitCode ? e : { exitCode: 123, message: 'Rude, condescending, and a little bit snotty error', element: page, type: 'page', error: e }
+            reject(theError)
+          }
+        })
+        const end = new Date()
+        console.info(`Pages generated: ${humanizeDuration(end - start)}`)
       }
+      resolve()
     })
   },
 
@@ -405,7 +444,7 @@ module.exports = {
       if (typeof aptugo !== 'undefined') aptugo.setFeedback('Copying extra files from elements...\n')
       spinner.stream = process.stdout
       if (parameters.skip.indexOf('extraFiles') === -1) {
-        copyExtraFiles({ ...parameters, files: aptugocli.filesRequiredByElements })
+        copyExtraFiles({ ...parameters, files: aptugocli.filesimportdByElements })
         const end = new Date()
         spinner.info(`Extra Files copied: ${humanizeDuration(end - start)}`)
         if (typeof aptugo !== 'undefined') aptugo.setFeedback(`Extra Files copied: ${humanizeDuration(end - start)}`)
@@ -420,18 +459,15 @@ module.exports = {
   fifthStep_extraSettings: (parameters) => {
     return new Promise((resolve, reject) => {
       const start = new Date()
-      const spinner = ora('Re-Generating pages with extra settings...\n').start()
-      if (typeof aptugo !== 'undefined') aptugo.setFeedback('Re-Generating pages with extra settings...\n')
-      spinner.stream = process.stdout
+      console.info('Re-Generating pages with extra settings...')
       if (parameters.skip.indexOf('copy') === -1) {
         aptugocli.skipSettings = false
         copyStaticFiles({ ...parameters, files: aptugocli.filesWithExtraSettings })
         const end = new Date()
-        spinner.succeed(`Static files re-generated: ${humanizeDuration(end - start)}`);
-        if (typeof aptugo !== 'undefined') aptugo.setFeedback(`Static files re-generated: ${humanizeDuration(end - start)}`)
+        console.info(`Static files re-generated: ${humanizeDuration(end - start)}`)
       } else {
         const end = new Date()
-        spinner.info(`Static files skiped (2nd pass): ${humanizeDuration(end - start)}`)
+        console.info(`Static files skiped (2nd pass): ${humanizeDuration(end - start)}`)
       }
       resolve()
     })
@@ -440,10 +476,7 @@ module.exports = {
   sixthStep_postBuild: (parameters) => {
     return new Promise((resolve, reject) => {
       const start = new Date()
-      const spinner = ora('Running post-build commands...\n').start()
-      if (typeof aptugo !== 'undefined') aptugo.setFeedback('Running post-build commands...\n')
-      spinner.stream = process.stdout
-
+      console.info('Running post-build commands...')
       if (parameters.skip.indexOf('post') === -1) {
         const tca = parameters.type === 'Development' ? parameters.template.templateCommandsAfter : parameters.template.templateCommandsAfterDeploy
         if (tca) {
@@ -457,8 +490,6 @@ module.exports = {
 
           child.stderr.on('data', function (data) {
             console.log(data.toString())
-            // that.helper.error(`${data.toString()} ERRROR`, data.toString())
-            // reject(data.toString())
           })
 
           child.stdout.on('data', function (data) {
@@ -471,20 +502,18 @@ module.exports = {
               // reject({ message: 'Postbuild Finished with code: ' + exitCode, error: exitCode })
             } else {
               const end = new Date()
-              spinner.succeed(`Post build comands finished: ${humanizeDuration(end - start)}`);
-              if (typeof aptugo !== 'undefined') aptugo.setFeedback(`Post build comands finished: ${humanizeDuration(end - start)}`)
-              resolve()     
+              console.info(`Post build comands finished: ${humanizeDuration(end - start)}`);
+              resolve()
             }
           })
         } else {
           const end = new Date()
-          spinner.succeed(`No post build commands to run: ${humanizeDuration(end - start)}`);
-          if (typeof aptugo !== 'undefined') aptugo.setFeedback(`No post build commands to run: ${humanizeDuration(end - start)}`)
+          console.info(`No post build commands to run: ${humanizeDuration(end - start)}`)
           resolve()
         }
       } else {
         const end = new Date()
-        spinner.info(`Post build commands skiped: ${humanizeDuration(end - start)}`);
+        console.info(`Post build commands skiped: ${humanizeDuration(end - start)}`)
         resolve()
       }
     })
@@ -493,19 +522,18 @@ module.exports = {
   seventhStep_buildScripts: (parameters) => {
     return new Promise((resolve, reject) => {
       const start = new Date()
-      const spinner = ora('Running post-build scripts...\n').start()
-      if (typeof aptugo !== 'undefined') aptugo.setFeedback('Running post-build scripts...\n')
+      console.info('Running post-build scripts...', parameters)
       var isWin = process.platform === "win32"
       // FIX PATH
       let returnValue = {}
       try {
-        const result = execSync(`${ os.userInfo().shell} -ilc 'echo -n "_SHELL_ENV_DELIMITER_"; env; echo -n "_SHELL_ENV_DELIMITER_"; exit'`).toString()
+        let result = execSync(`${ os.userInfo().shell} -ilc 'echo -n "_SHELL_ENV_DELIMITER_"; env; echo -n "_SHELL_ENV_DELIMITER_"; exit'`)
+        if (result) result = result.toString()
         for (const line of result.split('\n').filter(line => Boolean(line))) {
           const [key, ...values] = line.split('=');
           returnValue[key] = values.join('=');
         }
-      } catch(e) {
-      }
+      } catch(e) {}
       if (returnValue.PATH) process.env.PATH = returnValue.PATH
       let precommand = ''
       Object.keys(parameters.variables).forEach(avar => {
@@ -513,12 +541,11 @@ module.exports = {
           precommand += `export ${avar.substring(4)}=${parameters.variables[avar]} &&`
         }
       })
-
       if (parameters.skip.indexOf('post') === -1) {
         let command = null
-        const folders = getConfig('folders')
+        const folders = config.get('folders')
         if (parameters.type === 'Development') {
-          const scriptFolder = path.join(folders.templates, parameters.settings.template, 'templatescripts', isWin ? 'development.bat' : 'development.sh') 
+          const scriptFolder = path.join(folders.templates, parameters.settings.template, 'templatescripts', isWin ? 'development.bat' : 'development.sh')
           if ( fs.existsSync( scriptFolder ) ) {
             command = scriptFolder
           }
@@ -528,17 +555,18 @@ module.exports = {
             command = scriptFolder
           }
         }
-
         if (command) {
+          fixPath()
           const baseFilesFolder = path.join(parameters.fullbuildfolder, parameters.buildFolder)
           const child = spawn(`${precommand} cd ${baseFilesFolder} && ${command}`, {
-            shell: true
+            shell: true,
+            env: {
+              PATH: process.env.PATH
+            }
           })
 
           child.stderr.on('data', function (data) {
-            console.log(data.toString())
-            // that.helper.error(`${data.toString()} ERRROR`, data.toString())
-            // reject(data.toString())
+            reject({ message: `Template build scripts (${command}) raised some concerns`, exitCode: 130, error: data.toString() })
           })
 
           child.stdout.on('data', function (data) {
@@ -551,19 +579,18 @@ module.exports = {
               reject({ message: 'Postbuild Finished with code: ' + exitCode, error: exitCode })
             } else {
               const end = new Date()
-              spinner.succeed(`Post build scripts finished: ${humanizeDuration(end - start)}`);
-              if (typeof aptugo !== 'undefined') aptugo.setFeedback(`Post build scripts finished: ${humanizeDuration(end - start)}`)
-              resolve()     
+              console.info(`Post build scripts finished: ${humanizeDuration(end - start)}`);
+              resolve()
             }
           })
         } else {
           const end = new Date()
-          spinner.succeed(`No post build scripts to run: ${humanizeDuration(end - start)}`);
+          console.info(`No post build scripts to run: ${humanizeDuration(end - start)}`);
           resolve()
         }
       } else {
         const end = new Date()
-        spinner.info(`Post build scripts skiped: ${humanizeDuration(end - start)}`);
+        console.info(`Post build scripts skiped: ${humanizeDuration(end - start)}`)
         resolve()
       }
     })
@@ -572,8 +599,7 @@ module.exports = {
   eightStep_deploy: (parameters) => {
     return new Promise((resolve, reject) => {
       const start = new Date()
-      const spinner = ora('Starting Deployment...\n').start()
-      if (typeof aptugo !== 'undefined') aptugo.setFeedback('Starting Deployment...\n')
+      console.info('Starting Deployment...', parameters)
 
       // zip front-end
       let zipFilesFolder = path.join(parameters.fullbuildfolder, parameters.buildFolder, 'build')
@@ -583,39 +609,38 @@ module.exports = {
       let dirFiles = fs.readdirSync(zipFilesFolder)
       dirFiles.forEach((file) => {
         if(fs.lstatSync(path.join(zipFilesFolder, file)).isDirectory()) {
-          console.log('...adding directory', file)
+          log(`Adding directory: ${file}`, { verbosity: 9 })
           zip.addLocalFolder(path.join(zipFilesFolder, file), file)
         } else {
-          console.log('...adding file', file)
+          log(`Adding file: ${file}`, { verbosity: 10 })
           zip.addLocalFile(path.join(zipFilesFolder, file))
         }
       })
-
+      log(`Zip file written`, { verbosity: 7 })
       zip.writeZip(saveTo)
-      
-      
+
       // post
       const url = parameters.settings.url.substring(8).toLowerCase()
       const buffer = zip.toBuffer()
-      const data = new FormData();
-      const blob = new Blob([buffer],{type : 'multipart/form-data'});
-      data.append('data', blob);
+      const form = new FormData()
+      form.append('data', buffer)
+
       const options = {
         url: 'https://appuploader.aptugo.app:8500?appName=' + url,
         method: 'POST',
-        headers: { 'content-type': 'multipart/form-data' },
-        data
-      };
-      
+          headers: { 'Content-Type': `multipart/form-data; boundary=${form._boundary}` },
+        data: form
+      }
+
+      log(`Updloading front-end to Aptugo Servers`, { verbosity: 6 })
       axios(options)
         .then(response => {
-          console.warn('uploaded', response)
+          log('Front-end uploaded', { verbosity: 7 })
         })
         .catch(error => {
-          console.warn('erorr uploading', error)
-      
+          console.warn('failed uploading', error)
         })
-      
+
       // zip backend
       const zipFilesFolderbe = path.join(parameters.fullbuildfolder, parameters.buildFolder, 'back-end')
       saveTo = path.join(os.tmpdir(), 'aptugo', `aptugoapp-build-backend-${random()}.zip`)
@@ -635,38 +660,37 @@ module.exports = {
       })
 
       zipbe.writeZip(saveTo)
-      
+
       // post back-end
+      const beurl = parameters.settings.apiURL.substring(8)
       const bebuffer = zipbe.toBuffer()
-      const bedata = new FormData();
-      const beblob = new Blob([bebuffer],{type : 'multipart/form-data'});
-      bedata.append('data', beblob);
+      const beform = new FormData()
+      beform.append('data', bebuffer)
+
       const beoptions = {
-        url: 'https://appuploader.aptugo.app:8500?type=be&appName=' + parameters.settings.apiURL.substring(8),
+        url: 'https://appuploader.aptugo.app:8500?type=be&appName=' + beurl,
         method: 'POST',
-        headers: { 'content-type': 'multipart/form-data' },
-        data: bedata
+          headers: { 'Content-Type': `multipart/form-data; boundary=${beform._boundary}` },
+        data: beform
       }
-      
+
       axios(beoptions)
         .then(response => {
-          console.warn('uploaded', response)
+          log('Back-end uploaded', { verbosity: 7 })
         })
         .catch(error => {
-          console.warn('erorr uploading', error)
-      
+          console.warn('Error Uploading', error)
+
         })
       const end = new Date()
-      spinner.succeed(`Deployment queued (might take a few minutes): ${humanizeDuration(end - start)}`);
-      if (typeof aptugo !== 'undefined') aptugo.setFeedback(`Deployment queued (might take a few minutes): ${humanizeDuration(end - start)}`)
-      resolve()     
+      console.info(`Deployment queued (might take a few minutes): ${humanizeDuration(end - start)}`)
+      resolve()
     })
   },
 
   lastStep_success: (parameters) => {
     return new Promise((resolve, reject) => {
-      const fromcommandline = !!require.main
-      if (fromcommandline) {
+
         process.stdout.write(chalk.hex('#FF603D')(`\n\r
         ┌────────────────────────┐
         │                        │
@@ -677,8 +701,10 @@ module.exports = {
         ${path.join(parameters.fullbuildfolder, parameters.buildFolder)}
         `))
         process.exit(0)
-      }
+
       resolve()
     })
   }
 }
+
+export default builder

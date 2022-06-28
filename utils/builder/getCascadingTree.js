@@ -1,9 +1,10 @@
-const fs = require('fs')
-const path = require('path')
-const { fsLoadAndParseFile } = require('../templates')
+import fs from 'fs'
+import path from 'path'
+import templates from '../templates.js'
+const fsLoadAndParseFile = templates.fsLoadAndParseFile
 
-module.exports = (unique_id, accumulated = []) => {
-  getCascadingTree = (unique_id, accumulated = []) => {
+export default (unique_id, accumulated = []) => {
+  const getCascadingTree = (unique_id, accumulated = []) => {
     if (aptugocli.plain[unique_id]) {
       if (aptugocli.plain[unique_id].parent && aptugocli.plain[unique_id].parent !== 'not set') {
         accumulated.push(aptugocli.plain[unique_id].parent)
@@ -12,7 +13,7 @@ module.exports = (unique_id, accumulated = []) => {
     }
     return accumulated
   }
-  
+
   const gct = getCascadingTree(unique_id, accumulated = [])
   return gct
 }

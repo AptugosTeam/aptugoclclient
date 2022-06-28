@@ -1,12 +1,13 @@
-const fs = require('fs')
-const path = require('path')
-const { write } = require('./files')
-const { get } = require('./config')
+import fs from 'fs'
+import path from 'path'
 
-module.exports = {
+import { write } from './files.js'
+import config from './config.js'
+
+export default {
   list: () => {
     const toReturn = []
-    const folders = get('folders')
+    const folders = config.get('folders')
     const appFolders = fs.readdirSync(folders.applications)
     appFolders.forEach(appFolder => {
       try {
@@ -17,7 +18,7 @@ module.exports = {
     return toReturn
   },
   load: (app) => {
-    const appFolderDefinition = get('folders').applications
+    const appFolderDefinition = config.get('folders').applications
     const appFolders = fs.readdirSync(appFolderDefinition)
     appFolders.forEach(appFolder => {
       try {
@@ -50,14 +51,14 @@ module.exports = {
             })
             return tableDefinition
           })
-          
+
         }
       } catch(e) {}
     })
     return app
   },
   save: (app) => {
-    const folders = get('folders')
+    const folders = config.get('folders')
     const appFolders = folders.applications
     const saveFolder = path.join(appFolders, aptugocli.friendly(app.settings.name))
 
@@ -74,9 +75,9 @@ module.exports = {
     return app
   },
   remove: (app) => {
-    const folders = get('folders')
+    const folders = config.get('folders')
     const appFolders = folders.applications
     const saveFolder = path.join(appFolders, aptugocli.friendly(app.settings.name))
     fs.rmdirSync(saveFolder, { recursive: true })
   }
-} 
+}

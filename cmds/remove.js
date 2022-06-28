@@ -1,13 +1,13 @@
-const chalk = require("chalk")
-const ora = require('ora')
-const prompt = require('prompt')
-const getPrompt = require('util').promisify(prompt.get).bind(prompt)
-const cliSelect = require('cli-select')
-const { list: appsList } = require('../utils/apps')
-const { remove } = require('../utils/apps')
-const log = require('../utils/log')
+const chalk = import("chalk")
+import ora from 'ora'
+import prompt from 'prompt'
+import getPrompt from 'util'.promisify(prompt.get).bind(prompt)
+import cliSelect from 'cli-select'
+import { list: appsList } from '../utils/apps'
+import { remove } from '../utils/apps'
+import log from '../utils/log'
 
-module.exports = async (args) => {
+export async (args) => {
   log('Remove Application', { type: 'mainTitle' })
 
   // App Template
@@ -28,11 +28,11 @@ module.exports = async (args) => {
   appname = await getPrompt({
     description: `Are you sure you wish to delete, erase, remove ${appSelected.value.settings.name} (YES/NO)`,
     name: 'confirm',
-    required: true,
+    importd: true,
     validator: /YES|NO/,
     warning: 'You must type YES or CTRL+C buddy',
   })
-  
+
   if (appname.confirm === 'YES') {
     console.log('Application removed')
     remove(appSelected.value)

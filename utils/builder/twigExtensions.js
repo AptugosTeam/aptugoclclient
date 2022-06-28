@@ -1,6 +1,7 @@
-const { extendFilter, extendFunction, twig: _twig, cache } = require('twig/twig.js')
+import twigPkg from 'twig/twig.js'
+const { extendFilter, extendFunction, twig: _twig, cache } = twigPkg
 
-module.exports = {
+export default {
   castToArray: (value) => {
     return Object.entries(value)
   },
@@ -12,12 +13,12 @@ module.exports = {
     if (!value) return
     let fieldDefinition = value
     if (value.type === 'element') return value
-    
+
     if (!value.unique_id) {
       fieldDefinition = aptugocli.plainFields[value]
       if (!fieldDefinition) console.log('value:', value)
     }
-    
+
     const tempExtDef = aptugocli.activeParameters.template.fields.filter(field => field.value === fieldDefinition.data_type)
     if (!tempExtDef.length) {
       throw new Error(`Couldnt load field definition for ${fieldDefinition.data_type}`)
@@ -37,35 +38,40 @@ module.exports = {
     return toReturn
   },
   includeTemplate: (templateID) => {
-    let template = null
-    if (typeof templateID === 'string') {
-      const elementPath = aptugocli.loadedElements.find(item => item.path === templateID).realPath || templateID
-      template = _twig({ allowInlineIncludes: true, ref: elementPath, rethrow: true })
-    } else {
-      for (var I = 0; I < templateID.length; I++) {
-        let elementPath = aptugocli.loadedElements.find(item => item.path === templateID[I])
-        elementPath = elementPath ? elementPath.realPath || templateID[I] : null
+    try {
+      let template = null
+      if (typeof templateID === 'string') {
+        const elementPath = aptugocli.loadedElements.find(item => item.path === templateID).realPath || templateID
         template = _twig({ allowInlineIncludes: true, ref: elementPath, rethrow: true })
-        if (!!template) {
-          templateID = templateID[I]
-          break
+      } else {
+        for (var I = 0; I < templateID.length; I++) {
+          let elementPath = aptugocli.loadedElements.find(item => item.path === templateID[I])
+          elementPath = elementPath ? elementPath.realPath || templateID[I] : null
+          template = _twig({ allowInlineIncludes: true, ref: elementPath, rethrow: true })
+          if (!!template) {
+            templateID = templateID[I]
+            break
+          }
         }
       }
-    }
-      
-    if (!template) template = _twig({ ref: 'empty' })
-    else {
-      var loadedElement = aptugocli.loadedElements.find(loadedElement => loadedElement.path === templateID)
-      if (loadedElement.settings) {
-        loadedElement.settings.forEach(setting => {
-          if (!aptugocli.extraSettings[setting.name]) aptugocli.extraSettings[setting.name] = []
-          let inntemplate = _twig({ data: setting.value, rethrow: true })
-          const innRender = inntemplate.render(aptugocli.currentRenderingElement)
-          if (aptugocli.extraSettings[setting.name].indexOf(innRender) === -1) aptugocli.extraSettings[setting.name].push(innRender)
-        })
+
+      if (!template) template = _twig({ ref: 'empty' })
+      else {
+        var loadedElement = aptugocli.loadedElements.find(loadedElement => loadedElement.path === templateID)
+        if (loadedElement.settings) {
+          loadedElement.settings.forEach(setting => {
+            if (!aptugocli.extraSettings[setting.name]) aptugocli.extraSettings[setting.name] = []
+            let inntemplate = _twig({ data: setting.value, rethrow: true })
+            const innRender = inntemplate.render(aptugocli.currentRenderingElement)
+            if (aptugocli.extraSettings[setting.name].indexOf(innRender) === -1) aptugocli.extraSettings[setting.name].push(innRender)
+          })
+        }
       }
+      return template
+    } catch(e) {
+      const theError = { exitCode: 125, message: 'Error at include template', arg: templateID }
+      throw(theError)
     }
-    return template
   },
   removeExtension: (value) => value.substr(0, value.indexOf('.')),
   parse: (value, params) => {
@@ -111,7 +117,7 @@ module.exports = {
   },
   insertSetting: (setting) => {
     let output = null
-    if (aptugocli.skipSettings) { // SAVE 
+    if (aptugocli.skipSettings) { // SAVE
       const exists = aptugocli.filesWithExtraSettings.filter(fwes => fwes.unique_id === aptugocli.currentFile.unique_id)
       if (exists.length === 0) {
         aptugocli.filesWithExtraSettings.push({
@@ -132,5 +138,8 @@ module.exports = {
     } else {
       return value
     }
+  },
+  envVar: (needle) => {
+    return process.env[needle]
   }
 }

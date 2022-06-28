@@ -1,7 +1,4 @@
-const axios = require('axios')
-const { get } = require('./config')
-
-module.exports = async () => {
+export default async () => {
   return ('ok')
   const results = await axios({
     method: 'post',

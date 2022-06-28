@@ -1,12 +1,12 @@
-const { list: appsList } = require('../utils/apps')
-const prompt = require('prompt')
-const getPrompt = require('util').promisify(prompt.get).bind(prompt)
-const cliSelect = require('cli-select')
-const log = require('../utils/log')
+import { list: appsList } from '../utils/apps'
+import prompt from 'prompt'
+import getPrompt from 'util'.promisify(prompt.get).bind(prompt)
+import cliSelect from 'cli-select'
+import log from '../utils/log'
 
-module.exports = async (args) => {
+export async (args) => {
   log('Listing Aptugo applications', { type: 'mainTitle' })
-  
+
   const output = await appsList()
   return output
 }

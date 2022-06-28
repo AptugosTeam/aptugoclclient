@@ -1,28 +1,29 @@
-const fs = require('fs')
-const path = require('path')
-const { fsLoadAndParseFile } = require('../templates')
-const twig = require('twig/twig.js')
-const log = require('../log')
-const error = require('../error')
-const twigRender = require('./twigRender')
-const { isBinary } = require('istextorbinary')
-const { get } = require('../config')
+import fs from 'fs'
+import path from 'path'
+import templates from '../templates.js'
+const fsLoadAndParseFile = templates.fsLoadAndParseFile
+import twig from 'twig/twig.js'
+import log from '../log.js'
+import error from '../error.js'
+import twigRender from './twigRender.js'
+import { isBinary } from 'istextorbinary'
+import config from '../config.js'
 
-module.exports = (parameters) => {
-  doCopyStaticFiles = (parameters) => {
+export default (parameters) => {
+  const doCopyStaticFiles = (parameters) => {
     return new Promise((resolve,reject) => {
       parameters.files.forEach(prefile => {
         let skip = false
         if (prefile.path === 'elements' || prefile.path === 'Fields' || prefile.path === 'templatescripts') skip = true
-  
+
         if (!skip) {
           let fileName = prefile.path
           let partialPath = path.join(parameters.accumulated || '', fileName )
-          let sourcePath = path.join( get('folders').templates ,aptugocli.activeParameters.template._id, partialPath )
+          let sourcePath = path.join( config.get('folders').templates ,aptugocli.activeParameters.template._id, partialPath )
           let fullPathWithoutFile = prefile.fullPathWithoutFile || path.join(parameters.fullbuildfolder, parameters.buildFolder, parameters.accumulated || '')
           let fullPath = prefile.fullPath || path.join(parameters.fullbuildfolder, parameters.buildFolder, partialPath)
-          
-  
+
+
           if ( isBinary(sourcePath) ) {
             log(`Copying binary file: ${fullPath}`, { type: 'advance', level: parameters.level, verbosity: 7 })
             fs.copyFileSync( sourcePath, fullPath )
@@ -34,7 +35,7 @@ module.exports = (parameters) => {
               fullPath: fullPath,
               fullPathWithoutFile: fullPathWithoutFile
             }
-  
+
             if (file.modelRelated) {
               for (var table in parameters.application.tables) {
                 if (file.subtype === 'Any' || (file.subtype === parameters.application.tables[table].subtype)) {
@@ -48,7 +49,7 @@ module.exports = (parameters) => {
                     fullPathWithoutFile: fullPathWithoutFile
                   }
                   parameters.table = parameters.application.tables[table]
-  
+
                   if (file.type === 'folder') {
                     aptugocli.createIfDoesntExists(fullPath)
                     if (file.children && file.children.length) {
@@ -67,7 +68,7 @@ module.exports = (parameters) => {
                       console.error('Error compiling template for file: ', fileName, e)
                     }
                   }
-                } 
+                }
               }
             } else if (file.type === 'folder') {
               aptugocli.createIfDoesntExists(fullPath)

@@ -1,7 +1,7 @@
-const fs = require('fs')
-const path = require('path')
+import fs from 'fs'
+import path from 'path'
 
-module.exports = (parameters) => {
+export default (parameters) => {
   const assetsDefinition = JSON.parse( fs.readFileSync(path.join(parameters.appFolder, 'assets.json' ), { encoding: 'utf8'}, true) )
 
   aptugocli.createIfDoesntExists( path.join(parameters.fullbuildfolder, parameters.buildFolder, 'dist') )
@@ -12,7 +12,7 @@ module.exports = (parameters) => {
     const fileSourcePath = path.join(parameters.filesFolder, `${file.id}_${file.name}`)
     let fileDestinationPath = path.join(parameters.fullbuildfolder, parameters.buildFolder,  'dist', 'img', file.name )
     if (file.type === 'stylesheet') fileDestinationPath = path.join(parameters.fullbuildfolder, parameters.buildFolder,  'dist', 'css', file.name )
-    
+
     fs.copyFileSync(fileSourcePath, fileDestinationPath)
 
     if (file.versions && file.versions.length) {

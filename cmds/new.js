@@ -1,16 +1,21 @@
-const chalk = require("chalk")
-const ora = require('ora')
-const prompt = require('prompt')
-const getPrompt = require('util').promisify(prompt.get).bind(prompt)
-const cliSelect = require('cli-select')
-const { list: structList, run: structRun } = require('../utils/structures')
-const { save } = require('../utils/apps')
-const log = require('../utils/log')
+import util from 'util'
+import prompt from 'prompt'
+import structures from '../utils/structures.js'
+import thebuilder from './build.js'
 
-module.exports = async (args) => {
-  const fromcommandline = !!require.main
+const getPrompt = util.promisify(prompt.get).bind(prompt)
+
+const chalk = import("chalk")
+import ora from 'ora'
+
+import cliSelect from 'cli-select'
+
+import apps from '../utils/apps.js'
+import log from '../utils/log.js'
+
+export default async (args) => {
   log('Creating a new Aptugo application', { type: 'mainTitle' })
-  
+
   // App Name
   let appname = args._[1]
   if (!args._[1]) {
@@ -27,7 +32,7 @@ module.exports = async (args) => {
   let apptemplate = {}
   if (!args.template) {
     log('Select the template to use:', { type: 'promptHeader'})
-    const structs = await structList()
+    const structs = await structures.list()
     const templateStructs = structs.filter(struct => struct.type === 'template')
     apptemplate = await cliSelect({
       values: templateStructs,
@@ -37,19 +42,18 @@ module.exports = async (args) => {
       },
     })
   } else {
-    const structs = await structList()
+    const structs = await structures.list()
     const templateStructs = structs.filter(struct => struct._id === String(args.template))
     apptemplate.value = templateStructs[0]
   }
-  
+
   // Structure Run
-  const result = await structRun(apptemplate.value, { Name: appname } )
-  save(result)
+  const result = await structures.run(apptemplate.value, { Name: appname } )
+  apps.save(result)
   log('Successfuly created')
 
   // Build App
   if (!args.nobuild) {
-    const thebuilder = require('./build')
     var output = await thebuilder({
       app: result,
       type: 'Development'

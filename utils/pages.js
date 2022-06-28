@@ -1,20 +1,19 @@
-const fs = require('fs')
-const path = require('path')
-const { get } = require('./config')
+import fs from 'fs'
+import path from 'path'
 
-module.exports = {
+const pagesModule = {
   fix: (pages, parent = null) => {
     if (Array.isArray(pages)) {
-      pages = pages.map(page => module.exports.fix(page, parent))
+      pages = pages.map(page => pagesModule.fix(page, parent))
     } else if (pages.type === 'page') {
-      pages = module.exports.fixPage(pages, false, parent)
+      pages = pagesModule.fixPage(pages, false, parent)
     } else if (pages.type === 'element') {
-      pages = module.exports.fixElement(pages, false, parent)
+      pages = pagesModule.fixElement(pages, false, parent)
     } else {
       console.log('Fix Pages', pages)
     }
 
-    if (pages.children) pages.children = module.exports.fix(pages.children, pages)
+    if (pages.children) pages.children = pagesModule.fix(pages.children, pages)
     return pages
   },
   fixPage: (page, force = false, parent = false) => {
@@ -37,7 +36,7 @@ module.exports = {
     if (!newElement.prevent_delete) newElement.prevent_delete = element.prevent_delete || false
     if (!newElement.cascades) newElement.cascades = false
     if (!newElement.children) newElement.children = []
-    
+
     delete newElement.rendered
     delete newElement.delays
     return newElement
@@ -51,3 +50,5 @@ module.exports = {
     console.log(element, args)
   }
 }
+
+export default pagesModule

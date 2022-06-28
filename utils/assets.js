@@ -1,12 +1,12 @@
-const fs = require('fs')
-const path = require('path')
-const yaml = require('js-yaml')
-const { get } = require('./config')
-const { list: appsList } = require('./apps')
-const { getTree } = require('./files')
-const { exit } = require('process')
+import fs from 'fs'
+import path from 'path'
+import yaml from 'js-yaml'
+import { get } from './config'
+import { list: appsList } from './apps'
+import { getTree } from './files'
+import { exit } from 'process'
 
-module.exports = {
+export {
   fileSource: (appFolder, filePath) => {
     const appFolders = get('folders').applications
     const assetPath = path.join(appFolders, appFolder, 'Drops', filePath)
@@ -28,8 +28,9 @@ module.exports = {
       id: args.id,
       type: 'stylesheet'
     }
-    
+
     const saveFolder = path.join(appFolders, aptugocli.friendly(app.settings.name), 'Drops')
+    console.log('assets setfile', args, path.join(saveFolder, `${currentAsset.id}_${currentAsset.name}`), args.binary, fileDefinition)
     aptugocli.createIfDoesntExists(saveFolder)
     if (args.binary) fs.writeFileSync(path.join(saveFolder, `${currentAsset.id}_${currentAsset.name}`), fileDefinition)
     else fs.writeFileSync(path.join(saveFolder, `${currentAsset.id}_${currentAsset.name}`), JSON.parse(fileDefinition))
@@ -49,7 +50,7 @@ module.exports = {
     }
     const saveFolder = path.join(appFolders, aptugocli.friendly(app.settings.name), 'Drops')
     aptugocli.createIfDoesntExists(saveFolder)
-    
+
     return 'Upload Location:' + path.join(saveFolder, `${currentAsset.id}_${currentAsset.name}`)
   }
 }

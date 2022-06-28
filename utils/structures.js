@@ -1,17 +1,20 @@
-const fs = require('fs')
-const path = require('path')
-const error = require('./error')
-const { get } = require('./config')
-const { state: loadState, setState: updateState } = require('../utils/state')
-const { fix: fixPages } = require('./pages')
-const { fix: fixTables } = require('./tables')
-const log = require('../utils/log')
+import fs from 'fs'
+import path from 'path'
+import error from './error.js'
+import config from './config.js'
+import { state as loadState, setState as updateState } from '../utils/state.js'
+import log from '../utils/log.js'
+import pages from './pages.js'
+import tables from './tables.js'
+const fixPages = pages.fix
+const fixTables = tables.fix
 
-module.exports = {
+
+const structures = {
   loadedState: null,
   list: () => {
     const toReturn = []
-    const folders = get('folders')
+    const folders = config.get('folders')
     const structFolders = fs.readdirSync(folders.structures)
     structFolders.forEach(structFolder => {
       try {
@@ -23,7 +26,7 @@ module.exports = {
   },
 
   findStructure: (structureNameOrID) => {
-    const struct = module.exports.list().find(s => {
+    const struct = this.list().find(s => {
       if (s.name === structureNameOrID) return s
       else if (s._id === String(structureNameOrID)) return s
     })
@@ -34,17 +37,17 @@ module.exports = {
   },
 
   run: async (structure, parameters) => {
-    if (!module.exports.loadedState) module.exports.loadedState = parameters.state || await loadState()
-    const state = parameters.state || module.exports.loadedState
+    if (!structures.loadedState) structures.loadedState = parameters.state || await loadState()
+    const state = parameters.state || structures.loadedState
 
     if (typeof structure === 'string' || typeof structure === 'number') {
-      structure = module.exports.findStructure(structure)
+      structure = this.findStructure(structure)
     }
     log(`Running Structure: ${structure.name}`, { type: 'mainTitleSub' })
 
     let AsyncFunction = Object.getPrototypeOf(async function(){}).constructor
 
-    const folders = get('folders')
+    const folders = config.get('folders')
     const structFolders = fs.readdirSync(folders.structures)
     let currentStructureFolder
     structFolders.forEach(structFolder => {
@@ -57,7 +60,7 @@ module.exports = {
     const init = fs.readFileSync(path.join(folders.structures,currentStructureFolder,'init.js'), { encoding: 'utf8'}, true)
     const initFunction = new AsyncFunction('Application', 'State', 'Parameters', 'Store', 'aptugo', init)
 
-    returned = await initFunction( state.app, state, parameters, get(), aptugocli )
+    let returned = await initFunction( state.app, state, parameters, config.get(), aptugocli )
     if (returned) {
       if (returned.error) { error(returned.error, true) }
       if (returned.pages) returned.pages = fixPages(returned.pages)
@@ -65,25 +68,25 @@ module.exports = {
       state.app = returned
       updateState({ ...state, app: returned })
     }
-    
+
     const code = fs.readFileSync(path.join(folders.structures,currentStructureFolder,'code.js'), { encoding: 'utf8'}, true)
     const codeFunction = new AsyncFunction('Application', 'State', 'Parameters', 'Store', 'aptugo', code)
-    returned = await codeFunction( state.app, state, parameters, get(), aptugocli )
-    if (returned) { 
+    returned = await codeFunction( state.app, state, parameters, config.get(), aptugocli )
+    if (returned) {
       if (returned.pages) returned.pages = fixPages(returned.pages)
       if (returned.tables) returned.tables = fixTables(returned.tables)
       state.app = returned
       updateState({ ...state, app: returned })
     }
-    
+
     const postinit = fs.readFileSync(path.join(folders.structures,currentStructureFolder,'postinit.js'), { encoding: 'utf8'}, true)
     if (postinit) {
       const piFunction = new AsyncFunction('Application', 'State', 'Parameters', 'Store', 'aptugo', postinit)
-      returned = await piFunction( state.app, state, parameters, get(), aptugocli )
+      returned = await piFunction( state.app, state, parameters, config.get(), aptugocli )
     } else {
       log(`Skiping post init for ${structure.name}`, false)
     }
-    
+
     if (returned) {
       if (returned.pages) returned.pages = fixPages(returned.pages)
       if (returned.tables) returned.tables = fixTables(returned.tables)
@@ -95,15 +98,15 @@ module.exports = {
 
   icon: (structure, parameters) => {
     if (typeof structure !== 'object') {
-      structure = module.exports.findStructure(structure)
+      structure = this.findStructure(structure)
     }
     if (structure) {
       return path.join(structure.fullFolder, structure.icon)
     } else {
       error(`Could not find structure: ${structure}`)
     }
-    
-  }
-} 
 
-aptugocli.structures = module.exports
+  }
+}
+
+export default structures

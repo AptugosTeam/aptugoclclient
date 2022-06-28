@@ -1,12 +1,12 @@
-const chalk = require("chalk")
-const ora = require('ora')
-const prompt = require('prompt')
-const getPrompt = require('util').promisify(prompt.get).bind(prompt)
-const cliSelect = require('cli-select')
-const { list: structList, run: structRun } = require('../utils/structures')
-const { save } = require('../utils/apps')
-const log = require('../utils/log')
-const readline = require('readline')
+const chalk = import("chalk")
+import ora from 'ora'
+import prompt from 'prompt'
+import getPrompt from 'util'.promisify(prompt.get).bind(prompt)
+import cliSelect from 'cli-select'
+import { list: structList, run: structRun } from '../utils/structures'
+import { save } from '../utils/apps'
+import log from '../utils/log'
+import readline from 'readline'
 
 const updateApp = async(args) => {
   var r1 = readline.createInterface({ input: process.stdin, output: process.stdout })
@@ -20,8 +20,8 @@ const updateApp = async(args) => {
 }
 
 
-module.exports = async (args, extra) => {
-  const fromcommandline = !!require.main
+export async (args, extra) => {
+  const fromcommandline = !!import.main
   log('Saving an existing Aptugo application', { type: 'mainTitle' })
 
   // App Name
