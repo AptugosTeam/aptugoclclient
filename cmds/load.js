@@ -1,27 +1,32 @@
-const chalk = import("chalk")
-import ora from 'ora'
-import prompt from 'prompt'
-import getPrompt from 'util'.promisify(prompt.get).bind(prompt)
-import cliSelect from 'cli-select'
-import { list: structList, run: structRun } from '../utils/structures'
-import { load } from '../utils/apps'
-import log from '../utils/log'
+const chalk = require('chalk')
+const theapps = require('../utils/apps.js')
+const cliSelect = require('cli-select')
+const log = require('../utils/log.js')
 
-export async (args) => {
-  const fromcommandline = !!import.main
+module.exports = async (args) => {
   log('Loading Aptugo application', { type: 'mainTitle' })
 
-  // App Name
-  let appname = args._[1]
-  if (!args._[1]) {
-    prompt.start()
-    appname = await getPrompt({
-      name: 'name',
-      validator: /^[0-9a-zA-Z\-]+$/,
-      warning: 'Application must be only letters, numbers, or dashes'
+  if (!args.app && !args._[1]) {
+    log('\nSelect the application to load:', { type: 'promptHeader' })
+    const apps = await theapps.list()
+    const appSelected = await cliSelect({
+      values: apps,
+      indentation: 2,
+      cleanup: true,
+      selected: '▹',
+      unselected: '',
+      valueRenderer: (value, selected) => {
+        if (selected) {
+          return chalk.underline(value.settings.name)
+        } else {
+          return `${value.settings.name}`
+        }
+      }
     })
-    appname = appname.name
+    args.app = appSelected.value
+  } else if (args._[1]) {
+    args.app = args._[1]
   }
-  const output = load(appname)
-  return output
+
+  return theapps.load(args.app)
 }

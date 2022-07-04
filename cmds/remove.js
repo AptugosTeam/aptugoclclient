@@ -1,11 +1,11 @@
 const chalk = import("chalk")
-import ora from 'ora'
-import prompt from 'prompt'
-import getPrompt from 'util'.promisify(prompt.get).bind(prompt)
-import cliSelect from 'cli-select'
-import { list: appsList } from '../utils/apps'
-import { remove } from '../utils/apps'
-import log from '../utils/log'
+const ora = require('ora')
+const prompt = require('prompt')
+const getPrompt = require('util').promisify(prompt.get).bind(prompt)
+const cliSelect = require('cli-select')
+const { list: appsList } = require('../utils/apps')
+const { remove } = require('../utils/apps')
+const log = require('../utils/log')
 
 export async (args) => {
   log('Remove Application', { type: 'mainTitle' })

@@ -1,7 +1,7 @@
-import fs from 'fs'
-import path from 'path'
-import yaml from 'js-yaml'
-import { isBinary } from 'istextorbinary'
+const fs = require('fs')
+const path = require('path')
+const yaml = require('js-yaml')
+const { isBinary } = require('istextorbinary')
 
 const fsParseFileForStorage = (fileDetails) => {
   const {
@@ -19,7 +19,7 @@ const fsParseFileForStorage = (fileDetails) => {
   return output
 }
 
-export const getTree = (folder, accumulatedPath = '', fix = false) => {
+exports.getTree = (folder, accumulatedPath = '', fix = false) => {
   const ignoreFiles = ['template.json','.DS_Store','_.yaml','templatescripts']
   const output = []
   const filesInFolder = fs.readdirSync(folder)
@@ -32,7 +32,7 @@ export const getTree = (folder, accumulatedPath = '', fix = false) => {
       if (fs.lstatSync( path.join(folder, file) ).isDirectory()) {
         toPush.type = 'folder'
         toPush.unique_id = aptugocli.generateID()
-        toPush.children = getTree( path.join(folder, file), path.join(accumulatedPath, file), fix )
+        toPush.children = module.exports.getTree( path.join(folder, file), path.join(accumulatedPath, file), fix )
         try {
           const folderSource = fs.readFileSync( path.join(folder, file, '_.yaml'), 'utf8')
           toPush = { ...toPush, ...yaml.load(folderSource) }
@@ -41,7 +41,7 @@ export const getTree = (folder, accumulatedPath = '', fix = false) => {
         const binary = isBinary(path.join(folder, file))
         if (!binary) {
           const fileSource = fs.readFileSync( path.join(folder, file), 'utf8')
-          const [prefs, source] = parseFile(fileSource)
+          const [prefs, source] = module.exports.parseFile(fileSource)
           toPush = { ...toPush, ...prefs }
           if (fix) {
             if (!prefs.unique_id) { // Add and save unique_id if not exists
@@ -59,7 +59,7 @@ export const getTree = (folder, accumulatedPath = '', fix = false) => {
   return output
 }
 
-export const write = ({ saveFolder, filename, content, clean = false }) => {
+exports.write = ({ saveFolder, filename, content, clean = false }) => {
   const cleanForSaving = (input, folder) => {
     let output = []
     input.forEach(actualObject => {
@@ -83,7 +83,7 @@ export const write = ({ saveFolder, filename, content, clean = false }) => {
   )
 }
 
-export const parseFile = (fileSource) => {
+exports.parseFile = (fileSource) => {
   const regex = /^\/\*[\r]*\n(.*)[\r]*\n\*\/(.*)/is
   let m
   if ((m = regex.exec(fileSource)) !== null) {

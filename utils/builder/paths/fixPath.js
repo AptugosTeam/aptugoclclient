@@ -1,4 +1,19 @@
-import stripAnsi from 'strip-ansi'
+
+function ansiRegex({onlyFirst = false} = {}) {
+	const pattern = [
+		'[\\u001B\\u009B][[\\]()#;?]*(?:(?:(?:(?:;[-a-zA-Z\\d\\/#&.:=?%@~_]+)*|[a-zA-Z\\d]+(?:;[-a-zA-Z\\d\\/#&.:=?%@~_]*)*)?\\u0007)',
+		'(?:(?:\\d{1,4}(?:;\\d{0,4})*)?[\\dA-PR-TZcf-nq-uy=><~]))'
+	].join('|');
+
+	return new RegExp(pattern, onlyFirst ? undefined : 'g');
+}
+
+function stripAnsi(string) {
+	if (typeof string !== 'string') {
+		throw new TypeError(`Expected a \`string\`, got \`${typeof string}\``);
+	}
+	return string.replace(ansiRegex(), '');
+}
 
 const detectDefaultShell = () => {
 	const {env} = process;
@@ -64,13 +79,13 @@ async function shellEnv(shell) {
 }
 
 function shellEnvSync(shell) {
-  import('execa').then((execa) => {
+  return import('execa').then((execa) => {
     if (process.platform === 'win32') {
       return process.env;
     }
 
     try {
-      const {stdout} = execa.sync(shell || defaultShell, args, {env});
+      const {stdout} = execa.execaSync(shell || defaultShell, args, {env});
       return parseEnv(stdout);
     } catch (error) {
       if (shell) {
@@ -79,12 +94,9 @@ function shellEnvSync(shell) {
         return process.env;
       }
     }
+  }).catch(e => {
+    console.log('e', e)
   })
-}
-
-async function shellPath() {
-	const {PATH} = await shellEnv();
-	return PATH;
 }
 
 function shellPathSync() {
@@ -92,18 +104,8 @@ function shellPathSync() {
 	return PATH;
 }
 
+module.exports = async () => {
+  if (process.platform === 'win32') return;
 
-function fixPath() {
-	if (process.platform === 'win32') {
-		return;
-	}
-
-	process.env.PATH = shellPath() || [
-		'./node_modules/.bin',
-		'/.nodebrew/current/bin',
-		'/usr/local/bin',
-		process.env.PATH,
-	].join(':');
+  process.env.PATH = shellPathSync() || ['./node_modules/.bin','/.nodebrew/current/bin','/usr/local/bin', process.env.PATH,].join(':');
 }
-
-export default fixPath

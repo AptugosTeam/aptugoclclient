@@ -1,6 +1,7 @@
-#!/usr/bin/env node
-import init from '../index.js'
-const initied = init().then(res => {
+#!/usr/bin/env node --experimental-json-modules --no-warnings
+const init = require('../')
+
+init().then(res => {
   if (res.exitCode !== null) {
     if (res.exitCode === 0) {
       console.log(res.data)
@@ -14,4 +15,3 @@ const initied = init().then(res => {
   console.log('final catch', e)
   throw(e)
 })
-

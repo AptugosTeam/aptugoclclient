@@ -1,10 +1,10 @@
-import fs from 'fs'
-import path from 'path'
+const fs = require('fs')
+const path = require('path')
 
-import { write } from './files.js'
-import config from './config.js'
+const { write } = require('./files.js')
+const config = require('./config.js')
 
-export default {
+module.exports = {
   list: () => {
     const toReturn = []
     const folders = config.get('folders')
@@ -32,7 +32,7 @@ export default {
           app.pages = JSON.parse( fs.readFileSync( path.join( appFolderDefinition, appFolder, 'pages.json' ), { encoding: 'utf8'}, true) )
           app.assets = JSON.parse( fs.readFileSync( path.join( appFolderDefinition, appFolder, 'assets.json' ), { encoding: 'utf8'}, true) )
 
-          makeItPlain = (element) => {
+          const makeItPlain = (element) => {
             return element.map(ele => {
               const eleDefinition = JSON.parse( fs.readFileSync( path.join( appFolderDefinition, appFolder, 'Pages', `${ele.unique_id}.json` ), { encoding: 'utf8'}, true) )
               if (ele.children) ele.children = makeItPlain(ele.children)
@@ -53,7 +53,10 @@ export default {
           })
 
         }
-      } catch(e) {}
+      } catch(e) {
+        // const theError = e.exitCode ? e : { exitCode: 1, message: 'Error parsing your Apps (backup maybe?)', error: e }
+        // throw(theError)
+      }
     })
     return app
   },

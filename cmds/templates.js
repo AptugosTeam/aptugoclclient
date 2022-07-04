@@ -1,30 +1,19 @@
-import fs from 'fs'
-import readline from 'readline'
-const {
-  list: templatesList,
-  setoption: option,
-  setfield: field,
-  fileSource: source,
-  setfile: file,
-  get,
-  remove,
-  create,
-  version,
-  download
-} = import('../utils/templates')
-import Table from 'cli-table'
-import { stdin } from 'process'
+const fs = require('fs')
+const readline = require('readline')
+const templates = require('../utils/templates.js')
+const Table = require('cli-table')
+const { stdin } = require('process')
 
 const list = async (args) => {
-  const templates = await templatesList(true)
-  if (args.raw) return templates
+  const tpls = await templates.list(true)
+  if (args.raw) return tpls
 
   let simpleList = []
   var table = new Table({
     head: ['Name', 'Description']
   })
 
-  templates.forEach(tpl => {
+  tpls.forEach(tpl => {
     table.push([tpl.name, tpl.desc || 'no description'])
     simpleList.push(tpl.name)
   })
@@ -33,14 +22,14 @@ const list = async (args) => {
 }
 
 const setoption = async (args) => {
-  await option(args.template, args.optionName, args.optionValue)
+  await templates.setoption(args.template, args.optionName, args.optionValue)
   return list({ raw: true })
 }
 
 const createTemplate = async (args) => {
   var r1 = readline.createInterface({ input: process.stdin, output: process.stdout })
   r1.question('Paste definition here\n', async (def) => {
-    const newdef = await create(def)
+    const newdef = await templates.create(def)
     r1.close()
     process.stdin.destroy()
     return newdef
@@ -50,7 +39,7 @@ const createTemplate = async (args) => {
 const setfield = async (args) => {
   var r1 = readline.createInterface({ input: process.stdin, output: process.stdout })
   r1.question('Paste definition here\n', function (def) {
-    const newdef = field(args.template, { ...args, name: args.name, value: def })
+    const newdef = templates.field(args.template, { ...args, name: args.name, value: def })
     r1.close()
     process.stdin.destroy()
     return newdef
@@ -58,7 +47,6 @@ const setfield = async (args) => {
 }
 
 const setfile = async (args, extraarguments = null) => {
-  const fromcommandline = !!import.main
   let newdef
   if (fromcommandline) {
     var r1 = readline.createInterface({ input: process.stdin, output: process.stdout })
@@ -68,29 +56,29 @@ const setfile = async (args, extraarguments = null) => {
       process.stdin.destroy()
     })
   } else {
-    newdef = file(args, extraarguments.file)
+    newdef = templates.setfile(args, extraarguments.file)
   }
   return newdef
 }
 
 const filesource = async (args) => {
-  return source(args.template, args.file)
+  return templates.fileSource(args.template, args.file)
 }
 
 let output
-export async (args, extraarguments) => {
+module.exports = async (args, extraarguments) => {
   switch (args._[1]) {
     case 'list':
-      output = await list(args)
+      output = list(args)
       break
     case 'version':
-      output = await version(args)
+      output = await templates.version(args)
       break
     case 'create':
       output = await createTemplate(args)
       break
     case 'delete':
-      output = await remove(args)
+      output = await templates.remove(args)
       break
     case 'setoption':
       output = setoption(args)
@@ -102,13 +90,13 @@ export async (args, extraarguments) => {
       output = setfile(args, extraarguments)
       break
     case 'get':
-      output = get(args.template)
+      output = templates.get(args.template)
       break
     case 'fileSource':
       output = await filesource(args)
       break
     case 'download':
-      output = await download(args)
+      output = await templates.download(args)
   }
   return output
 }

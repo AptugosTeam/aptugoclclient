@@ -1,14 +1,14 @@
-import fs from 'fs'
-import path from 'path'
-import templates from '../templates.js'
+const fs = require('fs')
+const path = require('path')
+const templates = require('../templates.js')
 const fsLoadAndParseFile = templates.fsLoadAndParseFile
-import log from '../log.js'
-import twigRender from './twigRender.js'
-import { isBinary } from 'istextorbinary'
-import config from '../config.js'
+const log = require('../log.js')
+const twigRender = require('./twigRender.js')
+const { isBinary } = require('istextorbinary')
+const config = require('../config.js')
 
-export default (parameters) => {
-  doCopyExtraFiles = (parameters) => {
+module.exports = (parameters) => {
+  const doCopyExtraFiles = (parameters) => {
     parameters.files.forEach(prefile => {
       let sourceFileName = prefile.source
       let destinationFileName = prefile.destination

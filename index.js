@@ -1,27 +1,35 @@
-import minimist from "minimist"
-import checkLicense from './utils/checkLicense.js'
-import config from './utils/config.js'
-import log from './utils/log.js'
+const minimist = require('minimist')
+const checkLicense = require('./utils/checkLicense.js')
+const config = require('./utils/config.js')
+const log = require('./utils/log.js')
 
-import { default as configCmds } from './cmds/config.js'
-import state from './cmds/state.js'
-import help from './cmds/help.js'
-import { default as newApp } from './cmds/new.js'
-import build from './cmds/build.js'
-import version from './cmds/version.js'
+const configCmds = require('./cmds/config.js')
+const state = require('./cmds/state.js')
+const help = require('./cmds/help.js')
+const newApp = require('./cmds/new.js')
+const listApps = require('./cmds/list.js')
+const loadApp = require('./cmds/load.js')
+const saveApp = require('./cmds/save.js')
+const build = require('./cmds/build.js')
+const version = require('./cmds/version.js')
+const assets = require('./cmds/assets.js')
+const templates = require('./cmds/templates.js')
+const structures = require('./cmds/structures.js')
+const control = require('./cmds/control.js')
+const saveLogs = require('./saveLogs.js')
 
-import fs from 'fs'
-import os from 'os'
-import path from 'path'
-var splitargs = import('splitargs')
-import prettier from 'prettier'
-import parserTypeScript from 'prettier/parser-typescript.js'
-import parserBabel from 'prettier/parser-babel.js'
-import parserScss from 'prettier/parser-postcss.js'
-import organizeImports from 'prettier-plugin-organize-imports'
-import { isBinary } from 'istextorbinary'
+const fs = require('fs')
+const os = require('os')
+const path = require('path')
+const splitargs = require('splitargs')
+const prettier = require('prettier')
+const parserTypeScript = require('prettier/parser-typescript.js')
+const parserBabel = require('prettier/parser-babel.js')
+const parserScss = require('prettier/parser-postcss.js')
+const organizeImports = require('prettier-plugin-organize-imports')
+const { isBinary } = require('istextorbinary')
 
-global.aptugocli = {
+const aptugocli = {
   loglevel: 0,
   plain: {},
   plainAssets: {},
@@ -135,14 +143,11 @@ global.aptugocli = {
     else if (typeof(thearguments) === 'object') args = { _:[], ...thearguments}
     else args = minimist(process.argv.slice(2))
 
-    if (args.log === 'file') import('./saveLogs.js')
-
+    if (args.log === 'file') saveLogs()
     let cmd = args._[0] || 'help'
     let subcmd = args
-
     if (args.version || args.v) cmd = 'version'
     if (args.help || args.h) cmd = 'help'
-
     if (args.loglevel && args.loglevel !== aptugocli.loglevel) {
       console.debug(`Setting loglevel to ${args.loglevel}`)
       aptugocli.loglevel = args.loglevel
@@ -168,7 +173,7 @@ global.aptugocli = {
             break
 
           case 'control':
-            output = import('./cmds/control')(subcmd)
+            output = control(subcmd)
             break
 
           case 'config':
@@ -184,11 +189,11 @@ global.aptugocli = {
             break
 
           case 'list':
-            output = import('./cmds/list')(subcmd)
+            output = listApps(subcmd)
             break
 
           case 'load':
-            output = import('./cmds/load')(subcmd)
+            output = loadApp(subcmd)
             break
 
           case 'new':
@@ -196,19 +201,19 @@ global.aptugocli = {
             break
 
           case 'save':
-            output = import('./cmds/save')(subcmd, extraarguments)
+            output = saveApp(subcmd, extraarguments)
             break
 
           case 'elements':
-            output = import('./cmds/elements')(subcmd)
+            // output = import('./cmds/elements')(subcmd)
             break
 
           case 'model':
-            output = import('./cmds/model')(subcmd)
+            // output = import('./cmds/model')(subcmd)
             break
 
           case 'remove':
-            output = import('./cmds/remove')(subcmd)
+            // output = import('./cmds/remove')(subcmd)
             break
 
           case 'build':
@@ -216,17 +221,17 @@ global.aptugocli = {
             break
 
           case 'structures':
-            output = import('./cmds/structures')(subcmd, extraarguments)
+            output = structures(subcmd, extraarguments)
             break
 
           case 'templates':
-            output = import('./cmds/templates')(subcmd, extraarguments)
+            output = templates(subcmd, extraarguments)
             break
           case 'assets':
-            output = import('./cmds/assets')(subcmd, extraarguments)
+            output = assets(subcmd, extraarguments)
             break
           case 'renderer':
-            output = import('./cmds/renderer')(subcmd)
+            // output = import('./cmds/renderer')(subcmd)
             break
           case 'utils':
             if (subcmd._.slice(2).length) {
@@ -279,8 +284,10 @@ global.aptugocli = {
   }
 }
 
-process.on('unhandledRejection', (reason, p) => {
+global.aptugocli = aptugocli
+
+process.on('unhandledRejection', function withName (reason, p) {
   console.trace('Unhandled Rejection at: Promise', p, 'reason:', reason);
 });
 
-export default aptugocli.run
+module.exports = aptugocli.run

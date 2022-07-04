@@ -1,12 +1,12 @@
-import fs from 'fs'
-import path from 'path'
-import pages from '../pages.js'
-import error from '../error.js'
+const fs = require('fs')
+const path = require('path')
+const pages = require('../pages.js')
+const error = require('../error.js')
 const chalk = import("chalk")
-import twigRender from './twigRender.js'
-import log from '../log.js'
-import buildElement from './buildElement.js'
-import getCascadingTree from './getCascadingTree.js'
+const twigRender = require('./twigRender.js')
+const log = require('../log.js')
+const buildElement = require('./buildElement.js')
+const getCascadingTree = require('./getCascadingTree.js')
 
 function getInheritedChilds(element) {
   const parentsTree = getCascadingTree(element.unique_id)
@@ -38,7 +38,7 @@ function getInheritedChilds(element) {
   return toReturn
 }
 
-export default (page, parameters) => {
+module.exports = (page, parameters) => {
   const buildPage = (page, parameters) => {
     if (parameters.stoped) return
     // Load page

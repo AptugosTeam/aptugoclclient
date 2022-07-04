@@ -1,37 +1,37 @@
-import path from 'path'
-import os from 'os'
-import util from 'util'
-import fs from 'fs'
-import { Blob } from 'buffer'
+const path = require('path')
+const os = require('os')
+const util = require('util')
+const fs = require('fs')
+const { Blob } = require('buffer')
 
-import twigPkg from 'twig/twig.js'
+const twigPkg = require('twig/twig.js')
 const { extendFilter, extendFunction, twig: _twig, cache } = twigPkg
 
-import apps from '../apps.js'
-import templates from '../templates.js'
+const apps = require('../apps.js')
+const templates = require('../templates.js')
 
-import config from '../config.js'
-import copyAssets from './copyassets.js'
-import loadElements from './loadElements.js'
-import te from './twigExtensions.js'
-import saveTwigTemplates from './twigTemplates.js'
-import copyStaticFiles from './copystaticfiles.js'
-import copyExtraFiles from './copyextrafiles.js'
-import buildPage  from './buildpage.js'
-import log from '../log.js'
-import ora from 'ora'
-import chalk from 'chalk'
-import humanizeDuration from 'humanize-duration'
+const config = require('../config.js')
+const copyAssets = require('./copyassets.js')
+const loadElements = require('./loadElements.js')
+const te = require('./twigExtensions.js')
+const saveTwigTemplates = require('./twigTemplates.js')
+const copyStaticFiles = require('./copystaticfiles.js')
+const copyExtraFiles = require('./copyextrafiles.js')
+const buildPage  = require('./buildpage.js')
+const log = require('../log.js')
+const ora = require('ora')
+const chalk = require('chalk')
+const humanizeDuration = require('humanize-duration')
 
-import {spawn, execSync} from 'child_process'
-const AdmZip = import("adm-zip")
-import FormData from 'form-data'
-import error from '../error.js'
+const {spawn, execSync} = require('child_process')
+const AdmZip = require('adm-zip')
+const FormData = require('form-data')
+const error = require('../error.js')
 const errored = false
-import { randomFillSync } from 'crypto'
-import axios from 'axios'
-import {FormData as fmdata} from "formdata-node"
-import fixPath from './paths/fixPath.js'
+const { randomFillSync } = require('crypto')
+const axios = require('axios')
+const fmdata = require('formdata-node')
+const fixPath = require('./paths/fixPath.js')
 
 const random = (() => {
   const buf = Buffer.alloc(16)
@@ -121,8 +121,7 @@ const builder = {
           return builder.thirdStep_copyStaticFiles(parameters).then((res) => {
             return 'finished copy'
           }).catch(e => {
-            console.log('caught eerrrorr', e)
-            throw(e)
+            console.log('Caught Error on Copy Static Files', e)
           })
           break
         case 'pages':
@@ -399,18 +398,23 @@ const builder = {
         try {
           copyAssets(parameters)
           copyStaticFiles(parameters)
+          const end = new Date()
+          console.info(`Static files copied: ${humanizeDuration(end - start)}`)
+          resolve()
         } catch(e) {
-          console.log('------ caughtya!!!', e)
-          reject()
+          const theError = {
+            exitCode: 120,
+            message: 'Missing Asset File',
+            error: e
+          }
+          console.warn(theError)
+          reject(theError)
         }
-
-        const end = new Date()
-        console.info(`Static files copied: ${humanizeDuration(end - start)}`)
       } else {
         const end = new Date()
         console.info(`Static files skiped: ${humanizeDuration(end - start)}`)
+        resolve()
       }
-      resolve()
     })
   },
 
@@ -599,11 +603,12 @@ const builder = {
   eightStep_deploy: (parameters) => {
     return new Promise((resolve, reject) => {
       const start = new Date()
-      console.info('Starting Deployment...', parameters)
+      console.info('Starting Deployment...')
 
       // zip front-end
       let zipFilesFolder = path.join(parameters.fullbuildfolder, parameters.buildFolder, 'build')
       let saveTo = path.join(os.tmpdir(), 'aptugo', `aptugoapp-build-${random()}.zip`)
+      console.log(AdmZip)
       var zip = new AdmZip()
 
       let dirFiles = fs.readdirSync(zipFilesFolder)
@@ -707,4 +712,4 @@ const builder = {
   }
 }
 
-export default builder
+module.exports = builder

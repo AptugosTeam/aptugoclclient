@@ -1,6 +1,6 @@
-import templates from '../templates.js'
+const templates = require('../templates.js')
 
-export default (elements) => {
+module.exports = (elements) => {
   const doloadElements = (elements, preset = '') => {
     const output = []
     elements.forEach(element => {

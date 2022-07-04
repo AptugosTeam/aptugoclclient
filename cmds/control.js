@@ -1,20 +1,20 @@
 const chalk = import("chalk")
-import { run: runApp, stop, isRunning } from '../utils/controller'
-import { list: appsList } from '../utils/apps'
-import cliSelect from 'cli-select'
-import log from '../utils/log'
-import os from 'os'
+const controller = require('../utils/controller.js')
+const cliSelect = require('cli-select')
+const log = require('../utils/log.js')
+const os = require('os')
+const apps = require('../utils/apps.js')
 
 const run = async (args) => {
   log('Application Run', { type: 'mainTitle' })
   let appSelected
-  const apps = await appsList()
+  const allapps = await apps.list()
 
   if (!args.app) {
     log('\nSelect the application to run:', { type: 'promptHeader' })
 
     appSelected = await cliSelect({
-      values: apps,
+      values: allapps,
       indentation: 2,
       cleanup: true,
       selected: '▹',
@@ -29,20 +29,20 @@ const run = async (args) => {
     })
     args.app = appSelected.value
   } else {
-    args.app = apps.filter(localapp => localapp.settings.name === args.app || localapp._id === args.app)[0]
+    args.app = allapps.filter(localapp => localapp.settings.name === args.app || localapp._id === args.app)[0]
   }
 
-  return runApp(args).then(res => {
+  return controller.run(args).then(res => {
     return res
   }).catch(e => {
     return e
   })
 }
 
-export async (args) => {
+module.exports = async (args) => {
   switch (args._[1]) {
     case 'status':
-      return await isRunning()
+      return await controller.isRunning()
       break
     case 'tmpdir':
       return os.tmpdir()
@@ -51,7 +51,7 @@ export async (args) => {
       return await run(args)
       break
     case 'stop':
-      return await stop()
+      return await controller.stop()
       break
   }
 }

@@ -1,11 +1,11 @@
 const chalk = import("chalk")
-import ora from 'ora'
-import prompt from 'prompt'
-import getPrompt from 'util'.promisify(prompt.get).bind(prompt)
-import cliSelect from 'cli-select'
-import { updateElement: update } from '../utils/pages'
-import log from '../utils/log'
-import readline from 'readline'
+const ora = require('ora')
+const prompt = require('prompt')
+const getPrompt = require('util').promisify(prompt.get).bind(prompt)
+const cliSelect = require('cli-select')
+const { updateElement: update } = require('../utils/pages')
+const log = require('../utils/log')
+const readline = require('readline')
 
 const updateElement = async(args) => {
   var r1 = readline.createInterface({ input: process.stdin, output: process.stdout })
@@ -18,7 +18,7 @@ const updateElement = async(args) => {
 }
 
 let output
-export async (args) => {
+module.exports = async (args) => {
   switch (args._[1]) {
     case 'update':
       output = await updateElement(args)

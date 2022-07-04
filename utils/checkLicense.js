@@ -1,4 +1,4 @@
-export default async () => {
+module.exports = async () => {
   return ('ok')
   const results = await axios({
     method: 'post',

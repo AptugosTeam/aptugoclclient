@@ -2,8 +2,6 @@
   "name": "aptugoclient",
   "version": "1.5.1",
   "description": "Command line client for Aptugo",
-  "exports": "./index.js",
-  "type": "module",
   "engines": {
     "node": ">=14.16"
   },
@@ -11,7 +9,9 @@
   "bin": {
     "aptugo": "./bin/index.js"
   },
+  "main": "./index.js",
   "scripts": {
+    "build": "cross-env NODE_ENV=production TS_NODE_TRANSPILE_ONLY=true webpack --config webpack.config.cjs",
     "pub": "npm version patch --force && npm publish",
     "postinstall": "node ./post-install.js",
     "rebuild": "electron-rebuild -f -w node-pty"
@@ -22,7 +22,9 @@
     "scripts": "bin/index.js",
     "outputPath": "dist"
   },
+  "browserslist": "> 0.25%, not dead",
   "dependencies": {
+    "@babel/polyfill": "^7.12.1",
     "adm-zip": "^0.5.9",
     "axios": "^0.21.1",
     "boxen": "^5.0.1",
@@ -36,6 +38,7 @@
     "formdata-node": "^4.3.2",
     "gently-copy": "^3.2.0",
     "humanize-duration": "^3.25.1",
+    "image-size": "^1.0.1",
     "istextorbinary": "^6.0.0",
     "js-yaml": "^4.0.0",
     "minimist": "^1.2.0",
@@ -43,10 +46,12 @@
     "npm-run-path": "^5.1.0",
     "ora": "^5.4.0",
     "ora-promise": "^1.0.0",
+    "original-fs": "^1.1.0",
     "path-key": "^4.0.0",
     "prettier": "^2.2.1",
     "prettier-plugin-organize-imports": "^1.1.1",
     "prompt": "^1.1.0",
+    "sharp": "^0.30.7",
     "splitargs": "0.0.7",
     "strip-ansi": "^7.0.1",
     "twig": "^1.15.4",
@@ -54,7 +59,10 @@
     "yargs": "^17.3.1"
   },
   "devDependencies": {
+    "@babel/plugin-transform-runtime": "^7.18.6",
+    "@babel/preset-env": "^7.18.6",
     "@trivago/prettier-plugin-sort-imports": "^2.0.4",
+    "babel-loader": "^8.2.5",
     "electron-rebuild": "^3.2.7"
   }
 }

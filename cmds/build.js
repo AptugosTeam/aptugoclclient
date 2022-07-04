@@ -1,11 +1,11 @@
-import chalk from 'chalk'
-import builder from '../utils/builder/index.js'
-import theapps from '../utils/apps.js'
-import { state as loadState } from '../utils/state.js'
-import cliSelect from 'cli-select'
-import log from '../utils/log.js'
+const chalk = require('chalk')
+const builder = require('../utils/builder/index.js')
+const theapps = require('../utils/apps.js')
+const { state: loadState } = require('../utils/state.js')
+const cliSelect = require('cli-select')
+const log = require('../utils/log.js')
 
-export default async (args) => {
+module.exports = async (args) => {
   const state = await loadState()
   if (args.only) {
     log(`Application Build: ${args.only}`, { type: 'mainTitle' })

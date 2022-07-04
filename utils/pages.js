@@ -1,5 +1,5 @@
-import fs from 'fs'
-import path from 'path'
+const fs = require('fs')
+const path = require('path')
 
 const pagesModule = {
   fix: (pages, parent = null) => {
@@ -51,4 +51,4 @@ const pagesModule = {
   }
 }
 
-export default pagesModule
+module.exports = pagesModule

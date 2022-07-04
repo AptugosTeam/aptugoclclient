@@ -1,11 +1,11 @@
-import fs from 'fs'
-import path from 'path'
-import error from './error.js'
-import config from './config.js'
-import { state as loadState, setState as updateState } from '../utils/state.js'
-import log from '../utils/log.js'
-import pages from './pages.js'
-import tables from './tables.js'
+const fs = require('fs')
+const path = require('path')
+const error = require('./error.js')
+const config = require('./config.js')
+const { state: loadState, setState: updateState } = require('../utils/state.js')
+const log = require('../utils/log.js')
+const pages = require('./pages.js')
+const tables = require('./tables.js')
 const fixPages = pages.fix
 const fixTables = tables.fix
 
@@ -26,7 +26,7 @@ const structures = {
   },
 
   findStructure: (structureNameOrID) => {
-    const struct = this.list().find(s => {
+    const struct = structures.list().find(s => {
       if (s.name === structureNameOrID) return s
       else if (s._id === String(structureNameOrID)) return s
     })
@@ -37,11 +37,13 @@ const structures = {
   },
 
   run: async (structure, parameters) => {
+    console.log('struct 0')
+    aptugocli.structures = structures
     if (!structures.loadedState) structures.loadedState = parameters.state || await loadState()
     const state = parameters.state || structures.loadedState
 
     if (typeof structure === 'string' || typeof structure === 'number') {
-      structure = this.findStructure(structure)
+      structure = structures.findStructure(structure)
     }
     log(`Running Structure: ${structure.name}`, { type: 'mainTitleSub' })
 
@@ -57,7 +59,9 @@ const structures = {
       } catch(e) {}
     })
 
+    console.log('struct 1')
     const init = fs.readFileSync(path.join(folders.structures,currentStructureFolder,'init.js'), { encoding: 'utf8'}, true)
+    console.log('struct 2')
     const initFunction = new AsyncFunction('Application', 'State', 'Parameters', 'Store', 'aptugo', init)
 
     let returned = await initFunction( state.app, state, parameters, config.get(), aptugocli )
@@ -84,7 +88,7 @@ const structures = {
       const piFunction = new AsyncFunction('Application', 'State', 'Parameters', 'Store', 'aptugo', postinit)
       returned = await piFunction( state.app, state, parameters, config.get(), aptugocli )
     } else {
-      log(`Skiping post init for ${structure.name}`, false)
+      log(`Skiping post init for ${structure.name}`, { verbosity: 8 })
     }
 
     if (returned) {
@@ -98,7 +102,7 @@ const structures = {
 
   icon: (structure, parameters) => {
     if (typeof structure !== 'object') {
-      structure = this.findStructure(structure)
+      structure = structures.findStructure(structure)
     }
     if (structure) {
       return path.join(structure.fullFolder, structure.icon)
@@ -109,4 +113,6 @@ const structures = {
   }
 }
 
-export default structures
+module.exports = {
+  structures: structures
+}

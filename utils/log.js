@@ -1,5 +1,5 @@
-import rdl from 'readline'
-import chalk from 'chalk'
+const rdl = require('readline')
+const chalk = require('chalk')
 
 const mainTitle = chalk.hex('#FF603D').bold
 const mainTitleSub = chalk.hex('#FF603D')
@@ -12,7 +12,7 @@ const warning = chalk.keyword('red')
 const error = chalk.keyword('red').bold
 
 const debugElement = null
-export default (message, options = {}) => {
+module.exports = (message, options = {}) => {
   let output = ''
   let func = 'log'
   let text = ''

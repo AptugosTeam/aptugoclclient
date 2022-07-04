@@ -1,19 +1,19 @@
-import util from 'util'
-import prompt from 'prompt'
-import structures from '../utils/structures.js'
-import thebuilder from './build.js'
+const util = require('util')
+const prompt = require('prompt')
+const structures = require('../utils/structures.js')
+const thebuilder = require('./build.js')
 
 const getPrompt = util.promisify(prompt.get).bind(prompt)
 
 const chalk = import("chalk")
-import ora from 'ora'
+const ora = require('ora')
 
-import cliSelect from 'cli-select'
+const cliSelect = require('cli-select')
 
-import apps from '../utils/apps.js'
-import log from '../utils/log.js'
+const apps = require('../utils/apps.js')
+const log = require('../utils/log.js')
 
-export default async (args) => {
+module.exports = async (args) => {
   log('Creating a new Aptugo application', { type: 'mainTitle' })
 
   // App Name

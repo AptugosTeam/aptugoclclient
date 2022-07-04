@@ -1,9 +1,9 @@
 const chalk = import("chalk")
-import ora from 'ora'
-import { build } from '../utils/builder/'
-import { list: appsList } from '../utils/apps'
-import cliSelect from 'cli-select'
-import log from '../utils/log'
+const ora = require('ora')
+const { build } = require('../utils/builder/')
+const { list: appsList } = require('../utils/apps')
+const cliSelect = require('cli-select')
+const log = require('../utils/log')
 
 export async (args) => {
   log('Render template', { type: 'mainTitle' })

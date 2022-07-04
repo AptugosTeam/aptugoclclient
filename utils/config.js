@@ -1,10 +1,10 @@
-import Conf from 'conf'
-import os from 'os'
-import fs from 'fs'
-import path from 'path'
-import { execSync, spawnSync } from 'child_process'
+const Conf = require('conf')
+const os = require('os')
+const fs = require('fs')
+const path = require('path')
+const { execSync, spawnSync } = require('child_process')
 
-export default {
+module.exports = {
   get: (varName = undefined) => {
     const config = new Conf({ projectName: 'Aptugo' })
     if (!varName) return config.store || {}

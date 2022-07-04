@@ -1,15 +1,15 @@
-import fs from 'fs'
-import path from 'path'
+const fs = require('fs')
+const path = require('path')
 
-export default {
+const tablesModule = {
   fix: (tables) => {
-    tables = tables.map(table => module.exports.fixTable(table))
+    tables = tables.map(table => tablesModule.fixTable(table))
     return tables
   },
   fixTable: (table, force = false) => {
     const newTable = force ? {} : table
     if (!newTable.fields) newTable.fields = []
-    if (newTable.fields.length) newTable.fields = newTable.fields.map(field => module.exports.fixField(field))
+    if (newTable.fields.length) newTable.fields = newTable.fields.map(field => tablesModule.fixField(field))
 
     return newTable
   },
@@ -29,3 +29,5 @@ export default {
     return tableDefinition
   }
 }
+
+module.exports = tablesModule

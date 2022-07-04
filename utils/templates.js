@@ -1,13 +1,13 @@
-import fs from 'fs'
-import os from 'os'
-import path from 'path'
-import yaml from 'js-yaml'
-import config from './config.js'
-import { getTree } from './files.js'
-import axios from 'axios'
-import { exit } from 'process'
-import { isBinary } from 'istextorbinary'
-const AdmZip = import("adm-zip")
+const fs = require('fs')
+const os = require('os')
+const path = require('path')
+const yaml = require('js-yaml')
+const config = require('./config.js')
+const { getTree } = require('./files.js')
+const axios = require('axios')
+const { exit } = require('process')
+const { isBinary } = require('istextorbinary')
+const AdmZip = require('adm-zip')
 
 function downloadBase (source, destination) {
   return new Promise((resolve, reject) => {
@@ -148,30 +148,61 @@ function downloadBase (source, destination) {
   })
 }
 
-const templates = {
+const templatesModule = {
   list: (loadfull = false) => {
-    const toReturn = []
-    const folders = config.get('folders')
-    const templateFolders = fs.readdirSync(folders.templates)
-    templateFolders.forEach(templateFolder => {
+    try {
+      const toReturn = []
+      const folders = config.get('folders')
+      if (!folders.templates) {
+        throw({
+          exitCode: 150,
+          message: 'Aptugo Client is not configured'
+        })
+      }
+      let templateFolders = []
       try {
-        if (fs.lstatSync( path.join(folders.templates,templateFolder) ).isDirectory()) {
-          if (fs.existsSync(path.join(folders.templates,templateFolder,'template.json'))) {
-            const fileContents = fs.readFileSync(path.join(folders.templates,templateFolder,'template.json'), { encoding: 'utf8'}, true)
-            if (fileContents) {
-              let templateDefinition = JSON.parse( fileContents )
-              if ( loadfull ) {
-                templateDefinition = templates.get(templateDefinition._id, templateFolder)
+        templateFolders = fs.readdirSync(folders.templates)
+      } catch(e) {
+        throw({
+          exitCode: 151,
+          message: 'Templates folder missing'
+        })
+      }
+
+      templateFolders.forEach(templateFolder => {
+        try {
+          if (fs.lstatSync( path.join(folders.templates,templateFolder) ).isDirectory()) {
+            if (fs.existsSync(path.join(folders.templates,templateFolder,'template.json'))) {
+              const fileContents = fs.readFileSync(path.join(folders.templates,templateFolder,'template.json'), { encoding: 'utf8'}, true)
+              if (fileContents) {
+                let templateDefinition = JSON.parse( fileContents )
+                if ( loadfull ) {
+                  templateDefinition = templatesModule.get(templateDefinition._id, templateFolder)
+                }
+                toReturn.push(templateDefinition)
               }
-              toReturn.push(templateDefinition)
             }
           }
+        } catch(e) {
+          throw({
+            exitCode: 171,
+            error: e,
+            message: 'Failed to read template folder ' + templateFolder
+          })
         }
-      } catch(e) {
-        console.error(e)
+      })
+      return toReturn
+    } catch(e) {
+      if (e.exitCode) throw(e)
+      else {
+        throw({
+          exitCode: 170,
+          error: e,
+          message: 'Could not read templates folder (is it configured?)'
+        })
       }
-    })
-    return toReturn
+    }
+
   },
   version: (args) => {
     const folders = config.get('folders')
@@ -222,7 +253,7 @@ const templates = {
   },
   setfile: (templateFolder, fileDefinition) => {
     const fileDetails = JSON.parse(fileDefinition)
-    const parsedFile = templates.fsParseFileForStorage(fileDetails)
+    const parsedFile = templatesModule.fsParseFileForStorage(fileDetails)
     const folders = config.get('folders')
     const templateFolderPath = path.join(folders.templates,templateFolder)
 
@@ -249,20 +280,20 @@ const templates = {
   },
   fileSource: (templateID, fileID) => {
     const folders = config.get('folders')
-    const templates = templates.list()
+    const templates = templatesModule.list()
     const currentTemplate = templates.filter(template => template._id === templateID)[0]
     currentTemplate.files = getTree( path.join( folders.templates, currentTemplate._id ), '', true )
-    const file = templates.findFileWithUniqueID(currentTemplate.files, fileID)
+    const file = templatesModule.findFileWithUniqueID(currentTemplate.files, fileID)
     if (!file) return 'Error: File not found'
-    const fileSource = fs.readFileSync(path.join(folders.templates, currentTemplate._id, file.completePath,templates.renderPath(file)), 'utf8')
+    const fileSource = fs.readFileSync(path.join(folders.templates, currentTemplate._id, file.completePath,templatesModule.renderPath(file)), 'utf8')
     return fileSource
   },
   get: (templateID, templateFolder) => {
     const folders = config.get('folders')
-    const thetemplates = templates.list()
+    const thetemplates = templatesModule.list()
     const currentTemplate = thetemplates.filter(template => template._id === templateID)[0]
     currentTemplate.files = getTree( path.join( folders.templates, templateFolder || currentTemplate._id ), '', true )
-    currentTemplate.fields = templates.getFields(templateFolder || currentTemplate._id)
+    currentTemplate.fields = templatesModule.getFields(templateFolder || currentTemplate._id)
     return currentTemplate
   },
   getFields: (templateFolder) => {
@@ -273,7 +304,7 @@ const templates = {
       const fieldsInFolder = fs.readdirSync( fieldsFolder )
       fieldsInFolder.forEach(fieldFileName => {
         if (fieldFileName.toLowerCase().substr(-4) === 'json') {
-          const [discard, fieldSource] = templates.fsParseFile( fs.readFileSync(path.join( fieldsFolder, fieldFileName ), 'utf8') )
+          const [discard, fieldSource] = templatesModule.fsParseFile( fs.readFileSync(path.join( fieldsFolder, fieldFileName ), 'utf8') )
 
           let parsed
           try {
@@ -317,16 +348,16 @@ const templates = {
     return [{}, fileSource]
   },
   fsLoadAndParseFile: (params) => {
-    const fileSource = templates.fsLoadFileSource(params)
-    return templates.fsParseFile(fileSource)
+    const fileSource = templatesModule.fsLoadFileSource(params)
+    return templatesModule.fsParseFile(fileSource)
   },
   fsLoadFileSource: (params) => {
     let template, file
     if (!params.file) {
       template = aptugocli.activeParameters.template
       file = params.unique_id
-      ? templates.findFileWithUniqueID(template.files, params.unique_id , path.join( config.get('folders').templates ,template._id))
-      : templates.findFileWithPath(template.files, params.path, path.join( config.get('folders').templates ,template._id))
+      ? templatesModule.findFileWithUniqueID(template.files, params.unique_id , path.join( config.get('folders').templates ,template._id))
+      : templatesModule.findFileWithPath(template.files, params.path, path.join( config.get('folders').templates ,template._id))
     } else {
       file = params.file
     }
@@ -351,7 +382,7 @@ const templates = {
             completePath: acumulated_path
           }
         }
-        var found = templates.findFileWithUniqueID(tree[i].children, unique_id, path.join(acumulated_path, filePath))
+        var found = templatesModule.findFileWithUniqueID(tree[i].children, unique_id, path.join(acumulated_path, filePath))
         if (found) return found
       }
     }
@@ -366,7 +397,7 @@ const templates = {
             completePath: acumulated_path
           }
         }
-        var found = templates.findFileWithPath(tree[i].children, thepath, path.join(acumulated_path, filePath))
+        var found = templatesModule.findFileWithPath(tree[i].children, thepath, path.join(acumulated_path, filePath))
         if (found) return found
       }
     }
@@ -377,7 +408,7 @@ const templates = {
         if (tree[i].placeholder === true) {
           return acumulated + tree[i].path
         }
-        var found = templates.searchForRenderingPlaceholder(tree[i].children, acumulated + '/' + tree[i].path + '/')
+        var found = templatesModule.searchForRenderingPlaceholder(tree[i].children, acumulated + '/' + tree[i].path + '/')
         if (found) return found
       }
     }
@@ -386,11 +417,14 @@ const templates = {
     const remote = args.remote || 'https://api.github.com/repos/AptugosTeam/Base/releases/latest'
     return axios.get(remote).then(res => {
       var downloadedVersion = 1
-      releaseName = res.data.tag_name
+      const releaseName = res.data.tag_name
       const sourceFile = res.data.zipball_url
       let destination = path.join( os.tmpdir(), 'aptugoBase.zip' )
       if (downloadedVersion !== releaseName) {
         downloadBase(sourceFile, destination).then(response => {
+          const Messages = ['All your base are belong to us','That what I said','Everything should be ready now','And everrything for free!','Ready to rumble!','Things look good!']
+          const selectedMessage = Messages[Math.floor(Math.random() * Math.floor(Messages.length))]
+          aptugo.setFeedback({ kind: 'alert', title: 'Downloaded Templates!', message: selectedMessage })
           return response
         })
       } else {
@@ -400,4 +434,4 @@ const templates = {
   }
 }
 
-export default templates
+module.exports = templatesModule

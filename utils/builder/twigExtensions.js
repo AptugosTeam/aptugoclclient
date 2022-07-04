@@ -1,7 +1,7 @@
-import twigPkg from 'twig/twig.js'
+const twigPkg = require('twig/twig.js')
 const { extendFilter, extendFunction, twig: _twig, cache } = twigPkg
 
-export default {
+module.exports = {
   castToArray: (value) => {
     return Object.entries(value)
   },

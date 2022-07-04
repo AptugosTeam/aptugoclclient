@@ -346,6 +346,17 @@
     "nodedir": "/Users/gaston/Library/Caches/node-gyp/18.0.1",
     "standalone_static_library": 1,
     "target": "18.0.1",
-    "target_platform": "darwin"
+    "target_platform": "darwin",
+    "metrics_registry": "https://registry.npmjs.org/",
+    "global_prefix": "/Users/gaston/.nvm/versions/node/v16.15.1",
+    "local_prefix": "/Users/gaston/Sites/aptugo/Aptugo/cli",
+    "globalconfig": "/Users/gaston/.nvm/versions/node/v16.15.1/etc/npmrc",
+    "userconfig": "/Users/gaston/.npmrc",
+    "init_module": "/Users/gaston/.npm-init.js",
+    "node_gyp": "/Users/gaston/.nvm/versions/node/v16.15.1/lib/node_modules/npm/node_modules/node-gyp/bin/node-gyp.js",
+    "cache": "/Users/gaston/.npm",
+    "user_agent": "npm/8.11.0 node/v16.15.1 darwin x64 workspaces/false",
+    "prefix": "/Users/gaston/.nvm/versions/node/v16.15.1",
+    "shell_emulator": "true"
   }
 }

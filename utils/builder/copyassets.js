@@ -1,7 +1,7 @@
-import fs from 'fs'
-import path from 'path'
+const fs = require('fs')
+const path = require('path')
 
-export default (parameters) => {
+module.exports = (parameters) => {
   const assetsDefinition = JSON.parse( fs.readFileSync(path.join(parameters.appFolder, 'assets.json' ), { encoding: 'utf8'}, true) )
 
   aptugocli.createIfDoesntExists( path.join(parameters.fullbuildfolder, parameters.buildFolder, 'dist') )

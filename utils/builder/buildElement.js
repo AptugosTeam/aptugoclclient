@@ -1,9 +1,9 @@
-import log from '../log.js'
-import error from '../error.js'
-import getCascadingTree from './getCascadingTree.js'
-import pages from '../pages.js'
+const log = require('../log.js')
+const error = require('../error.js')
+const getCascadingTree = require('./getCascadingTree.js')
+const pages = require('../pages.js')
 const loadPage = pages.load
-import twigRender from './twigRender.js'
+const twigRender = require('./twigRender.js')
 
 function getInheritedChilds(element) {
   const parentsTree = getCascadingTree(element.unique_id)
@@ -35,7 +35,7 @@ function getInheritedChilds(element) {
   return toReturn
 }
 
-export default (element, parameters) => {
+module.exports = (element, parameters) => {
   const buildField = (parameters) => {
     if (parameters.stoped) return
     let elementPath

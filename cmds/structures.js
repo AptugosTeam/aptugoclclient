@@ -1,19 +1,14 @@
-const {
-  list: structList,
-  icon: structIcon,
-  run: structRun
-} = import('../utils/structures')
-
-import { state: loadState } from '../utils/state'
-import log from '../utils/log'
-import { list: appsList, load: appLoad } from '../utils/apps'
-import Table from 'cli-table'
-import cliSelect from 'cli-select'
+const structures = require('../utils/structures.js').structures
+const { state: loadState } = require('../utils/state.js')
+const log = require('../utils/log.js')
+const apps = require('../utils/apps.js')
+const Table = require('cli-table')
+const cliSelect = require('cli-select')
 const chalk = import("chalk")
-import { save } from '../utils/apps'
+// const apps, { save } = require('../utils/apps')
 
 const list = async (args) => {
-  const structs = await structList()
+  const structs = await structures.list()
   if (args.raw) return structs
 
   let simpleList = []
@@ -30,19 +25,20 @@ const list = async (args) => {
 }
 
 const icon = async(args) => {
-  const res = await structIcon(args.structure)
+  const res = await structures.icon(args.structure)
   return res
 }
 
 const run = async(args, extra) => {
+  console.log('struct cmd 1')
   const state = await loadState()
-
+  console.log('struct cmd 2')
   if (!args.skipapp) {
     if (!args.app) {
       log('\nSelect the application to create model into:', { type: 'promptHeader' })
-      const apps = await appsList()
+      const allapps = await apps.list()
       appSelected = await cliSelect({
-        values: apps,
+        values: allapps,
         indentation: 2,
         cleanup: true,
         selected: '▹',
@@ -56,9 +52,9 @@ const run = async(args, extra) => {
         }
       })
       args.app = appSelected.value
-      state.app = appLoad(appSelected.value)
+      state.app = apps.load(appSelected.value)
     } else {
-      if (state.app && state.app._id !== args.app) state.app = appLoad(args.app)
+      if (state.app && state.app._id !== args.app) state.app = apps.load(args.app)
     }
   }
 
@@ -67,14 +63,14 @@ const run = async(args, extra) => {
       args[key] = extra.file
     }
   })
-  const result = await structRun(args.structure, { state: state, ...args } )
+
+  const result = await structures.run(args.structure, { state: state, ...args } )
   state.app = result
-  console.error('client: skipsaving', args)
-  if (!args.skipsave) save(result || state.app)
+  if (!args.skipsave) apps.save(result || state.app)
   return await result
 }
 
-export async (args, extra) => {
+module.exports = async (args, extra) => {
   switch (args._[1]) {
     case 'list':
       return await list(args)

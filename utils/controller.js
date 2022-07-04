@@ -1,20 +1,16 @@
-import log from '../utils/log'
-import { fork, exec } from 'child_process';
-import { state: loadState } from '../utils/state'
-import { get: getConfig } from './config'
-import path from 'path'
-import fs from 'fs'
-import os from 'os'
-
+const log = require('../utils/log.js')
+const config = require('./config.js')
+const path = require('path')
+const fs = require('fs')
+const os = require('os')
+const pty = require('node-pty')
 let ptyproc
-export {
+const controllerModule = {
   run: async ({ app }) => {
-    const state = await loadState()
-
     log(`Running ${app.settings.name}`, { type: 'mainTitle' })
     const settings = app.settings.development
     const buildFolder = settings.folder
-    const fullbuildfolder = getConfig('folders').build
+    const fullbuildfolder = config.get('folders').build
     const finalFolder = path.join(fullbuildfolder, buildFolder)
 
     // Find PNPM
@@ -36,9 +32,9 @@ export {
     if (!found) return { exitCode: 1, error: 'Could not find PNPM (maybe you need to run npm i -g pnpm ?)'}
     found = `"${found}"`
 
-    var pty = import('node-pty');
     var shell = os.platform() === 'win32' ? 'cmd.exe' : 'bash';
-
+    // const pty = require('node-pty')
+    console.log('pty is', pty)
     ptyproc = pty.spawn(shell, [], {
       name: 'aptugo-process-controller',
       cols: 80,
@@ -51,7 +47,7 @@ export {
       process.stdout.write(data)
     })
 
-    await module.exports.killIfRunning()
+    await controllerModule.killIfRunning()
     ptyproc.write(`${found} start\r`)
     fs.writeFileSync( path.join( os.tmpdir(), 'aptugo-state.json' ), ptyproc._pid + '')
     return 'ok'
@@ -80,8 +76,10 @@ export {
     return 'no'
   },
   killIfRunning: async () => {
-    if (await module.exports.isRunning() !== 'no') {
-      await module.exports.stop()
+    if (await controllerModule.isRunning() !== 'no') {
+      await controllerModule.stop()
     }
   }
 }
+
+module.exports = controllerModule

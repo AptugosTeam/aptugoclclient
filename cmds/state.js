@@ -1,8 +1,8 @@
-import { state as loadState, setState, getPath } from '../utils/state.js'
+const { state: loadState, setState, getPath } = require('../utils/state')
 
 let state
 let output
-export default async (args, extraarguments) => {
+module.exports = async (args, extraarguments) => {
   switch (args._[1]) {
     case 'update':
       setState({ app: extraarguments.file })
