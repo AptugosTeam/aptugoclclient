@@ -1,6 +1,6 @@
 {
   "name": "aptugoclient",
-  "version": "1.5.4",
+  "version": "1.5.5",
   "description": "Command line client for Aptugo",
   "engines": {
     "node": ">=14.16"
@@ -31,7 +31,7 @@
     "cli-spinners": "^2.6.0",
     "cli-table": "^0.3.6",
     "conf": "^9.0.2",
-    "execa": "^6.1.0",
+    "execa": "^5.1.1",
     "form-data": "^4.0.0",
     "formdata-node": "^4.3.2",
     "gently-copy": "^3.2.0",
