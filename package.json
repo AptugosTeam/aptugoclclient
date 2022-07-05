@@ -1,6 +1,6 @@
 {
   "name": "aptugoclient",
-  "version": "1.5.3",
+  "version": "1.5.4",
   "description": "Command line client for Aptugo",
   "engines": {
     "node": ">=14.16"
@@ -11,7 +11,6 @@
   },
   "main": "./index.js",
   "scripts": {
-    "build": "cross-env NODE_ENV=production TS_NODE_TRANSPILE_ONLY=true webpack --config webpack.config.cjs",
     "pub": "npm version patch --force && npm publish",
     "postinstall": "node ./post-install.js",
     "rebuild": "electron-rebuild -f -w node-pty"
@@ -24,7 +23,6 @@
   },
   "browserslist": "> 0.25%, not dead",
   "dependencies": {
-    "@babel/polyfill": "^7.12.1",
     "adm-zip": "^0.5.9",
     "axios": "^0.21.1",
     "boxen": "^5.0.1",
@@ -59,10 +57,7 @@
     "yargs": "^17.3.1"
   },
   "devDependencies": {
-    "@babel/plugin-transform-runtime": "^7.18.6",
-    "@babel/preset-env": "^7.18.6",
     "@trivago/prettier-plugin-sort-imports": "^2.0.4",
-    "babel-loader": "^8.2.5",
     "electron-rebuild": "^3.2.7"
   }
 }
