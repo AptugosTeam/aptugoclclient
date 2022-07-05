@@ -9,7 +9,9 @@ const emptyState = {
       name: 'anonymous'
     }
   },
-  app: {}
+  app: {},
+  extraSettings: {},
+  filesWithExtraSettings: []
 }
 
 let savedState = {}
@@ -26,5 +28,10 @@ exports.state = async () => {
   const toReturn = { ...emptyState, ...savedState }
   if (toReturn.apps) toReturn.apps = await apps.list()
   if (toReturn.templates) toReturn.templates = await templates.list()
+  return toReturn
+}
+
+exports.stateSync = () => {
+  const toReturn = { ...emptyState, ...savedState }
   return toReturn
 }

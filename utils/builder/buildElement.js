@@ -4,6 +4,7 @@ const getCascadingTree = require('./getCascadingTree.js')
 const pages = require('../pages.js')
 const loadPage = pages.load
 const twigRender = require('./twigRender.js')
+const { stateSync: loadState, setState: updateState } = require('../state.js')
 
 function getInheritedChilds(element) {
   const parentsTree = getCascadingTree(element.unique_id)
@@ -87,6 +88,7 @@ module.exports = (element, parameters) => {
     return newValues
   },
   buildElement = (element, parameters) => {
+    const state = loadState()
     if (!element.value && element.unique_id) {
       element = pages.load(element.unique_id, parameters.appFolder)
       if (element.type === 'page') return
@@ -158,11 +160,13 @@ module.exports = (element, parameters) => {
 
         // Check for Element Extra Settings
         if (broughtElement.settings) {
+          const ns = { ...state.extraSettings }
           broughtElement.settings.forEach(setting => {
-            if (!aptugocli.extraSettings[setting.name]) aptugocli.extraSettings[setting.name] = []
+            if (!ns[setting.name]) ns[setting.name] = []
             const innRender = twigRender({ data: setting.value, rethrow: true }, parameters, parameters.element)
-            if (aptugocli.extraSettings[setting.name].indexOf(innRender) === -1) aptugocli.extraSettings[setting.name].push(innRender)
+            if (ns[setting.name].indexOf(innRender) === -1) ns[setting.name].push(innRender)
           })
+          updateState({ ...state, extraSettings: ns })
         }
 
         try {

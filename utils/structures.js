@@ -37,7 +37,6 @@ const structures = {
   },
 
   run: async (structure, parameters) => {
-    console.log('struct 0')
     aptugocli.structures = structures
     if (!structures.loadedState) structures.loadedState = parameters.state || await loadState()
     const state = parameters.state || structures.loadedState
@@ -59,9 +58,7 @@ const structures = {
       } catch(e) {}
     })
 
-    console.log('struct 1')
     const init = fs.readFileSync(path.join(folders.structures,currentStructureFolder,'init.js'), { encoding: 'utf8'}, true)
-    console.log('struct 2')
     const initFunction = new AsyncFunction('Application', 'State', 'Parameters', 'Store', 'aptugo', init)
 
     let returned = await initFunction( state.app, state, parameters, config.get(), aptugocli )

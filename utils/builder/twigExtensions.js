@@ -1,5 +1,6 @@
 const twigPkg = require('twig/twig.js')
 const { extendFilter, extendFunction, twig: _twig, cache } = twigPkg
+const { stateSync: loadState, setState: updateState } = require('../state.js')
 
 module.exports = {
   castToArray: (value) => {
@@ -57,14 +58,17 @@ module.exports = {
 
       if (!template) template = _twig({ ref: 'empty' })
       else {
+        const state = loadState()
         var loadedElement = aptugocli.loadedElements.find(loadedElement => loadedElement.path === templateID)
         if (loadedElement.settings) {
+          const ns = { ...state.extraSettings }
           loadedElement.settings.forEach(setting => {
-            if (!aptugocli.extraSettings[setting.name]) aptugocli.extraSettings[setting.name] = []
+            if (!ns[setting.name]) ns[setting.name] = []
             let inntemplate = _twig({ data: setting.value, rethrow: true })
             const innRender = inntemplate.render(aptugocli.currentRenderingElement)
-            if (aptugocli.extraSettings[setting.name].indexOf(innRender) === -1) aptugocli.extraSettings[setting.name].push(innRender)
+            if (ns[setting.name].indexOf(innRender) === -1) ns[setting.name].push(innRender)
           })
+          updateState({ ...state, extraSettings: ns })
         }
       }
       return template
@@ -112,21 +116,28 @@ module.exports = {
     return aptugocli.plainAssets[value]
   },
   addSetting: (settingName, settingValue) => {
-    if (!aptugocli.extraSettings[settingName]) aptugocli.extraSettings[settingName] = []
-    if (aptugocli.extraSettings[settingName].indexOf(settingValue) === -1) aptugocli.extraSettings[settingName].push(settingValue)
+    const state = loadState()
+    const ns = { ...state.extraSettings }
+    if (!ns[settingName]) ns[settingName] = []
+    if (ns[settingName].indexOf(settingValue) === -1) ns[settingName].push(settingValue)
+    updateState({ ...state, extraSettings: ns })
   },
   insertSetting: (setting) => {
+    const state = loadState()
     let output = null
     if (aptugocli.skipSettings) { // SAVE
-      const exists = aptugocli.filesWithExtraSettings.filter(fwes => fwes.unique_id === aptugocli.currentFile.unique_id)
+      const exists = state.filesWithExtraSettings.filter(fwes => fwes.unique_id === aptugocli.currentFile.unique_id)
       if (exists.length === 0) {
-        aptugocli.filesWithExtraSettings.push({
+        const nfwes = [ ...state.filesWithExtraSettings, {
           ...aptugocli.currentFile,
           savePath: 'aaaa'
-        })
+        }]
+        updateState({ ...state, filesWithExtraSettings: nfwes })
       }
     } else { // APPLY
-      output = aptugocli.extraSettings[setting] ? (typeof aptugocli.extraSettings[setting] === 'string' || typeof aptugocli.extraSettings[setting] === 'number')  ? aptugocli.extraSettings[setting] : aptugocli.extraSettings[setting].join('\n') : ''
+      output = state.extraSettings[setting] ? (typeof state.extraSettings[setting] === 'string' || typeof state.extraSettings[setting] === 'number')
+        ? state.extraSettings[setting]
+        : state.extraSettings[setting].join('\n') : ''
     }
     return output
   },

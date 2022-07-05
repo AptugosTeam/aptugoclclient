@@ -30,9 +30,7 @@ const icon = async(args) => {
 }
 
 const run = async(args, extra) => {
-  console.log('struct cmd 1')
   const state = await loadState()
-  console.log('struct cmd 2')
   if (!args.skipapp) {
     if (!args.app) {
       log('\nSelect the application to create model into:', { type: 'promptHeader' })

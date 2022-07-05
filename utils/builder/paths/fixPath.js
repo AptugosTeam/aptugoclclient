@@ -1,4 +1,4 @@
-
+const execa = require('execa')
 function ansiRegex({onlyFirst = false} = {}) {
 	const pattern = [
 		'[\\u001B\\u009B][[\\]()#;?]*(?:(?:(?:(?:;[-a-zA-Z\\d\\/#&.:=?%@~_]+)*|[a-zA-Z\\d]+(?:;[-a-zA-Z\\d\\/#&.:=?%@~_]*)*)?\\u0007)',
@@ -79,7 +79,7 @@ async function shellEnv(shell) {
 }
 
 function shellEnvSync(shell) {
-  return import('execa').then((execa) => {
+
     if (process.platform === 'win32') {
       return process.env;
     }
@@ -94,9 +94,6 @@ function shellEnvSync(shell) {
         return process.env;
       }
     }
-  }).catch(e => {
-    console.log('e', e)
-  })
 }
 
 function shellPathSync() {

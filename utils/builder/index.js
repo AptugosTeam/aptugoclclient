@@ -10,6 +10,7 @@ const { extendFilter, extendFunction, twig: _twig, cache } = twigPkg
 const apps = require('../apps.js')
 const templates = require('../templates.js')
 
+const { stateSync: loadState, setState: updateState } = require('../state.js')
 const config = require('../config.js')
 const copyAssets = require('./copyassets.js')
 const loadElements = require('./loadElements.js')
@@ -22,7 +23,7 @@ const log = require('../log.js')
 const ora = require('ora')
 const chalk = require('chalk')
 const humanizeDuration = require('humanize-duration')
-
+const parseToString = require('./parseToString')
 const {spawn, execSync} = require('child_process')
 const AdmZip = require('adm-zip')
 const FormData = require('form-data')
@@ -126,14 +127,10 @@ const builder = {
           break
         case 'pages':
           if (parameters.stoped) return
-          return builder.firstStep_setupBuild(parameters).then(() => {
-            return builder.fourthStep_generatePages(parameters).then(() => {
-              return 'finished pages'
-            }).catch(e => {
-              throw(e)
-            })
+          return builder.fourthStep_generatePages(parameters).then(() => {
+            return 'finished pages'
           }).catch(e => {
-            console.log('caught Error on Pages Build', e)
+            throw(e)
           })
           break
         case 'extraFiles':
@@ -224,8 +221,9 @@ const builder = {
             Object.keys(item).map(propertyName => {
               if (item[propertyName] && item[propertyName].substr && item[propertyName].substr(0,2) === '()') {
                 let replacedValue = item[propertyName].replace('aptugo.store.getState().application.tables','params.plainTables')
+                replacedValue = replacedValue.replace('aptugo.activeApplication.tables','params.plainTables')
                 replacedValue = '(params)' + replacedValue.substr(2)
-                item[propertyName] = builder.parseToString(replacedValue)
+                item[propertyName] = parseToString(replacedValue)
               }
             })
           }
@@ -238,24 +236,6 @@ const builder = {
     } catch(e) {
       throw(e)
     }
-  },
-
-  parseToString(input) {
-    let output = ''
-    try {
-      const params = {
-        plainTables: Object.values(aptugocli.plain)
-      }
-      output = builder.deserializeFunction(input).call({})(params)
-    } catch(e) {
-      const theError = { exitCode: 125, message: 'Element parameters error', error: e, info: input}
-      throw(theError)
-    }
-    return output
-  },
-
-  deserializeFunction(funcString) {
-    return new Function('builder', `return ${funcString}`)
   },
 
   buildParameters: (buildData) => {
@@ -295,23 +275,23 @@ const builder = {
 
       return aptugocli.activeParameters
     } catch(e) {
-      console.log('another capsule')
       throw(e)
     }
   },
 
   firstStep_setupBuild: (parameters) => {
     return new Promise((resolve, reject) => {
+      const state = loadState()
       const start = new Date()
       console.info('Setting up build...')
-      aptugocli.extraSettings = { ...parameters.variables } || {}
+      console.log(parameters.variables)
+      updateState({ ...state, filesWithExtraSettings: [], extraSettings: [] })
       if (parameters.doClean) {
         fs.rmdirSync( path.join(parameters.fullbuildfolder, parameters.buildFolder), { recursive: true })
       }
       aptugocli.createIfDoesntExists(path.join(parameters.fullbuildfolder, parameters.buildFolder))
 
       aptugocli.skipSettings = true
-      aptugocli.filesWithExtraSettings = []
       aptugocli.filesimportdByElements = []
       cache(false)
       twigExtensions()
@@ -462,11 +442,12 @@ const builder = {
 
   fifthStep_extraSettings: (parameters) => {
     return new Promise((resolve, reject) => {
+      const state = loadState()
       const start = new Date()
       console.info('Re-Generating pages with extra settings...')
       if (parameters.skip.indexOf('copy') === -1) {
         aptugocli.skipSettings = false
-        copyStaticFiles({ ...parameters, files: aptugocli.filesWithExtraSettings })
+        copyStaticFiles({ ...parameters, files: state.filesWithExtraSettings })
         const end = new Date()
         console.info(`Static files re-generated: ${humanizeDuration(end - start)}`)
       } else {

@@ -7,6 +7,7 @@ const twigRender = require('./twigRender.js')
 const log = require('../log.js')
 const buildElement = require('./buildElement.js')
 const getCascadingTree = require('./getCascadingTree.js')
+const parseToString = require('./parseToString')
 
 function getInheritedChilds(element) {
   const parentsTree = getCascadingTree(element.unique_id)
@@ -42,7 +43,17 @@ module.exports = (page, parameters) => {
   const buildPage = (page, parameters) => {
     if (parameters.stoped) return
     // Load page
-    const pageDefiniton = { ...pages.load(page.unique_id, parameters.appFolder), ...page }
+    let pageDefiniton = { ...pages.load(page.unique_id, parameters.appFolder), ...page }
+
+    Object.keys(pageDefiniton).map(propertyName => {
+      if (pageDefiniton[propertyName] && pageDefiniton[propertyName].substr && pageDefiniton[propertyName].substr(0,2) === '()') {
+        let replacedValue = pageDefiniton[propertyName].replace('aptugo.store.getState().application.tables','params.plainTables')
+        replacedValue = replacedValue.replace('aptugo.activeApplication.tables','params.plainTables')
+        replacedValue = '(params)' + replacedValue.substr(2)
+        pageDefiniton[propertyName] = parseToString(replacedValue)
+      }
+    })
+
     aptugocli.currentRenderingPage = pageDefiniton
     log(`Building page: ${aptugocli.currentRenderingPage.name}`, { type: 'title', level: parameters.level, unique_id: pageDefiniton.unique_id, verbosity: 6 })
 
