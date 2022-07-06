@@ -284,7 +284,6 @@ const builder = {
       const state = loadState()
       const start = new Date()
       console.info('Setting up build...')
-      console.log(parameters.variables)
       updateState({ ...state, filesWithExtraSettings: [], extraSettings: [] })
       if (parameters.doClean) {
         fs.rmdirSync( path.join(parameters.fullbuildfolder, parameters.buildFolder), { recursive: true })
@@ -339,8 +338,6 @@ const builder = {
 
         // Check Elements
         const elements = Object.values(aptugocli.plain).filter(plainThing => plainThing.type === 'element')
-        console.log('aptugo cli exists?')
-        // console.log(aptugocli)
         elements.forEach(element => {
           const broughtElement = aptugocli.loadedElements.find(item => item.path === `${element.value}.tpl`)
           if (broughtElement) {
@@ -468,7 +465,6 @@ const builder = {
           var template = _twig({ data: tca, rethrow: true })
           const renderedCommands = template.render(parameters)
           const baseFilesFolder = path.join(parameters.fullbuildfolder, parameters.buildFolder)
-          console.log('rendered commands', renderedCommands)
           const child = spawn(`cd ${baseFilesFolder} && ${renderedCommands}`, {
             shell: true
           })
@@ -512,12 +508,12 @@ const builder = {
       // FIX PATH
       let returnValue = {}
       try {
-        let result = execSync(`${ os.userInfo().shell} -ilc 'echo -n "_SHELL_ENV_DELIMITER_"; env; echo -n "_SHELL_ENV_DELIMITER_"; exit'`)
+        let result = execSync(`${ os.userInfo().shell} -ilc 'echo -n "_SHELL_ENV_DELIMITER_"; env; echo -n "_SHELL_ENV_DELIMITER_"; exit'`, { shell: true })
         if (result) result = result.toString()
-        for (const line of result.split('\n').filter(line => Boolean(line))) {
-          const [key, ...values] = line.split('=');
-          returnValue[key] = values.join('=');
-        }
+        // for (const line of result.split('\n').filter(line => Boolean(line))) {
+        //   const [key, ...values] = line.split('=');
+        //   returnValue[key] = values.join('=');
+        // }
       } catch(e) {}
       if (returnValue.PATH) process.env.PATH = returnValue.PATH
       let precommand = ''
@@ -589,7 +585,7 @@ const builder = {
       // zip front-end
       let zipFilesFolder = path.join(parameters.fullbuildfolder, parameters.buildFolder, 'build')
       let saveTo = path.join(os.tmpdir(), 'aptugo', `aptugoapp-build-${random()}.zip`)
-      console.log(AdmZip)
+
       var zip = new AdmZip()
 
       let dirFiles = fs.readdirSync(zipFilesFolder)

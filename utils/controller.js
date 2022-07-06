@@ -4,8 +4,40 @@ const path = require('path')
 const fs = require('fs')
 const os = require('os')
 const pty = require('node-pty')
+const { execSync } = require('child_process')
 let ptyproc
+
+const args = [
+	'-ilc',
+	'echo -n "_SHELL_ENV_DELIMITER_"; env; echo -n "_SHELL_ENV_DELIMITER_"; exit',
+]
+
+const detectDefaultShell = () => {
+	const {env} = process;
+
+	if (process.platform === 'win32') {
+		return env.COMSPEC || 'cmd.exe';
+	}
+
+	try {
+		const {shell} = userInfo();
+		if (shell) {
+			return shell;
+		}
+	} catch {}
+
+	if (process.platform === 'darwin') {
+		return env.SHELL || '/bin/zsh';
+	}
+
+	return env.SHELL || '/bin/sh';
+}
+
 const controllerModule = {
+  path: () => {
+    const result = execSync(`${detectDefaultShell()} -ilc env`, { encoding: 'utf8' })
+    console.log(result)
+  },
   run: async ({ app }) => {
     log(`Running ${app.settings.name}`, { type: 'mainTitle' })
     const settings = app.settings.development

@@ -44,6 +44,9 @@ module.exports = async (args) => {
     case 'status':
       return await controller.isRunning()
       break
+    case 'path':
+      return controller.path()
+      break
     case 'tmpdir':
       return os.tmpdir()
       break

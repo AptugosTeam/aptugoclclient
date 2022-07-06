@@ -1,4 +1,6 @@
 const execa = require('execa')
+const { execSync } = require('child_process')
+
 function ansiRegex({onlyFirst = false} = {}) {
 	const pattern = [
 		'[\\u001B\\u009B][[\\]()#;?]*(?:(?:(?:(?:;[-a-zA-Z\\d\\/#&.:=?%@~_]+)*|[a-zA-Z\\d]+(?:;[-a-zA-Z\\d\\/#&.:=?%@~_]*)*)?\\u0007)',
@@ -61,7 +63,6 @@ const parseEnv = env => {
 };
 
 async function shellEnv(shell) {
-  const execa = await import('execa')
 	if (process.platform === 'win32') {
 		return process.env;
 	}
@@ -101,8 +102,18 @@ function shellPathSync() {
 	return PATH;
 }
 
-module.exports = async () => {
+module.exports = () => {
   if (process.platform === 'win32') return;
+  const result = execSync(`${detectDefaultShell()} -ilc env`, { encoding: 'utf8' })
 
-  process.env.PATH = shellPathSync() || ['./node_modules/.bin','/.nodebrew/current/bin','/usr/local/bin', process.env.PATH,].join(':');
+  const returnValue = {}
+
+  for (const line of stripAnsi(result).split('\n').filter(line => Boolean(line))) {
+		const [key, ...values] = line.split('=');
+		returnValue[key] = values.join('=');
+	}
+
+  const {PATH} = returnValue
+
+  process.env.PATH = PATH || ['./node_modules/.bin','/.nodebrew/current/bin','/usr/local/bin', process.env.PATH,].join(':');
 }

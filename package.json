@@ -24,6 +24,7 @@
   "browserslist": "> 0.25%, not dead",
   "dependencies": {
     "adm-zip": "^0.5.9",
+    "ansi-escapes": "^5.0.0",
     "axios": "^0.21.1",
     "boxen": "^5.0.1",
     "chalk": "^2.4.2",
