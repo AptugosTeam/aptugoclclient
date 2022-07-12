@@ -547,7 +547,7 @@ const builder = {
           })
 
           child.stderr.on('data', function (data) {
-            reject({ message: `Template build scripts (${command}) raised some concerns`, exitCode: 130, error: data.toString() })
+            log(data.toString(), { verbosity: 5 })
           })
 
           child.stdout.on('data', function (data) {

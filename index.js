@@ -1,5 +1,4 @@
 const minimist = require('minimist')
-const checkLicense = require('./utils/checkLicense.js')
 const config = require('./utils/config.js')
 const log = require('./utils/log.js')
 
@@ -153,134 +152,124 @@ const aptugocli = {
       aptugocli.loglevel = args.loglevel
     }
 
-    return await checkLicense().then((result) => {
-      try {
-        let output = ''
 
-        if (cmd !== 'config' && cmd !== 'utils') {
-          const checkResult = config.check()
-          if (checkResult !== 0) {
-            output = {
-              exitCode: 10,
-              data: 'Missing Config'
-            }
-          }
+    let output = ''
+
+    if (cmd !== 'config' && cmd !== 'utils') {
+      const checkResult = config.check()
+      if (checkResult !== 0) {
+        output = {
+          exitCode: 10,
+          data: 'Missing Config'
         }
-
-        switch (cmd) {
-          case 'state':
-            output = state(subcmd, extraarguments)
-            break
-
-          case 'control':
-            output = control(subcmd)
-            break
-
-          case 'config':
-            output = configCmds(subcmd)
-            break
-
-          case 'version':
-            output = version(subcmd)
-            break
-
-          case 'help':
-            output = help(subcmd)
-            break
-
-          case 'list':
-            output = listApps(subcmd)
-            break
-
-          case 'load':
-            output = loadApp(subcmd)
-            break
-
-          case 'new':
-            output = newApp(subcmd)
-            break
-
-          case 'save':
-            output = saveApp(subcmd, extraarguments)
-            break
-
-          case 'elements':
-            // output = import('./cmds/elements')(subcmd)
-            break
-
-          case 'model':
-            // output = import('./cmds/model')(subcmd)
-            break
-
-          case 'remove':
-            // output = import('./cmds/remove')(subcmd)
-            break
-
-          case 'build':
-            output = build(subcmd)
-            break
-
-          case 'structures':
-            output = structures(subcmd, extraarguments)
-            break
-
-          case 'templates':
-            output = templates(subcmd, extraarguments)
-            break
-          case 'assets':
-            output = assets(subcmd, extraarguments)
-            break
-          case 'renderer':
-            // output = import('./cmds/renderer')(subcmd)
-            break
-          case 'utils':
-            if (subcmd._.slice(2).length) {
-              output = aptugocli[subcmd._[1]].apply(this, subcmd._.slice(2))
-            }
-            break
-          default:
-            output = `"${cmd}" is not a valid command`
-            break
-        }
-
-        if (output instanceof Promise) {
-          return output.then(res => {
-            if (!res) {
-              return {
-                exitCode: 255,
-                data: 'No output produced'
-              }
-            } else if (res.exitCode) {
-              console.log('there also')
-              return res
-            } else {
-              if (args.pipe) return console.log(JSON.stringify(res))
-              else {
-                return {
-                  exitCode: 0,
-                  data: res
-                }
-              }
-            }
-          }).catch(e => {
-            const theError = e.exitCode ? e : { exitCode: 1, message: 'General Error', error: e }
-            throw(theError)
-          })
-        } else {
-          return {
-            exitCode: 0,
-            data: output
-          }
-        }
-      } catch(e) {
-        console.error(e)
-        error(`Failed to execute command`, true)
       }
+    }
 
-    })
-    .catch((error) => {
-      throw(error)
-    })
+    switch (cmd) {
+      case 'state':
+        output = state(subcmd, extraarguments)
+        break
+
+      case 'control':
+        output = control(subcmd)
+        break
+
+      case 'config':
+        output = configCmds(subcmd)
+        break
+
+      case 'version':
+        output = version(subcmd)
+        break
+
+      case 'help':
+        output = help(subcmd)
+        break
+
+      case 'list':
+        output = listApps(subcmd)
+        break
+
+      case 'load':
+        output = loadApp(subcmd)
+        break
+
+      case 'new':
+        output = newApp(subcmd)
+        break
+
+      case 'save':
+        output = saveApp(subcmd, extraarguments)
+        break
+
+      case 'elements':
+        // output = import('./cmds/elements')(subcmd)
+        break
+
+      case 'model':
+        // output = import('./cmds/model')(subcmd)
+        break
+
+      case 'remove':
+        // output = import('./cmds/remove')(subcmd)
+        break
+
+      case 'build':
+        output = build(subcmd)
+        break
+
+      case 'structures':
+        output = structures(subcmd, extraarguments)
+        break
+
+      case 'templates':
+        output = templates(subcmd, extraarguments)
+        break
+      case 'assets':
+        output = assets(subcmd, extraarguments)
+        break
+      case 'renderer':
+        // output = import('./cmds/renderer')(subcmd)
+        break
+      case 'utils':
+        if (subcmd._.slice(2).length) {
+          output = aptugocli[subcmd._[1]].apply(this, subcmd._.slice(2))
+        }
+        break
+      default:
+        output = `"${cmd}" is not a valid command`
+        break
+    }
+
+    if (output instanceof Promise) {
+      return output.then(res => {
+        if (!res) {
+          return {
+            exitCode: 255,
+            data: 'No output produced'
+          }
+        } else if (res.exitCode) {
+          console.log('there also')
+          return res
+        } else {
+          if (args.pipe) return console.log(JSON.stringify(res))
+          else {
+            return {
+              exitCode: 0,
+              data: res
+            }
+          }
+        }
+      }).catch(e => {
+        const theError = e.exitCode ? e : { exitCode: 1, message: 'General Error', error: e }
+        throw(theError)
+      })
+    } else {
+      return {
+        exitCode: 0,
+        data: output
+      }
+    }
   }
 }
 

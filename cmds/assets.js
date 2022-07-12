@@ -41,6 +41,7 @@ const assetRemove = async (args) => {
 }
 
 const assetDetails = async (args) => {
+  args = await fixArgApp(args)
   return assets.details(args)
 }
 
