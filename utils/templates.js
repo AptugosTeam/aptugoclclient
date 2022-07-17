@@ -414,7 +414,7 @@ const templatesModule = {
     }
   },
   download: (args) => {
-    const remote = args.remote || 'https://api.github.com/repos/AptugosTeam/Base/releases/latest'
+    const remote = args.remote || 'https://api.github.com/repos/AptugosTeam/BaseDev/releases/latest'
     return axios.get(remote).then(res => {
       var downloadedVersion = 1
       const releaseName = res.data.tag_name

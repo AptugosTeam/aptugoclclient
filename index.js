@@ -249,7 +249,6 @@ const aptugocli = {
             data: 'No output produced'
           }
         } else if (res.exitCode) {
-          console.log('there also')
           return res
         } else {
           if (args.pipe) return console.log(JSON.stringify(res))

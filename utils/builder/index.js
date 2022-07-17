@@ -503,7 +503,7 @@ const builder = {
   seventhStep_buildScripts: (parameters) => {
     return new Promise((resolve, reject) => {
       const start = new Date()
-      console.info('Running post-build scripts...', parameters)
+      console.info('Running post-build scripts...')
       var isWin = process.platform === "win32"
       // FIX PATH
       let returnValue = {}
@@ -547,7 +547,7 @@ const builder = {
           })
 
           child.stderr.on('data', function (data) {
-            log(data.toString(), { verbosity: 5 })
+            log(data.toString(), { verbosity: 3 })
           })
 
           child.stdout.on('data', function (data) {
