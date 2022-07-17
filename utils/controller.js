@@ -67,7 +67,7 @@ const controllerModule = {
     var shell = os.platform() === 'win32' ? 'cmd.exe' : 'bash';
     // const pty = require('node-pty')
     console.log('pty is', pty)
-    ptyproc = pty.spawn(shell, [], {
+    ptyproc = await pty.spawn(shell, [], {
       name: 'aptugo-process-controller',
       cols: 80,
       rows: 30,
@@ -79,6 +79,7 @@ const controllerModule = {
       process.stdout.write(data)
     })
 
+    ptyproc._isReady = true
     await controllerModule.killIfRunning()
     ptyproc.write(`${found} start\r`)
     fs.writeFileSync( path.join( os.tmpdir(), 'aptugo-state.json' ), ptyproc._pid + '')
