@@ -23,7 +23,7 @@ module.exports = {
     appFolders.forEach(appFolder => {
       try {
         const appDefinition = JSON.parse( fs.readFileSync(path.join(appFolderDefinition, appFolder, 'basics.json'), { encoding: 'utf8'}, true) )
-        if (appDefinition._id === app._id || appDefinition._id === app) {
+        if ((app._id && appDefinition._id === app._id) || appDefinition._id === app) {
           if (typeof app === 'string') {
             app = { ...appDefinition }
           }

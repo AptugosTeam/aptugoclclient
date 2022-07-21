@@ -61,13 +61,14 @@ const assetsModule = {
     return fs.readFileSync(assetPath, { encoding: 'utf-8'})
   },
   setfile: async (args, fileDefinition) => {
+    console.log('setfile args', args)
     const appFolders = config.get('folders').applications
     const apps = await appsList()
     const app = apps.filter(localapp => (localapp.settings.name === args.app) || (localapp._id === args.app))[0]
     const assets = JSON.parse( fs.readFileSync( path.join( appFolders, aptugocli.friendly(app.settings.name), 'assets.json' ), { encoding: 'utf8'}, true) )
     let foundAsset = assets.filter(asset => asset.id === args.id)
     let currentAsset = foundAsset.length ? foundAsset[0] : {
-      name: args.filename,
+      name: args.filename || args.details?.name,
       id: args.id,
       type: 'stylesheet'
     }
