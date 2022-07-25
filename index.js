@@ -275,7 +275,7 @@ const aptugocli = {
 global.aptugocli = aptugocli
 
 process.on('unhandledRejection', function withName (reason, p) {
-  console.trace('Unhandled Rejection at: Promise', p, 'reason:', reason);
+  // console.trace('Unhandled Rejection at: Promise', p, 'reason:', reason);
 });
 
 module.exports = aptugocli.run

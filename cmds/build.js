@@ -74,6 +74,6 @@ module.exports = async (args) => {
     return res
   }).catch(e => {
     const theError = e.exitCode ? e : { exitCode: 1, message: 'Mariscal Error', error: e }
-    return theError
+    throw(theError)
   })
 }

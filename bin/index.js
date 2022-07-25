@@ -12,6 +12,5 @@ init().then(res => {
     console.log(res)
   }
 }).catch(e => {
-  console.log('final catch', e)
-  throw(e)
+  console.error(e)
 })

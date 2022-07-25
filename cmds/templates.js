@@ -95,6 +95,9 @@ module.exports = async (args, extraarguments) => {
     case 'fileSource':
       output = await filesource(args)
       break
+    case 'checkVersion':
+      output = await templates.checkTemplatesVersion(args)
+      break
     case 'download':
       output = await templates.download(args)
   }

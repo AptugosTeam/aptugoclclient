@@ -73,7 +73,7 @@ module.exports = {
       }
       return template
     } catch(e) {
-      const theError = { exitCode: 125, message: 'Error at include template', arg: templateID }
+      const theError = { exitCode: 122, message: 'Error at include template', arg: templateID }
       throw(theError)
     }
   },

@@ -8,9 +8,11 @@ const axios = require('axios')
 const { exit } = require('process')
 const { isBinary } = require('istextorbinary')
 const AdmZip = require('adm-zip')
+const log = require('./log.js')
 
 function downloadBase (source, destination) {
   return new Promise((resolve, reject) => {
+    log(`Starting templates download`, { type: 'advance', level: 0, verbosity: 1 })
     return axios({
       url: source,
       method: 'GET',
@@ -30,29 +32,32 @@ function downloadBase (source, destination) {
       data.on('close', async () => {
         // Remove old downloads
         try {
-          console.log('\r- Removing destination', destination)
+          log(`Removing old destination at ${destination}`, { type: 'advance', level: 1, verbosity: 5 })
           fs.rmSync(destination, { recursive: true, force: true })
         } catch(e) {
-          console.log('\rERROR: Unable to remove destination', e)
+          log(`Error: Unable to remove old destination at ${destination}`, { type: 'advance', level: 1, verbosity: 2 })
+          console.error(e)
         }
 
         // Rename ziptemp to zip
         try {
-          console.log('\r- Renaming destination', destination + 'temp', destination)
+          log(`Renaming destination from ${destination}temp to ${destination}`, { type: 'advance', level: 1, verbosity: 5 })
           fs.renameSync(destination + 'temp', destination)
           fs.chmodSync(destination,'755')
         } catch(e) {
-          console.log('\rERROR: Could not rename ', destination + 'temp', destination, e)
+          log(`Error: Could not rename ${destination}temp to ${destination} `, { type: 'advance', level: 1, verbosity: 2 })
+          console.error(e)
         }
 
         const destinationPath = path.join( os.tmpdir(), 'AptugoBase' )
         // Remove and Prepare temp folder
         try {
-          console.log('\r- Removing temp path', destinationPath)
+          log(`Recursively removing temp path at ${destinationPath}`, { type: 'advance', level: 1, verbosity: 5 })
           fs.rmSync(destinationPath, { recursive: true })
         } catch(e) {}
+
         try {
-          console.log('\r- Creating temp path', destinationPath)
+          log(`And creating it from scratch at ${destinationPath}`, { type: 'advance', level: 1, verbosity: 5 })
           fs.mkdirSync(destinationPath)
         } catch (err) {
           console.log('\rCould not create temp path!', err)
@@ -60,31 +65,25 @@ function downloadBase (source, destination) {
 
         // Extract to a temp folder
         try {
-          console.log('\r- Extracting zip', destinationPath)
+          log(`Extracting Zip with templates at ${destinationPath}`, { type: 'advance', level: 1, verbosity: 5 })
           var zip = new AdmZip(destination)
           await zip.extractAllTo(destinationPath)
-          console.log('\r✅ - Extraction complete\r')
+          log(`✅ Extraction Complete`, { type: 'advance', level: 1, verbosity: 3 })
         } catch (err) {
-          console.log('\rExtraction ERROR!', err)
+          log(`❌ Extraction Failed`, { type: 'advance', level: 1, verbosity: 3 })
+          console.error(err)
+          reject(err)
         }
-
 
         // Detecting folder name
         const weirdName = fs.readdirSync(destinationPath)
-        try {
-          console.log('\r- Extracting zip Step B', destinationPath)
-          console.log( path.join(destinationPath, weirdName[0], 'templates') )
-          console.log( path.join(destinationPath, weirdName[0], 'structures') )
-        } catch (err) {
-          console.log('\rStep B Extraction Error!', err)
-        }
 
         // Check if templates folder exists and renames it if it does
         try {
-          console.log(`\r- Checking readiness of Final Destination: ${config.get('folders').templates}`)
+          log(`Checking readiness of Final Destination: ${config.get('folders').templates}`, { type: 'advance', level: 2, verbosity: 4 })
           if (fs.existsSync(config.get('folders').templates) && fs.readdirSync(config.get('folders').templates).length > 0) { // Final Directory is not empty
-            console.log('\r- Final Destination is not Empty, creating backup\r')
-            fs.renameSync(get('folders').templates, `${get('folders').templates}_${new Date().getTime()}`)
+            log(`Final Destination is not Empty, creating backup`, { type: 'advance', level: 3, verbosity: 4 })
+            fs.renameSync(config.get('folders').templates, `${config.get('folders').templates}_${new Date().getTime()}`)
           }
         } catch(e) {
           console.log('\r- Final Destination error\r', e)
@@ -92,7 +91,7 @@ function downloadBase (source, destination) {
 
         // Move templates to the destination folder
         try {
-          console.log(`\r- Now moving from ${path.join(destinationPath, weirdName[0], 'templates')}`)
+          log(`Now moving templates`, { type: 'advance', level: 2, verbosity: 4 })
           fs.renameSync(path.join(destinationPath, weirdName[0], 'templates'), config.get('folders').templates )
         } catch(e) {
           console.log('\rERROR: could not move templates')
@@ -106,12 +105,12 @@ function downloadBase (source, destination) {
           allTemplates.forEach(template => {
             const templateScriptsDir = path.join(templatesDir, template, 'templatescripts')
             if (fs.existsSync( templateScriptsDir )) {
-              console.log(`\r- Changing execution perms on ${templateScriptsDir}`)
+              log(`And adjusting execution perms`, { type: 'advance', level: 3, verbosity: 6 })
               fs.chmodSync(templateScriptsDir, '755')
               const executableFiles = fs.readdirSync(templateScriptsDir)
               executableFiles.forEach(execFile => {
                 const execFilePath = path.join(templateScriptsDir, execFile)
-                console.log(`\r- Changing execution perms on ${execFilePath}`)
+                log(`Changing execution perms on ${execFilePath}`, { type: 'advance', level: 4, verbosity: 6 })
                 fs.chmodSync(execFilePath, '755')
               })
             }
@@ -412,6 +411,15 @@ const templatesModule = {
         if (found) return found
       }
     }
+  },
+  // Returns available Templates version
+  checkTemplatesVersion: (args) => {
+    const remote = args.remote || 'https://api.github.com/repos/AptugosTeam/BaseDev/releases/latest'
+    return axios.get(remote).then(res => {
+      return res.data.tag_name
+    }).catch(e => {
+      return e
+    })
   },
   download: (args) => {
     const remote = args.remote || 'https://api.github.com/repos/AptugosTeam/BaseDev/releases/latest'
